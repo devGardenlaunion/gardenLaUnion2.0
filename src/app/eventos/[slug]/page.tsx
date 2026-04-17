@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
+import { getMediaImages } from "@/lib/media";
 import Navbar from "@/components/public/sections/Navbar";
 import Footer from "@/components/public/sections/Footer";
 
@@ -76,7 +77,10 @@ export default async function EventoPage({ params }: Props) {
     },
   ];
 
-  const fotos = edicion.multimedia.filter((m) => m.tipo === "foto");
+  const fotosDB = edicion.multimedia.filter((m) => m.tipo === "foto");
+  const fotosCarpeta = getMediaImages(`eventos/${slug}`);
+  const urlsDB = new Set(fotosDB.map((f) => f.url));
+  const fotosExtra = fotosCarpeta.filter((f) => !urlsDB.has(f.src));
   const videos = edicion.multimedia.filter((m) => m.tipo === "youtube");
   const otrasEdiciones = edicion.evento.ediciones.filter(
     (e) => e.slug !== edicion.slug
@@ -100,23 +104,25 @@ export default async function EventoPage({ params }: Props) {
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-gc-green-900/95 via-gc-green-900/50 to-transparent" />
-          <div className="relative container-gc pb-10 pt-16">
-            {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm text-white/50 font-body mb-6">
-              <a href="/" className="hover:text-white/80 transition-colors">Inicio</a>
-              <span>/</span>
-              <a href="/#eventos" className="hover:text-white/80 transition-colors">Eventos</a>
-              <span>/</span>
-              <span className="text-white/70 line-clamp-1">{edicion.evento.nombre}</span>
-            </nav>
-            <span className="inline-flex items-center px-3 py-1 bg-gc-gold/20 text-gc-gold-light text-xs font-semibold rounded-full border border-gc-gold/20 mb-4">
+          {/* Scrim superior — evita que el navbar se pierda en fondos claros */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
+          {/* Scrim inferior — garantiza legibilidad del texto siempre */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+          <div className="relative container-gc pb-10 pt-14">
+            <a href="/#eventos" className="inline-flex items-center gap-2 text-white/50 hover:text-white/80 text-sm font-body mb-6 transition-colors">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Volver a Eventos
+            </a>
+            <br />
+            <span className="inline-flex items-center px-4 py-1.5 bg-gc-gold/20 text-gc-gold-light text-sm font-semibold rounded-full border border-gc-gold/20 mb-4">
               {edicion.evento.nombre} · {format(edicion.fecha, "yyyy", { locale: es })}
             </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mb-4 leading-tight max-w-4xl">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mb-4 leading-tight max-w-4xl drop-shadow-lg">
               {edicion.titulo}
             </h1>
-            <time className="text-white/60 text-sm font-body">
+            <time className="text-white/70 text-sm font-body drop-shadow">
               {format(edicion.fecha, "d 'de' MMMM, yyyy", { locale: es })}
             </time>
           </div>
@@ -139,19 +145,19 @@ export default async function EventoPage({ params }: Props) {
               dangerouslySetInnerHTML={{ __html: edicion.contenido }}
             />
 
-            {/* Fotos */}
-            {fotos.length > 0 && (
+            {/* Fotos — combina BD + carpeta public/media/eventos/[slug]/ */}
+            {(fotosDB.length > 0 || fotosExtra.length > 0) && (
               <div className="mb-10">
                 <h2 className="text-xl font-display font-bold text-gc-green-800 mb-4">Galería</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {fotos.map((foto) => (
+                  {fotosDB.map((foto) => (
                     <div key={foto.id} className="aspect-square rounded-xl overflow-hidden bg-gc-green/10">
-                      <img
-                        src={foto.url}
-                        alt={foto.titulo || ""}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                      <img src={foto.url} alt={foto.titulo || ""} className="w-full h-full object-cover" loading="lazy" />
+                    </div>
+                  ))}
+                  {fotosExtra.map((foto) => (
+                    <div key={foto.src} className="aspect-square rounded-xl overflow-hidden bg-gc-green/10">
+                      <img src={foto.src} alt="" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   ))}
                 </div>
@@ -199,14 +205,11 @@ export default async function EventoPage({ params }: Props) {
             )}
 
             {/* Volver */}
-            <a
-              href="/#eventos"
-              className="inline-flex items-center gap-2 text-gc-green-800/60 hover:text-gc-green-800 font-body text-sm transition-colors"
-            >
+            <a href="/#eventos" className="btn-secondary inline-flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
-              Volver a Eventos Garden
+              Volver a Eventos
             </a>
           </div>
         </div>

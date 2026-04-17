@@ -52,7 +52,7 @@ export default function Navbar({ nombre, telefono, variant = "transparent" }: Na
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isLight
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b-2 border-gc-navy"
-          : "bg-transparent border-b-2 border-gc-navy/50"
+          : "bg-gc-green-900 border-b-2 border-gc-green-800"
       }`}
     >
       {/* Barra superior — solo desktop */}
