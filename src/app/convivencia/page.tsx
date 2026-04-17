@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getConfig } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
-import Navbar from "@/components/public/Navbar";
-import Footer from "@/components/public/Footer";
+import Navbar from "@/components/public/sections/Navbar";
+import Footer from "@/components/public/sections/Footer";
 
 export const metadata: Metadata = {
   title: "Convivencia y Valores | Garden College",

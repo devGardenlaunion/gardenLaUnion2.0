@@ -42,6 +42,7 @@ export default function Navbar({ nombre, telefono, variant = "transparent" }: Na
   useEffect(() => {
     if (variant === "solid") return;
     const onScroll = () => setScrolled(window.scrollY > 50);
+    onScroll(); // sincroniza estado inicial al recargar con scroll
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [variant]);
@@ -71,14 +72,12 @@ export default function Navbar({ nombre, telefono, variant = "transparent" }: Na
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo + Nombre */}
           <a href={logoHref} className="flex items-center gap-3 group">
-            <div
-              className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center font-display font-bold transition-colors ${
-                isLight
-                  ? "bg-gc-green text-gc-gold"
-                  : "bg-gc-green/80 text-gc-gold-light backdrop-blur-sm"
-              }`}
-            >
-              GC
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden bg-white shrink-0 p-0.5">
+              <img
+                src="/media/Logo/cropped-cropped-logo.png"
+                alt="Logo Garden College"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <span

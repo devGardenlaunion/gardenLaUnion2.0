@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import EventModal, { type EdicionModal, type MultimediaItem, type EdicionMinima } from "./EventModal";
+import EventModal, { type EdicionModal, type MultimediaItem, type EdicionMinima } from "@/components/public/shared/EventModal";
 
 export type EventoMinimo = {
   id: string;
@@ -55,7 +55,7 @@ export default function EventosWrapper({
 
   return (
     <>
-      <section id="eventos" className="py-12 sm:py-16 lg:py-20 xl:py-28 section-alt">
+      <section id="eventos" className="pt-12 pb-8 section-alt">
         <div className="container-gc">
           {/* Header */}
           <div className="text-center mb-10 lg:mb-16">
@@ -172,6 +172,7 @@ export default function EventosWrapper({
           </div>
 
           {/* Tradiciones */}
+          {/*
           {todosEventos.length > 0 && (
             <div className="text-center">
               <p className="text-xs font-body font-semibold text-gc-green-800/40 uppercase tracking-wider mb-4">
@@ -189,6 +190,7 @@ export default function EventosWrapper({
               </div>
             </div>
           )}
+          */}
         </div>
       </section>
 

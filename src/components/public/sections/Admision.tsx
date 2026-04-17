@@ -3,11 +3,12 @@ import Image from "next/image";
 interface AdmisionProps {
   info: string;
   linkSae: string;
+  imagen?: string;
 }
 
-export default function Admision({ info, linkSae }: AdmisionProps) {
+export default function Admision({ info, linkSae, imagen }: AdmisionProps) {
   return (
-    <section id="admision" className="py-12 sm:py-16 lg:py-20 xl:py-28 section-alt">
+    <section id="admision" className="pt-12 pb-8 section-alt">
       <div className="container-gc">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -48,7 +49,7 @@ export default function Admision({ info, linkSae }: AdmisionProps) {
               <div className="text-center">
                 <div className="relative rounded-xl overflow-hidden mb-6 aspect-[3/4]">
                   <Image
-                    src="https://picsum.photos/seed/garden-admision/600/800"
+                    src={imagen ?? "https://picsum.photos/seed/garden-admision/600/800"}
                     alt="Estudiantes Garden College"
                     fill
                     className="object-cover"

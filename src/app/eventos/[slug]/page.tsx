@@ -3,8 +3,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
-import Navbar from "@/components/public/Navbar";
-import Footer from "@/components/public/Footer";
+import Navbar from "@/components/public/sections/Navbar";
+import Footer from "@/components/public/sections/Footer";
 
 interface Props {
   params: Promise<{ slug: string }>;

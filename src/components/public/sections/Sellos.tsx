@@ -1,3 +1,5 @@
+import InfoCard from "@/components/public/shared/InfoCard";
+
 interface Sello {
   titulo: string;
   descripcion: string;
@@ -32,7 +34,7 @@ const iconMap: Record<string, JSX.Element> = {
 
 export default function Sellos({ sellos }: SellosProps) {
   return (
-    <section id="sellos" className="py-12 sm:py-16 lg:py-20 xl:py-28 section-alt">
+    <section id="sellos" className="pt-12 pb-8 section-alt">
       <div className="container-gc">
         {/* Header */}
         <div className="text-center mb-10 lg:mb-16">
@@ -45,24 +47,15 @@ export default function Sellos({ sellos }: SellosProps) {
 
         {/* Cards */}
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
-          {sellos.map((sello) => {
-            return (
-              <div
-                key={sello.titulo}
-                className="card p-8 lg:p-10 border border-gc-green-100"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-gc-green-50 flex items-center justify-center mb-6 text-gc-green-dark">
-                  {iconMap[sello.icono] || iconMap["globe"]}
-                </div>
-                <h3 className="text-xl lg:text-2xl font-display font-bold text-gc-green-800 mb-4">
-                  {sello.titulo}
-                </h3>
-                <p className="text-gc-green-800/70 font-body leading-relaxed">
-                  {sello.descripcion}
-                </p>
-              </div>
-            );
-          })}
+          {sellos.map((sello) => (
+            <InfoCard
+              key={sello.titulo}
+              title={sello.titulo}
+              description={sello.descripcion}
+              icon={iconMap[sello.icono] ?? iconMap["globe"]}
+              accent="gold"
+            />
+          ))}
         </div>
       </div>
     </section>

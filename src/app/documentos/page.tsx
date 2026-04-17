@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getConfig } from "@/lib/config";
-import Navbar from "@/components/public/Navbar";
-import DocumentViewer, { type Documento } from "@/components/public/DocumentViewer";
+import Navbar from "@/components/public/sections/Navbar";
+import DocumentViewer, { type Documento } from "@/components/public/shared/DocumentViewer";
 
 export const metadata: Metadata = {
   title: "Documentos | Garden College",
