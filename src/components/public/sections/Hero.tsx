@@ -1,26 +1,40 @@
-import Image from "next/image";
+const MOBILE_PLACEHOLDER = "https://picsum.photos/seed/gc-hero/800/600";
 
 interface HeroProps {
   nombre: string;
   slogan: string;
   mision: string;
+  imagenMobile?: string;
 }
 
-export default function Hero({ nombre, slogan, mision }: HeroProps) {
+export default function Hero({ nombre, slogan, mision, imagenMobile }: HeroProps) {
+  const mobileSrc = imagenMobile ?? MOBILE_PLACEHOLDER;
   return (
     <section
       id="inicio"
       className="relative min-h-[85vh] lg:min-h-screen flex items-center justify-center overflow-hidden"
     >
-      {/* Background — foto con overlay */}
-      <Image
-        src="https://picsum.photos/seed/garden-hero/1920/1080"
+      {/* Background — video (desktop + landscape) */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+        className="absolute inset-0 pt-4 w-full h-full object-cover hidden landscape:block md:block"
+      >
+        <source src="/media/Hero/heroShort.webm" type="video/webm" />
+      </video>
+
+      {/* Background — imagen fija (mobile portrait) */}
+      <img
+        src={mobileSrc}
         alt=""
-        fill
-        priority
-        className="object-cover"
-        sizes="100vw"
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover block landscape:hidden md:hidden"
       />
+
       <div className="absolute inset-0 bg-gradient-to-br from-gc-green-900/90 via-gc-green-800/85 to-gc-green-800/80" />
 
       {/* Patrón decorativo sutil */}

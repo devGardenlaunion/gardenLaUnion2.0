@@ -22,7 +22,7 @@ const nivelBorders = [
 
 export default function Niveles({ niveles, extras }: NivelesProps) {
   return (
-    <section id="niveles" className="py-12 sm:py-16 lg:py-20 xl:py-28">
+    <section id="niveles" className="pt-12 pb-8">
       <div className="container-gc">
         {/* Header */}
         <div className="text-center mb-10 lg:mb-16">

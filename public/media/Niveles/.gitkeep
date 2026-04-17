@@ -1,0 +1,4 @@
+# Imágenes para las cards de niveles educativos.
+# Convención: una imagen por nivel, en orden alfabético o numérico (0.jpg, 1.jpg…).
+# Se asignan a los niveles en el mismo orden que aparecen en la configuración.
+# Ejemplo: 0-parvularia.jpg, 1-basica.jpg, 2-basica-media.jpg, 3-media.jpg

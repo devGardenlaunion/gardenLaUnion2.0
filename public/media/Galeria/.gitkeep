@@ -1,0 +1,3 @@
+# Imágenes estáticas de respaldo para la sección Galería.
+# Se usan cuando la base de datos no tiene suficientes fotos publicadas.
+# La lógica de Galeria.tsx carga desde BD primero; estas completan hasta 12 fotos.

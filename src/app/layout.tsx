@@ -40,6 +40,10 @@ export const metadata: Metadata = {
     description:
       "Educación integral con énfasis en inglés, vida saludable y valores cristianos. Pre-Kínder a 4° Medio.",
   },
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
   robots: {
     index: true,
     follow: true,

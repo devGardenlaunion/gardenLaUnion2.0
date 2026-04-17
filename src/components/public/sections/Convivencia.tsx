@@ -1,3 +1,6 @@
+import InfoCard from "@/components/public/shared/InfoCard";
+import CarouselLinkCard from "@/components/public/shared/CarouselLinkCard";
+
 interface Logro {
   cifra: string;
   descripcion: string;
@@ -21,7 +24,14 @@ interface ConvivenciaProps {
   logros: Logro[];
   pilares: Pilar[];
   testimonio: Testimonio | null;
+  imagenesLink?: string[];
 }
+
+const IMAGENES_CONVIVENCIA = [
+  "/media/carousel-cards/convivencia/foto-1.webp",
+  "/media/carousel-cards/convivencia/foto-2.webp",
+  "/media/carousel-cards/convivencia/foto-3.webp",
+];
 
 const pilarIcons = [
   // Escudo-check: respeto
@@ -52,11 +62,12 @@ export default function Convivencia({
   logros,
   pilares,
   testimonio,
+  imagenesLink = IMAGENES_CONVIVENCIA,
 }: ConvivenciaProps) {
   const hasTestimonio = !!testimonio?.texto;
 
   return (
-    <section id="convivencia" className="py-12 sm:py-16 lg:py-20 xl:py-28">
+    <section id="convivencia" className="pt-12 pb-8">
       <div className="container-gc">
         {/* Tarjeta continua — overflow-hidden aplica radius a todos los hijos */}
         <div className="rounded-2xl overflow-hidden shadow-2xl">
@@ -119,46 +130,26 @@ export default function Convivencia({
               </p>
               <div className="grid sm:grid-cols-2 gap-4 lg:gap-5 max-w-4xl mx-auto">
                 {pilares.map((pilar, i) => (
-                  <div
+                  <InfoCard
                     key={pilar.titulo}
-                    className="rounded-xl p-6 border border-gc-green-100/15 hover:border-gc-green-100/25 transition-colors"
-                    style={{ background: "rgba(61,133,120,0.15)" }}
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-gc-green-light/20 text-gc-green-light flex items-center justify-center mb-4 shrink-0">
-                      {pilarIcons[i % pilarIcons.length]}
-                    </div>
-                    <h4 className="text-base font-display font-bold text-white mb-2">
-                      {pilar.titulo}
-                    </h4>
-                    <p className="text-gc-green-100/65 font-body text-sm leading-relaxed">
-                      {pilar.descripcion}
-                    </p>
-                  </div>
+                    title={pilar.titulo}
+                    description={pilar.descripcion}
+                    icon={pilarIcons[i % pilarIcons.length]}
+                    accent="gold"
+                    variant="dark"
+                  />
                 ))}
+
+                {/* 4ª card: carousel + link a /convivencia */}
+                <CarouselLinkCard
+                  href="/convivencia"
+                  title="Conoce nuestra historia"
+                  label="Descubre cómo construimos convivencia"
+                  images={imagenesLink}
+                />
               </div>
             </div>
           )}
-
-          {/* ── BLOQUE CTA: LINK A /convivencia ── */}
-          <div className="bg-gc-green-800 border-t border-gc-green-100/10 px-6 py-7 lg:py-8">
-            <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5">
-              <div className="flex items-center gap-3">
-                <span className="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-gc-gold animate-pulse" />
-                <p className="text-gc-green-100/60 font-body text-base text-center sm:text-left">
-                  Descubre cómo construimos convivencia
-                </p>
-              </div>
-              <a
-                href="/convivencia"
-                className="btn-primary w-full sm:w-auto flex-shrink-0 gap-2"
-              >
-                Conoce nuestra historia
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
-            </div>
-          </div>
 
           {/* ── BLOQUE 4: TESTIMONIO ── */}
           {hasTestimonio && (

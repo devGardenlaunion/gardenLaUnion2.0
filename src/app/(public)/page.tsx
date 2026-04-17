@@ -1,22 +1,29 @@
 import { getConfig } from "@/lib/config";
-import Navbar from "@/components/public/Navbar";
-import Hero from "@/components/public/Hero";
-import QuienesSomos from "@/components/public/QuienesSomos";
-import Sellos from "@/components/public/Sellos";
-import Convivencia from "@/components/public/Convivencia";
-import EventosDestacados from "@/components/public/EventosDestacados";
-import Galeria from "@/components/public/Galeria";
-import Niveles from "@/components/public/Niveles";
-import Noticias from "@/components/public/Noticias";
-import Admision from "@/components/public/Admision";
-import Contacto from "@/components/public/Contacto";
-import Footer from "@/components/public/Footer";
+import { getMediaImages, getMediaCover } from "@/lib/media";
+import Navbar from "@/components/public/sections/Navbar";
+import Hero from "@/components/public/sections/Hero";
+import QuienesSomos from "@/components/public/sections/QuienesSomos";
+import Sellos from "@/components/public/sections/Sellos";
+import Convivencia from "@/components/public/sections/Convivencia";
+import EventosDestacados from "@/components/public/sections/EventosDestacados";
+import Galeria from "@/components/public/sections/Galeria";
+import Niveles from "@/components/public/sections/Niveles";
+import Noticias from "@/components/public/sections/Noticias";
+import Admision from "@/components/public/sections/Admision";
+import Contacto from "@/components/public/sections/Contacto";
+import Footer from "@/components/public/sections/Footer";
 
 // ISR: regenerar la página cada 60 segundos
 export const revalidate = 60;
 
 export default async function HomePage() {
   const config = await getConfig();
+
+  // ── Media desde carpetas ────────────────────────────────────────────────
+  const fotosQuienesSomos  = getMediaImages("QuienesSomos");
+  const imagenesNiveles    = getMediaImages("Niveles");
+  const imagenAdmision     = getMediaCover("Admision");
+  const imagenHeroMobile   = getMediaCover("Hero");
 
   const nombre = config["institucional.nombre"] || "Garden College";
   const slogan = config["institucional.slogan"] || "Educación sin fronteras";
@@ -67,12 +74,14 @@ export default async function HomePage() {
           nombre={nombre}
           slogan={slogan}
           mision={config["institucional.mision"] || ""}
+          imagenMobile={imagenHeroMobile}
         />
 
         <QuienesSomos
           mision={config["institucional.mision"] || ""}
           vision={config["institucional.vision"] || ""}
           resena={config["institucional.resena"] || ""}
+          fotos={fotosQuienesSomos.length > 0 ? fotosQuienesSomos : undefined}
         />
 
         <Sellos sellos={sellos} />
@@ -90,7 +99,12 @@ export default async function HomePage() {
         <Galeria />
 
         <Niveles
-          niveles={config["niveles.info"] || []}
+          niveles={(config["niveles.info"] || []).map(
+            (n: Record<string, string>, i: number) => ({
+              ...n,
+              imagen: n.imagen || imagenesNiveles[i]?.src,
+            })
+          )}
           extras={config["niveles.extras"] || []}
         />
 
@@ -99,6 +113,7 @@ export default async function HomePage() {
         <Admision
           info={config["admision.info"] || ""}
           linkSae={config["admision.link_sae"] || "#"}
+          imagen={imagenAdmision}
         />
 
         <Contacto sedes={sedes} email={config["contacto.email"] || ""} />

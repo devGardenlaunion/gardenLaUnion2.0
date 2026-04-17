@@ -1,4 +1,4 @@
-import ContactForm from "./ContactForm";
+import ContactForm from "@/components/public/shared/ContactForm";
 
 interface Sede {
   nombre: string;
@@ -14,7 +14,7 @@ interface ContactoProps {
 
 export default function Contacto({ sedes, email }: ContactoProps) {
   return (
-    <section id="contacto" className="py-12 sm:py-16 lg:py-20 xl:py-28">
+    <section id="contacto" className="pt-12 pb-8">
       <div className="container-gc">
         {/* Header */}
         <div className="text-center mb-10 lg:mb-16">

@@ -41,3 +41,8 @@ backups/
 
 # SSL certs
 certs/
+
+# Archivos media pesados — nunca commitear (>50MB rompe Vercel free tier)
+public/documentos/Hero_optimizar.mp4
+public/documentos/Archivador.zip
+*.mp4
