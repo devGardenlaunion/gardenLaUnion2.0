@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ColumnsPhotoAlbum } from "react-photo-album";
+import SSR from "react-photo-album/ssr";
 import "react-photo-album/columns.css";
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
@@ -35,8 +36,7 @@ interface GaleriaColumnasProps {
 
 function defaultColumns(w: number) {
   if (w < 640) return 2;
-  if (w < 1024) return 3;
-  return 4;
+  return 3;
 }
 
 export default function GaleriaColumnas({
@@ -58,22 +58,24 @@ export default function GaleriaColumnas({
 
   return (
     <div className={className}>
-      <ColumnsPhotoAlbum
-        photos={fotos}
-        spacing={spacing}
-        columns={columns}
-        onClick={({ index: i }) => setIndex(i)}
-        render={{
-          image: (imageProps) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              {...imageProps}
-              alt={imageProps.alt ?? "Galería Garden College"}
-              className="rounded-lg cursor-pointer object-cover hover:brightness-90 transition-[filter,transform] duration-300 hover:scale-[1.01]"
-            />
-          ),
-        }}
-      />
+      <SSR breakpoints={[375, 640, 1200]}>
+        <ColumnsPhotoAlbum
+          photos={fotos}
+          spacing={spacing}
+          columns={columns}
+          onClick={({ index: i }) => setIndex(i)}
+          render={{
+            image: (imageProps) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                {...imageProps}
+                alt={imageProps.alt ?? "Galería Garden College"}
+                className="rounded-lg cursor-pointer object-cover hover:brightness-90 transition-[filter,transform] duration-300 hover:scale-[1.01]"
+              />
+            ),
+          }}
+        />
+      </SSR>
 
       <Lightbox
         open={index >= 0}

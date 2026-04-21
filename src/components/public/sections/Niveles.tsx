@@ -1,10 +1,12 @@
 import Image from "next/image";
+import { getMediaImageMap } from "@/lib/media";
 
 interface Nivel {
   nombre: string;
   niveles: string;
   sede: string;
   descripcion: string;
+  slug?: string;
   imagen?: string;
 }
 
@@ -16,11 +18,12 @@ interface NivelesProps {
 const nivelBorders = [
   "border-l-4 border-gc-green-light",
   "border-l-4 border-gc-green",
-  "border-l-4 border-gc-green-dark",
   "border-l-4 border-gc-green-800",
 ];
 
 export default function Niveles({ niveles, extras }: NivelesProps) {
+  const imageMap = getMediaImageMap("Niveles");
+
   return (
     <section id="niveles" className="pt-12 pb-8">
       <div className="container-gc">
@@ -34,18 +37,20 @@ export default function Niveles({ niveles, extras }: NivelesProps) {
         </div>
 
         {/* Grid de niveles */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-8 lg:mb-12">
+        <div className="grid sm:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8 lg:mb-12">
           {niveles.map((nivel, i) => {
+            const imgSrc = (nivel.slug && imageMap[`nivel-${nivel.slug}`])
+              || nivel.imagen;
             return (
               <div key={nivel.nombre} className={`card overflow-hidden ${nivelBorders[i % nivelBorders.length]}`}>
-                {nivel.imagen && (
+                {imgSrc && (
                   <div className="relative aspect-[2/1]">
                     <Image
-                      src={nivel.imagen}
+                      src={imgSrc}
                       alt={nivel.nombre}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
                 )}

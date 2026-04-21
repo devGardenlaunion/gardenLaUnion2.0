@@ -10,10 +10,10 @@ interface FooterProps {
 
 const footerLinks = [
   { label: "Quiénes Somos", href: "#quienes-somos" },
-  { label: "Sellos Educativos", href: "#sellos" },
+  { label: "Convivencia", href: "#convivencia" },
   { label: "Eventos", href: "#eventos" },
   { label: "Niveles", href: "#niveles" },
-  { label: "Noticias", href: "#noticias" },
+  { label: "Recursos", href: "#recursos" },
   { label: "Admisión", href: "#admision" },
   { label: "Contacto", href: "#contacto" },
 ];

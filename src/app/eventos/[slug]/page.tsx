@@ -77,10 +77,18 @@ export default async function EventoPage({ params }: Props) {
     },
   ];
 
+  const year = edicion.fecha.getFullYear();
+  const mediaBase = `eventos/${edicion.evento.slug}/${year}`;
+
   const fotosDB = edicion.multimedia.filter((m) => m.tipo === "foto");
-  const fotosCarpeta = getMediaImages(`eventos/${slug}`);
+  const fotosCarpeta = getMediaImages(mediaBase);
   const urlsDB = new Set(fotosDB.map((f) => f.url));
   const fotosExtra = fotosCarpeta.filter((f) => !urlsDB.has(f.src));
+
+  // Portada: BD → hero/ de la carpeta → null
+  const heroSrc =
+    edicion.imagenPortada ??
+    (getMediaImages(`${mediaBase}/hero`)[0]?.src ?? null);
   const videos = edicion.multimedia.filter((m) => m.tipo === "youtube");
   const otrasEdiciones = edicion.evento.ediciones.filter(
     (e) => e.slug !== edicion.slug
@@ -97,9 +105,9 @@ export default async function EventoPage({ params }: Props) {
       <main className="pt-20 bg-gc-warm min-h-screen">
         {/* Hero del evento */}
         <div className="relative min-h-[50vh] flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800 overflow-hidden">
-          {edicion.imagenPortada && (
+          {heroSrc && (
             <img
-              src={edicion.imagenPortada}
+              src={heroSrc}
               alt={edicion.titulo}
               className="absolute inset-0 w-full h-full object-cover"
             />

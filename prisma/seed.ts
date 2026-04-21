@@ -444,36 +444,28 @@ async function main() {
       clave: "niveles.info",
       valor: JSON.stringify([
         {
-          nombre: "Parvularia",
+          nombre: "Prebásica",
+          slug: "prebasica",
           niveles: "Pre-Kínder y Kínder",
           sede: "Los Carrera 387",
           descripcion:
             "Primeros pasos en un ambiente seguro y estimulante, con énfasis en el juego, la creatividad y los valores.",
-          imagen: "https://picsum.photos/seed/garden-parvularia/600/300",
         },
         {
           nombre: "Educación Básica",
+          slug: "basica",
           niveles: "1° a 6° Básico",
           sede: "Los Carrera 387",
           descripcion:
             "Formación académica sólida con inglés desde primer año, talleres de música, arte y deporte.",
-          imagen: "https://picsum.photos/seed/garden-basica/600/300",
-        },
-        {
-          nombre: "Educación Básica - Media",
-          niveles: "7° y 8° Básico",
-          sede: "Caupolicán 967",
-          descripcion:
-            "Transición acompañada con mayor autonomía, preparación para la enseñanza media y talleres especializados.",
-          imagen: "https://picsum.photos/seed/garden-nivel-media/600/300",
         },
         {
           nombre: "Educación Media",
-          niveles: "1° a 4° Medio",
+          slug: "media",
+          niveles: "7° Básico a 4° Medio",
           sede: "Caupolicán 967",
           descripcion:
             "Preparación para la educación superior con talleres de Administración, Introducción al Derecho, y formación integral.",
-          imagen: "https://picsum.photos/seed/garden-media/600/300",
         },
       ]),
       tipo: "json",
@@ -570,7 +562,7 @@ async function main() {
         contenido:
           "<p>En el marco de nuestro 20° aniversario, Garden College inauguró su Primera Gala Cultural. Una noche de alto nivel artístico y profundo sentido comunitario que reunió a estudiantes, familias, docentes y autoridades locales.</p><p>El evento destacó presentaciones musicales, números artísticos preparados por los departamentos de Música y Artes, y un emotivo reconocimiento a quienes han sido parte de estas dos décadas de historia educativa en La Unión.</p>",
         fecha: new Date("2025-10-21"),
-        destacada: true,
+        destacada: false,
         estado: NoticiaEstado.PUBLICADA,
         imagenPortada: "https://picsum.photos/seed/garden-gala/1200/600",
       },
@@ -662,9 +654,9 @@ async function main() {
         contenido:
           "<p>Durante la semana del 15 al 19 de septiembre, Garden College se vistió de colores patrios para celebrar la identidad chilena de la manera más auténtica: en comunidad.</p><p>Los cursos compitieron en el concurso de empanadas, donde apoderados y estudiantes pusieron a prueba sus mejores recetas familiares. Las ramadas montadas por cada nivel llenaron los patios de olor a chilenería, con muelles, sopaipillas y bebidas tradicionales servidas con orgullo.</p><p>El Departamento de Música y Artes organizó presentaciones de cueca, con parejas de todos los niveles desde pre-kínder hasta cuarto medio. Ver a los más pequeños bailar con sus trajes típicos fue uno de los momentos más emotivos de la semana, demostrando que la tradición se aprende y se vive desde los primeros años.</p><p>El cierre de semana fue una gran convivencia familiar con parrillada, música en vivo y un show artístico que reunió a toda la comunidad Garden en una tarde de celebración, orgullo y chilenidad compartida. Una semana que reafirma que ser chileno también se enseña.</p>",
         fecha: new Date("2025-09-19"),
-        destacada: false,
+        destacada: true,
         estado: NoticiaEstado.PUBLICADA,
-        imagenPortada: "https://picsum.photos/seed/garden-patrias/1200/600",
+        imagenPortada: null,
       },
     },
   ];
@@ -683,7 +675,10 @@ async function main() {
 
     await prisma.edicion.upsert({
       where: { slug: eventoData.edicion.slug },
-      update: { imagenPortada: eventoData.edicion.imagenPortada },
+      update: {
+        imagenPortada: eventoData.edicion.imagenPortada,
+        destacada: eventoData.edicion.destacada,
+      },
       create: {
         ...eventoData.edicion,
         eventoId: evento.id,
