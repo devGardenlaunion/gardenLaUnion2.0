@@ -1,14 +1,14 @@
 import { getConfig } from "@/lib/config";
 import { getMediaImages, getMediaCover } from "@/lib/media";
+import { redesSociales } from "@/data/redes";
 import Navbar from "@/components/public/sections/Navbar";
 import Hero from "@/components/public/sections/Hero";
 import QuienesSomos from "@/components/public/sections/QuienesSomos";
-import Sellos from "@/components/public/sections/Sellos";
 import Convivencia from "@/components/public/sections/Convivencia";
 import EventosDestacados from "@/components/public/sections/EventosDestacados";
 import Galeria from "@/components/public/sections/Galeria";
 import Niveles from "@/components/public/sections/Niveles";
-import Noticias from "@/components/public/sections/Noticias";
+import Recursos from "@/components/public/sections/Recursos";
 import Admision from "@/components/public/sections/Admision";
 import Contacto from "@/components/public/sections/Contacto";
 import Footer from "@/components/public/sections/Footer";
@@ -21,7 +21,6 @@ export default async function HomePage() {
 
   // ── Media desde carpetas ────────────────────────────────────────────────
   const fotosQuienesSomos  = getMediaImages("QuienesSomos");
-  const imagenesNiveles    = getMediaImages("Niveles");
   const imagenAdmision     = getMediaCover("Admision");
   const imagenHeroMobile   = getMediaCover("Hero");
 
@@ -82,9 +81,8 @@ export default async function HomePage() {
           vision={config["institucional.vision"] || ""}
           resena={config["institucional.resena"] || ""}
           fotos={fotosQuienesSomos.length > 0 ? fotosQuienesSomos : undefined}
+          sellos={sellos}
         />
-
-        <Sellos sellos={sellos} />
 
         <Convivencia
           titulo={config["convivencia.titulo"] || "Convivencia y Valores"}
@@ -99,16 +97,11 @@ export default async function HomePage() {
         <Galeria />
 
         <Niveles
-          niveles={(config["niveles.info"] || []).map(
-            (n: Record<string, string>, i: number) => ({
-              ...n,
-              imagen: n.imagen || imagenesNiveles[i]?.src,
-            })
-          )}
+          niveles={config["niveles.info"] || []}
           extras={config["niveles.extras"] || []}
         />
 
-        <Noticias />
+        <Recursos />
 
         <Admision
           info={config["admision.info"] || ""}
@@ -116,17 +109,13 @@ export default async function HomePage() {
           imagen={imagenAdmision}
         />
 
-        <Contacto sedes={sedes} email={config["contacto.email"] || ""} />
+        <Contacto sedes={sedes} redes={redesSociales} />
       </main>
 
       <Footer
         nombre={nombre}
         corporacion={config["institucional.corporacion"] || ""}
-        redes={{
-          facebook: config["redes.facebook"],
-          instagram: config["redes.instagram"],
-          youtube: config["redes.youtube"],
-        }}
+        redes={redesSociales}
       />
     </>
   );

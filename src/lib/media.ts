@@ -50,3 +50,21 @@ export function getMediaVideos(section: string): string[] {
 export function getMediaCover(section: string): string | undefined {
   return getMediaImages(section)[0]?.src;
 }
+
+/**
+ * Devuelve un mapa { stem → src } con todas las imágenes de public/media/<section>/.
+ * El stem es el nombre del archivo sin extensión (e.g. "nivel-basica" → "/media/Niveles/nivel-basica.webp").
+ */
+export function getMediaImageMap(section: string): Record<string, string> {
+  const dir = mediaDir(section);
+  if (!fs.existsSync(dir)) return {};
+
+  const map: Record<string, string> = {};
+  fs.readdirSync(dir)
+    .filter((f) => IMAGE_EXTS.has(path.extname(f).toLowerCase()))
+    .forEach((f) => {
+      const stem = path.basename(f, path.extname(f));
+      map[stem] = `/media/${section}/${f}`;
+    });
+  return map;
+}

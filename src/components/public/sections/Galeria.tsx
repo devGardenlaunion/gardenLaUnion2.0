@@ -2,7 +2,8 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 import { getConfig } from "@/lib/config";
-import GaleriaColumnas, { type FotoColumnas } from "@/components/public/shared/GaleriaColumnas";
+import GaleriaDynamic from "@/components/public/shared/GaleriaDynamic";
+import { type FotoColumnas } from "@/components/public/shared/GaleriaColumnas";
 
 const GALERIA_DIR = path.join(process.cwd(), "public", "media", "Galeria");
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
@@ -30,8 +31,10 @@ async function getFotosGaleria(): Promise<FotoColumnas[]> {
 
   if (archivos.length === 0) return PLACEHOLDER_FOTOS;
 
+  const MAX_FOTOS = 9;
+
   return Promise.all(
-    archivos.map(async (archivo) => {
+    archivos.slice(0, MAX_FOTOS).map(async (archivo) => {
       const nombre = path.basename(archivo, path.extname(archivo));
       try {
         const meta = await sharp(path.join(GALERIA_DIR, archivo)).metadata();
@@ -53,41 +56,16 @@ export default async function Galeria() {
 
   const titulo = config["galeria.titulo"] || "Galería";
   const badge = config["galeria.badge"] || "Momentos Garden";
-  const subtitulo =
-    config["galeria.subtitulo"] || "Los mejores momentos de nuestra comunidad";
 
   return (
-    <section id="galeria" className="pt-12 pb-8 section-alt">
+    <section id="galeria" className="py-8 sm:py-12 section-alt">
       <div className="container-gc">
         <div className="text-center mb-10 lg:mb-14">
           <span className="badge-gold mb-4 inline-block">{badge}</span>
           <h2 className="section-heading">{titulo}</h2>
-          <p className="section-subheading mx-auto mt-4">{subtitulo}</p>
         </div>
 
-        <GaleriaColumnas fotos={fotos} className="max-w-6xl mx-auto" />
-
-        <div className="text-center mt-10">
-          <a
-            href="#eventos"
-            className="inline-flex items-center gap-2 text-gc-green-800 hover:text-gc-green font-body font-medium transition-colors group"
-          >
-            Ver todos los eventos
-            <svg
-              className="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
-          </a>
-        </div>
+        <GaleriaDynamic fotos={fotos} className="max-w-6xl mx-auto" />
       </div>
     </section>
   );

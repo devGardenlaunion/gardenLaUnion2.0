@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
+import { getMediaCover } from "@/lib/media";
 import EventosWrapper, { type EdicionCard, type EventoMinimo } from "./EventosWrapper";
 
 function serializeEdicion(edicion: {
@@ -27,8 +28,16 @@ function serializeEdicion(edicion: {
     orden: number;
   }[];
 }): EdicionCard {
+  // Usa la imagen del campo BD; si está vacío, toma la primera de public/media/eventos/[evento-slug]/[year]/hero/
+  const year = edicion.fecha.getFullYear();
+  const imagenPortada =
+    edicion.imagenPortada ??
+    getMediaCover(`eventos/${edicion.evento.slug}/${year}/hero`) ??
+    null;
+
   return {
     ...edicion,
+    imagenPortada,
     fecha: edicion.fecha.toISOString(),
     evento: {
       ...edicion.evento,
