@@ -4,7 +4,11 @@ import { useState } from "react";
 
 type FormState = "idle" | "loading" | "success" | "error";
 
-export default function ContactForm() {
+interface ContactFormProps {
+  sede: "basica" | "media";
+}
+
+export default function ContactForm({ sede }: ContactFormProps) {
   const [state, setState] = useState<FormState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -20,6 +24,7 @@ export default function ContactForm() {
       telefono: formData.get("telefono") as string || undefined,
       asunto: formData.get("asunto") as string,
       mensaje: formData.get("mensaje") as string,
+      sede: formData.get("sede") as string,
     };
 
     try {
@@ -72,6 +77,7 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <input type="hidden" name="sede" value={sede} />
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="nombre" className="label-gc">
