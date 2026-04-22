@@ -33,7 +33,7 @@ export const recursos: RecursoItem[] = [
     descripcion: 'Normas, sanciones y procedimientos',
     url: '/documentos',
     tipo: 'documento',
-    nuevaPestana: false,
+    nuevaPestana: true,
   },
   {
     id: 'pei',
@@ -41,6 +41,14 @@ export const recursos: RecursoItem[] = [
     descripcion: 'Misión, visión y lineamientos del colegio',
     url: '/documentos',
     tipo: 'documento',
-    nuevaPestana: false,
+    nuevaPestana: true,
+  },
+  {
+    id: 'catalogo-textos-mineduc',
+    nombre: 'Catálogo de Textos Escolares',
+    descripcion: 'Descarga los textos escolares oficiales del Mineduc',
+    url: 'https://catalogotextos.mineduc.cl/catalogo-textos/login/login?tipo=alumno',
+    tipo: 'externo',
+    nuevaPestana: true,
   },
 ]
