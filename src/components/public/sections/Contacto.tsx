@@ -67,6 +67,14 @@ const IcoNavegar = () => (
 
 export default function Contacto({ sedes, redes }: ContactoProps) {
   const [sedeActiva, setSedeActiva] = useState<"basica" | "media">("basica");
+  const [isChanging, setIsChanging] = useState(false);
+
+  const handleSedeChange = (key: "basica" | "media") => {
+    if (key === sedeActiva) return;
+    setIsChanging(true);
+    setSedeActiva(key);
+    setTimeout(() => setIsChanging(false), 450);
+  };
 
   const sedeData = sedesConfig[sedeActiva];
   const sedeInfo = sedeActiva === "basica" ? sedes[0] : sedes[1];
@@ -92,7 +100,7 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
                 {(["basica", "media"] as const).map((key) => (
                   <button
                     key={key}
-                    onClick={() => setSedeActiva(key)}
+                    onClick={() => handleSedeChange(key)}
                     className={`flex-1 py-3 px-4 rounded-xl border-[1.5px] font-body transition-all duration-200 min-h-[44px] flex flex-col items-center gap-1 ${
                       sedeActiva === key
                         ? "border-gc-green bg-gc-green text-white"
@@ -111,7 +119,12 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
             </div>
 
             {/* Info de sede */}
-            <div className="flex flex-col gap-3">
+            <div className="relative flex flex-col gap-3">
+              {isChanging && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-lg">
+                  <div className="w-5 h-5 border-2 border-gc-green/30 border-t-gc-green rounded-full animate-spin" />
+                </div>
+              )}
               <div className="flex items-start gap-3">
                 <span className="w-7 h-7 rounded-full bg-gc-green-50 flex items-center justify-center text-gc-green shrink-0 mt-0.5">
                   <IcoUbicacion />
@@ -213,7 +226,12 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
           </div>
 
           {/* Columna derecha — formulario */}
-          <div className="bg-white p-6 lg:p-8 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="relative bg-white p-6 lg:p-8 rounded-2xl border border-gray-100 shadow-sm">
+            {isChanging && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-2xl">
+                <div className="w-5 h-5 border-2 border-gc-green/30 border-t-gc-green rounded-full animate-spin" />
+              </div>
+            )}
             <h3 className="font-display text-xl font-bold text-gc-green-800 mb-2">
               Envíanos un mensaje
             </h3>

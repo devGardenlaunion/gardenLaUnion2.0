@@ -159,12 +159,6 @@ export default async function ConvivenciaPage() {
   ]);
 
   const nombre = config["institucional.nombre"] || "Garden College";
-  const telefono = [
-    config["contacto.sede_basica.telefono"],
-    config["contacto.sede_media.telefono"],
-  ]
-    .filter(Boolean)
-    .join(" | ");
 
   const logros: { cifra: string; descripcion: string }[] =
     config["convivencia.logros"] || [];
@@ -185,7 +179,12 @@ export default async function ConvivenciaPage() {
 
   return (
     <>
-      <Navbar nombre={nombre} telefono={telefono} variant="solid" />
+      <Navbar
+        nombre={nombre}
+        telefonoBasica={config["contacto.sede_basica.telefono"]}
+        telefonoMedia={config["contacto.sede_media.telefono"]}
+        variant="solid"
+      />
 
       <main className="pt-16 lg:pt-20">
 
