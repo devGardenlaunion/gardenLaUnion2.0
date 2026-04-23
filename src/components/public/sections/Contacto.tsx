@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ContactForm from "@/components/public/shared/ContactForm";
+import MapSelector from "@/components/public/ui/MapSelector";
 
 interface Sede {
   nombre: string;
@@ -75,9 +76,6 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
       <div className="container-gc">
         <div className="text-center mb-10 lg:mb-16">
           <h2 className="section-heading">Contacto</h2>
-          <p className="section-subheading mx-auto mt-4">
-            ¿Tienes preguntas? Escríbenos y te responderemos a la brevedad
-          </p>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_1.4fr] gap-8 lg:gap-12 max-w-6xl mx-auto">
@@ -85,21 +83,31 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
           {/* Columna izquierda */}
           <div className="flex flex-col gap-6">
 
-            {/* Tabs de sede */}
-            <div className="grid grid-cols-2 rounded-xl border border-gc-green/30 overflow-hidden">
-              {(["basica", "media"] as const).map((key) => (
-                <button
-                  key={key}
-                  onClick={() => setSedeActiva(key)}
-                  className={`py-3 px-4 text-sm font-body font-semibold transition-all duration-200 min-h-[44px] ${
-                    sedeActiva === key
-                      ? "bg-gc-green text-white"
-                      : "bg-gc-green-50 text-gc-green-800 hover:bg-gc-green-100"
-                  }`}
-                >
-                  {sedesConfig[key].label}
-                </button>
-              ))}
+            {/* Texto instruccional + Tabs de sede */}
+            <div className="flex flex-col gap-2">
+              <p className="font-body text-sm font-semibold text-gc-green-700">
+                Selecciona una sede para continuar
+              </p>
+              <div className="flex gap-2 w-full">
+                {(["basica", "media"] as const).map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setSedeActiva(key)}
+                    className={`flex-1 py-3 px-4 rounded-xl border-[1.5px] font-body transition-all duration-200 min-h-[44px] flex flex-col items-center gap-1 ${
+                      sedeActiva === key
+                        ? "border-gc-green bg-gc-green text-white"
+                        : "border-gc-green/30 bg-white text-gc-green-800 font-medium hover:bg-gc-green-50"
+                    }`}
+                  >
+                    <span className="font-semibold text-sm">{sedesConfig[key].label}</span>
+                    {sedeActiva === key && (
+                      <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full">
+                        ✓ Seleccionada
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Info de sede */}
@@ -136,15 +144,17 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
             </div>
 
             {/* Botón ¿Cómo llegar? */}
-            <a
-              href={sedeData.urlMapa}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border border-gc-green bg-white text-gc-green-800 font-body font-semibold text-sm hover:bg-gc-green-50 transition-all duration-200 min-h-[44px]"
-            >
-              <IcoNavegar />
-              ¿Cómo llegar?
-            </a>
+            {sedeActiva === "basica" ? (
+              <MapSelector
+                direccion="Los Carrera 387, La Unión"
+                queryEncoded="Los+Carrera+387+La+Union+Chile"
+              />
+            ) : (
+              <MapSelector
+                direccion="Caupolicán 967, La Unión"
+                queryEncoded="Caupolican+967+La+Union+Chile"
+              />
+            )}
 
             {/* Divisor + Redes sociales */}
             <div>

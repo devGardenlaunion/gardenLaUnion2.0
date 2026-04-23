@@ -173,7 +173,7 @@ async function main() {
     },
     {
       clave: "contacto.sede_basica.niveles",
-      valor: "Pre-Kínder, Kínder, 1° a 6° Básico",
+      valor: "Prebásica, 1° a 6° Básico",
       tipo: "text",
       grupo: "contacto",
       orden: 4,
