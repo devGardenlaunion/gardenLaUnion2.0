@@ -6,7 +6,8 @@ import { redesSociales } from "@/data/redes";
 
 interface NavbarProps {
   nombre: string;
-  telefono?: string;
+  telefonoBasica?: string;
+  telefonoMedia?: string;
   variant?: "transparent" | "solid";
 }
 
@@ -20,7 +21,7 @@ const navLinks = [
   { label: "Contacto", href: "#contacto" },
 ];
 
-export default function Navbar({ nombre, telefono, variant = "transparent" }: NavbarProps) {
+export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant = "transparent" }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -78,7 +79,23 @@ export default function Navbar({ nombre, telefono, variant = "transparent" }: Na
       {!isLight && (
         <div className="hidden lg:block bg-gc-green-800 text-white/80 text-sm">
           <div className="container-gc flex justify-between items-center py-1.5">
-            <span className="font-body">{telefono}</span>
+            <div className="flex items-center gap-4 font-body">
+                {telefonoBasica && (
+                  <span>
+                    <span className="text-white/50 mr-1">Básica</span>
+                    {telefonoBasica}
+                  </span>
+                )}
+                {telefonoBasica && telefonoMedia && (
+                  <span className="text-white/30">|</span>
+                )}
+                {telefonoMedia && (
+                  <span>
+                    <span className="text-white/50 mr-1">Media</span>
+                    {telefonoMedia}
+                  </span>
+                )}
+              </div>
             <div className="flex items-center gap-4">
               <span className="font-body text-gc-gold-light">
                 Corporación Educacional Filadelfia Garden
@@ -128,7 +145,7 @@ export default function Navbar({ nombre, telefono, variant = "transparent" }: Na
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo + Nombre */}
           <a href={logoHref} className="flex items-center gap-3 group">
-            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden bg-white shrink-0 p-0.5">
+            <div className="w-14 h-14 lg:w-[4.5rem] lg:h-[4.5rem] rounded-full overflow-hidden bg-white shadow-md p-0.5 shrink-0 -my-2">
               <img
                 src="/media/Logo/cropped-cropped-logo.png"
                 alt="Logo Garden College"

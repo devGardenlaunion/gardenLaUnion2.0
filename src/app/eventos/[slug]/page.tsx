@@ -98,7 +98,8 @@ export default async function EventoPage({ params }: Props) {
     <>
       <Navbar
         nombre={nombre}
-        telefono={sedes.map((s) => s.telefono).join(" | ")}
+        telefonoBasica={sedes[0]?.telefono}
+        telefonoMedia={sedes[1]?.telefono}
         variant="solid"
       />
 

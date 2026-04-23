@@ -152,21 +152,23 @@ const documentos: Documento[] = [
 
 const categorias = ["Institucional", "Reglamentos", "Protocolos", "Planes"];
 
-export default async function DocumentosPage() {
-  const config = await getConfig();
+interface Props {
+  searchParams: Promise<{ doc?: string }>;
+}
+
+export default async function DocumentosPage({ searchParams }: Props) {
+  const [config, { doc }] = await Promise.all([getConfig(), searchParams]);
 
   const nombre = config["institucional.nombre"] || "Garden College";
-  const telefono = [
-    config["contacto.sede_basica.telefono"],
-    config["contacto.sede_media.telefono"],
-  ]
-    .filter(Boolean)
-    .join(" | ");
-
   return (
     <>
-      <Navbar nombre={nombre} telefono={telefono} variant="solid" />
-      <DocumentViewer documentos={documentos} categorias={categorias} />
+      <Navbar
+        nombre={nombre}
+        telefonoBasica={config["contacto.sede_basica.telefono"]}
+        telefonoMedia={config["contacto.sede_media.telefono"]}
+        variant="solid"
+      />
+      <DocumentViewer documentos={documentos} categorias={categorias} initialDocId={doc} />
     </>
   );
 }
