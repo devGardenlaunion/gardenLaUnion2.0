@@ -56,7 +56,7 @@ export default function QuienesSomos({
     <section id="quienes-somos" className="pt-12 pb-8">
       <div className="container-gc">
         {/* Header */}
-        <div className="text-center mb-10 lg:mb-16">
+        <div className="text-center mb-4">
           <span className="badge-gold mb-4 inline-block">Nuestra historia</span>
           <h2 className="section-heading">Quiénes Somos</h2>
         </div>
@@ -117,7 +117,7 @@ export default function QuienesSomos({
       {/* Sellos educativos */}
       {sellos.length > 0 && (
         <div className="mt-16 lg:mt-24 border-t border-gc-gray-200 pt-12 lg:pt-16">
-          <div className="text-center mb-10 lg:mb-16">
+          <div className="text-center mb-4">
             <span className="badge-gold mb-4 inline-block">Lo que nos distingue</span>
             <h2 className="section-heading">Sellos Educativos</h2>
             <p className="section-subheading mx-auto mt-4">

@@ -125,7 +125,7 @@ export default function Recursos() {
   return (
     <section id="recursos" className="pt-12 pb-8 section-alt">
       <div className="container-gc">
-        <div className="text-center mb-10 lg:mb-16">
+        <div className="text-center mb-4">
           <span className="badge-gold mb-4 inline-block">Para la comunidad</span>
           <h2 className="section-heading">Recursos y enlaces de interés</h2>
           <p className="section-subheading mx-auto mt-4">

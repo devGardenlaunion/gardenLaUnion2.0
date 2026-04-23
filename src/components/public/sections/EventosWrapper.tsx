@@ -51,7 +51,7 @@ export default function EventosWrapper({
     <section id="eventos" className="pt-12 pb-8 section-alt">
       <div className="container-gc">
         {/* Header */}
-        <div className="text-center mb-10 lg:mb-16">
+        <div className="text-center mb-4">
           <span className="badge-gold mb-4 inline-block">{badge}</span>
           <h2 className="section-heading">{titulo}</h2>
           <p className="section-subheading mx-auto mt-4">{subtitulo}</p>

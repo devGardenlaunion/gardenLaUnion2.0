@@ -80,9 +80,9 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
   const sedeInfo = sedeActiva === "basica" ? sedes[0] : sedes[1];
 
   return (
-    <section id="contacto" className="pt-12 pb-8">
+    <section id="contacto" className="pt-4 pb-4">
       <div className="container-gc">
-        <div className="text-center mb-10 lg:mb-16">
+        <div className="text-center mb-4">
           <h2 className="section-heading">Contacto</h2>
         </div>
 
@@ -226,16 +226,16 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
           </div>
 
           {/* Columna derecha — formulario */}
-          <div className="relative bg-white p-6 lg:p-8 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="relative bg-white p-3 lg:p-3 rounded-2xl border border-gray-100 shadow-sm">
             {isChanging && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-2xl">
-                <div className="w-5 h-5 border-2 border-gc-green/30 border-t-gc-green rounded-full animate-spin" />
+                <div className="w-5 h-4 border-2 border-gc-green/30 border-t-gc-green rounded-full animate-spin" />
               </div>
             )}
             <h3 className="font-display text-xl font-bold text-gc-green-800 mb-2">
               Envíanos un mensaje
             </h3>
-            <p className="text-xs font-body text-gc-gray-400 mb-6">
+            <p className="text-xs font-body text-gc-gray-400 mb-2">
               Escribiendo a:{" "}
               <span className="inline-block bg-gc-green-50 text-gc-green-800 border border-gc-green/20 text-xs px-2 py-0.5 rounded-full font-semibold">
                 {sedesConfig[sedeActiva].label}

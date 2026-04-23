@@ -76,7 +76,7 @@ export default function ContactForm({ sede }: ContactFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <input type="hidden" name="sede" value={sede} />
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
@@ -150,7 +150,7 @@ export default function ContactForm({ sede }: ContactFormProps) {
           required
           minLength={10}
           maxLength={2000}
-          rows={5}
+          rows={4}
           className="input-gc resize-none"
           placeholder="Escribe tu mensaje aquí..."
         />
