@@ -32,7 +32,7 @@ export default function Niveles({ niveles, extras }: NivelesProps) {
           <span className="badge-navy mb-4 inline-block">Formación completa</span>
           <h2 className="section-heading">Niveles Educativos</h2>
           <p className="section-subheading mx-auto mt-4">
-            Acompañamos a tus hijos desde pre-kínder hasta cuarto medio, en dos sedes en La Unión
+            Acompañamos a tus hijos desde prebásica hasta cuarto medio, en dos sedes en La Unión
           </p>
         </div>
 

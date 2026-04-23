@@ -76,7 +76,7 @@ export default function Hero({ nombre, slogan, mision, imagenMobile }: HeroProps
         {/* Descripción breve */}
         <p className="text-white/70 font-body text-lg max-w-2xl mx-auto mb-12 leading-relaxed">
           Educación integral con énfasis en inglés, vida saludable y valores
-          cristianos. Pre-Kínder a 4° Medio.
+          cristianos. Prebásica a 4° Medio.
         </p>
 
         {/* CTAs */}

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | Garden College",
   },
   description:
-    "Colegio particular subvencionado en La Unión, Chile. Educación Pre-Kínder a 4° Medio con énfasis en inglés, vida saludable y valores cristianos. Corporación Educacional Filadelfia Garden.",
+    "Colegio particular subvencionado en La Unión, Chile. Educación Prebásica a 4° Medio con énfasis en inglés, vida saludable y valores cristianos. Corporación Educacional Filadelfia Garden.",
   keywords: [
     "Garden College",
     "colegio La Unión",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     siteName: "Garden College",
     title: "Garden College — La Unión, Región de Los Ríos",
     description:
-      "Educación integral con énfasis en inglés, vida saludable y valores cristianos. Pre-Kínder a 4° Medio.",
+      "Educación integral con énfasis en inglés, vida saludable y valores cristianos. Prebásica a 4° Medio.",
   },
   icons: {
     icon: "/favicon.svg",
