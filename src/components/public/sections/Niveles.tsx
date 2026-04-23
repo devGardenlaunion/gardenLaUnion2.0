@@ -28,7 +28,7 @@ export default function Niveles({ niveles, extras }: NivelesProps) {
     <section id="niveles" className="pt-12 pb-8">
       <div className="container-gc">
         {/* Header */}
-        <div className="text-center mb-10 lg:mb-16">
+        <div className="text-center mb-4">
           <span className="badge-navy mb-4 inline-block">Formación completa</span>
           <h2 className="section-heading">Niveles Educativos</h2>
           <p className="section-subheading mx-auto mt-4">

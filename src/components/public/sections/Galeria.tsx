@@ -60,7 +60,7 @@ export default async function Galeria() {
   return (
     <section id="galeria" className="py-8 sm:py-12 section-alt">
       <div className="container-gc">
-        <div className="text-center mb-10 lg:mb-14">
+        <div className="text-center mb-4">
           <span className="badge-gold mb-4 inline-block">{badge}</span>
           <h2 className="section-heading">{titulo}</h2>
         </div>

@@ -12,7 +12,7 @@ export default function Admision({ info, linkSae, imagen }: AdmisionProps) {
       <div className="container-gc">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-4">
             <span className="badge-gold mb-4 inline-block">Únete a nuestra comunidad</span>
             <h2 className="section-heading">Proceso de Admisión</h2>
           </div>
