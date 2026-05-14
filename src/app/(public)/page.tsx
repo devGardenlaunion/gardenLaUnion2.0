@@ -20,7 +20,7 @@ export default async function HomePage() {
   const config = await getConfig();
 
   // ── Media desde carpetas ────────────────────────────────────────────────
-  const fotosQuienesSomos  = getMediaImages("QuienesSomos");
+  const fotosQuienesSomos  = getMediaImages("QuienesSomos/polaroid");
   const imagenAdmision     = getMediaCover("Admision");
   const imagenHeroMobile   = getMediaCover("Hero");
 

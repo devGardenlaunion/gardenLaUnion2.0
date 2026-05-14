@@ -24,10 +24,21 @@ interface GaleriaPolaroidProps {
   desorden?: number;
 }
 
+let rafId: number | null = null;
+
 /** Pseudo-random determinista por índice — evita diferencias de hydration */
 function sr(seed: number): number {
   const x = Math.sin(seed + 2) * 10000;
   return x - Math.floor(x);
+}
+
+function Spinner({ className = "w-8 h-8" }: { className?: string }) {
+  return (
+    <svg className={`${className} animate-spin text-gc-gray-400`} fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
 }
 
 /** Marco polaroid reutilizable */
@@ -40,10 +51,14 @@ function Polaroid({
   shadow?: "soft" | "lifted";
   size?: "sm" | "lg";
 }) {
-  // Dimensiones del área de imagen: sm = miniatura en la mesa, lg = overlay ampliado
-  const imgClass = size === "lg"
-    ? "w-72 sm:w-96"   // ancho fijo; alto se adapta a la imagen
-    : "w-28 sm:w-44";  // miniatura
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [foto.src]);
+
+  const imgClass  = size === "lg" ? "w-72 sm:w-96" : "w-28 sm:w-44";
+  const loadingMinH = size === "lg" ? "180px" : "80px";
 
   return (
     <div
@@ -55,16 +70,29 @@ function Polaroid({
             : "0 4px 16px rgba(0,0,0,0.20)",
       }}
     >
-      {/* next/image con layout natural: preserva proporción sin recortar */}
-      <div className={`${imgClass} bg-gc-gray-100`}>
+      <div
+        className={`${imgClass} bg-gc-gray-100 relative overflow-hidden`}
+        style={!loaded ? { minHeight: loadingMinH } : undefined}
+      >
+        {/* Shimmer skeleton mientras carga */}
+        {!loaded && (
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gc-gray-100 via-gc-gray-200 to-gc-gray-100" />
+        )}
+        {/* Spinner solo en vista ampliada */}
+        {!loaded && size === "lg" && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Spinner className="w-9 h-9" />
+          </div>
+        )}
         <Image
           src={foto.src}
           alt={foto.caption}
           width={0}
           height={0}
           sizes={size === "lg" ? "(max-width: 640px) 288px, 384px" : "176px"}
-          className="w-full h-auto block"
+          className={`w-full h-auto block transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
           style={{ display: "block" }}
+          onLoad={() => setLoaded(true)}
         />
       </div>
     </div>
@@ -82,15 +110,25 @@ export default function GaleriaPolaroid({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [mounted, setMounted]           = useState(false);
   const [isMobile, setIsMobile]         = useState(false);
+  const [lightboxLoaded, setLightboxLoaded] = useState(false);
   const containerRef                    = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    let timeout: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        setIsMobile(window.innerWidth < 768);
+      }, 150);
+    };
+    setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(timeout);
+    };
   }, []);
 
   useEffect(() => {
@@ -99,10 +137,12 @@ export default function GaleriaPolaroid({
     return () => { document.body.style.overflow = ""; };
   }, [activeIndex, lightboxMode]);
 
+  // Resetear estado de carga cada vez que cambia la imagen activa en el lightbox
+  useEffect(() => {
+    if (activeIndex !== null) setLightboxLoaded(false);
+  }, [activeIndex]);
+
   // ── Posiciones absolutas de cada foto ──────────────────────────────────
-  // Interpola entre grilla ordenada (d=0) y dispersión caótica (d=1).
-  // Luego aplica paso de separación mínima para que ninguna foto tape
-  // más del ~75% de otra (siempre se ve al menos un cuarto de cada foto).
   const positions = useMemo(() => {
     const COLS      = isMobile ? 2 : 3;
     const totalRows = Math.ceil(fotos.length / COLS);
@@ -111,32 +151,23 @@ export default function GaleriaPolaroid({
       const col = i % COLS;
       const row = Math.floor(i / COLS);
 
-      // Posición grilla: distribución limpia en el área útil del contenedor
-      const gridX = COLS > 1 ? 20 + (col / (COLS - 1)) * 60 : 50; // 20 | 50 | 80 %
+      const gridX = COLS > 1 ? 20 + (col / (COLS - 1)) * 60 : 50;
       const gridY = totalRows > 1
-        ? 15 + (row / (totalRows - 1)) * 70                          // 15 … 85 %
+        ? 15 + (row / (totalRows - 1)) * 70
         : 50;
 
-      // Posición aleatoria: dispersa en toda el área, con margen de borde
-      const randX = sr(i * 5)     * 68 + 16; // 16 … 84 %
+      const randX = sr(i * 5)     * 68 + 16;
       const randY = sr(i * 5 + 1) * 68 + 16;
 
-      // Interpolación lineal según desorden
       const x = gridX + (randX - gridX) * d;
       const y = gridY + (randY - gridY) * d;
 
-      // Rotación ±18° × desorden
       const rotation = (sr(i * 3) * 36 - 18) * d;
-
-      // Z-index base aleatorio (1–10) para que unas tapen a otras naturalmente
-      const zBase = Math.floor(sr(i * 7 + 3) * 10) + 1;
+      const zBase    = Math.floor(sr(i * 7 + 3) * 10) + 1;
 
       return { x, y, rotation, zBase };
     });
 
-    // Paso de separación: empuja fotos que se solapan demasiado.
-    // MIN_DIST en % del contenedor — foto sm ≈ 36% de ancho,
-    // con 27% de separación mínima queda siempre ~25% visible.
     const MIN_DIST = isMobile ? 32 : 27;
     for (let iter = 0; iter < 5; iter++) {
       for (let a = 0; a < result.length; a++) {
@@ -160,37 +191,34 @@ export default function GaleriaPolaroid({
     return result;
   }, [fotos, d, isMobile]);
 
-  // Altura del contenedor: suficiente para el número de "filas" equivalentes
   const cols = isMobile ? 2 : 3;
   const containerHeight = isMobile
     ? Math.max(360, Math.ceil(fotos.length / cols) * 210)
     : Math.max(420, Math.ceil(fotos.length / cols) * 250);
 
-  // ── Hover por proximidad al centro de cada foto ────────────────────────
-  // Detecta la foto más cercana al cursor aunque esté tapada por otra,
-  // resolviendo el problema de hover inaccesible en fotos con z-index bajo.
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!mounted) return;
-    // No activar hover de fotos cuando el cursor está sobre un botón de navegación
-    if ((e.target as HTMLElement).closest("button")) return;
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const mx = ((e.clientX - rect.left) / rect.width)  * 100;
-    const my = ((e.clientY - rect.top)  / rect.height) * 100;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      if (!mounted) return;
+      if ((e.target as HTMLElement).closest("button")) return;
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const mx = ((e.clientX - rect.left) / rect.width)  * 100;
+      const my = ((e.clientY - rect.top)  / rect.height) * 100;
 
-    let minDist = Infinity;
-    let closest = -1;
-    positions.forEach(({ x, y }, i) => {
-      const dist = Math.sqrt((mx - x) ** 2 + (my - y) ** 2);
-      if (dist < minDist) { minDist = dist; closest = i; }
+      let minDist = Infinity;
+      let closest = -1;
+      positions.forEach(({ x, y }, i) => {
+        const dist = Math.sqrt((mx - x) ** 2 + (my - y) ** 2);
+        if (dist < minDist) { minDist = dist; closest = i; }
+      });
+
+      setHoveredIndex(minDist < 22 ? closest : null);
     });
-
-    setHoveredIndex(minDist < 22 ? closest : null);
   }, [positions, mounted]);
 
   const handleMouseLeave = useCallback(() => setHoveredIndex(null), []);
 
-  // ── Callbacks ──────────────────────────────────────────────────────────
   const close = useCallback(() => setActiveIndex(null), []);
 
   const prev = useCallback(
@@ -253,9 +281,6 @@ export default function GaleriaPolaroid({
                 left:       `${parseFloat(x.toFixed(4))}%`,
                 top:        `${parseFloat(y.toFixed(4))}%`,
                 transform:  getTransform(i, isHovered),
-                // Solo post-mount: evita mismatch por expansión del shorthand en SSR.
-                // z-9999 es el máximo DENTRO del stacking context del padre (z-20 en QuienesSomos),
-                // por lo que nunca puede superar el header (z-50 global).
                 transition: mounted ? "transform 300ms ease-out, opacity 250ms ease-out, box-shadow 300ms ease-out" : undefined,
                 zIndex:     isHovered ? 9999 : zBase,
                 visibility: isActive ? "hidden" : "visible",
@@ -268,7 +293,6 @@ export default function GaleriaPolaroid({
         })}
 
         {/* ── Overlay inline centrado ── */}
-        {/* z-[10000]: debe superar el polaroid hovered (z-9999) dentro del mismo stacking context */}
         {lightboxMode === "inline" && hasActive && (
           <div className="absolute inset-0 flex items-center justify-center z-[10000] pointer-events-none">
             <div
@@ -345,18 +369,25 @@ export default function GaleriaPolaroid({
           )}
 
           <div
-            className="bg-white p-3 sm:p-4 pb-4 shadow-2xl w-full max-w-3xl"
+            className="relative bg-white p-3 sm:p-4 pb-4 shadow-2xl w-full max-w-3xl min-h-[200px]"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Spinner mientras carga la imagen en fullscreen */}
+            {!lightboxLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gc-gray-100">
+                <Spinner className="w-10 h-10" />
+              </div>
+            )}
             <Image
               src={fotos[activeIndex].src}
               alt={fotos[activeIndex].caption}
               width={0}
               height={0}
               sizes="(max-width: 768px) 95vw, 768px"
-              className="w-full h-auto block"
+              className={`w-full h-auto block transition-opacity duration-300 ${lightboxLoaded ? "opacity-100" : "opacity-0"}`}
               style={{ maxHeight: "80vh", objectFit: "contain" }}
               priority
+              onLoad={() => setLightboxLoaded(true)}
             />
           </div>
 

@@ -10,6 +10,8 @@ const nextConfig = {
 
   // Optimización de imágenes
   images: {
+    // En dev se desactiva sharp para no saturar RAM con 100+ imágenes de galería
+    unoptimized: process.env.NODE_ENV === 'development',
     // Formatos modernos
     formats: ['image/webp', 'image/avif'],
     // Dominios permitidos para imágenes remotas (agregar si se usa CDN)

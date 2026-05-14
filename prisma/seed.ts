@@ -654,6 +654,26 @@ async function main() {
         contenido:
           "<p>Durante la semana del 15 al 19 de septiembre, Garden College se vistió de colores patrios para celebrar la identidad chilena de la manera más auténtica: en comunidad.</p><p>Los cursos compitieron en el concurso de empanadas, donde apoderados y estudiantes pusieron a prueba sus mejores recetas familiares. Las ramadas montadas por cada nivel llenaron los patios de olor a chilenería, con muelles, sopaipillas y bebidas tradicionales servidas con orgullo.</p><p>El Departamento de Música y Artes organizó presentaciones de cueca, con parejas de todos los niveles desde pre-kínder hasta cuarto medio. Ver a los más pequeños bailar con sus trajes típicos fue uno de los momentos más emotivos de la semana, demostrando que la tradición se aprende y se vive desde los primeros años.</p><p>El cierre de semana fue una gran convivencia familiar con parrillada, música en vivo y un show artístico que reunió a toda la comunidad Garden en una tarde de celebración, orgullo y chilenidad compartida. Una semana que reafirma que ser chileno también se enseña.</p>",
         fecha: new Date("2025-09-19"),
+        destacada: false,
+        estado: NoticiaEstado.PUBLICADA,
+        imagenPortada: null,
+      },
+    },
+    {
+      nombre: "Semana del Fomento Lector",
+      slug: "fomento-lector",
+      descripcion:
+        "Cada abril, Garden College se transforma en una biblioteca viva. El Departamento de Lenguaje y Comunicación lidera la Semana del Fomento Lector: una experiencia donde cada curso — desde Pre-Kínder hasta 4° Medio — se sumerge en un universo literario propio.\n\nCada sala se convierte en el escenario de su obra asignada. Los estudiantes no solo leen: investigan, crean murales, decoran sus espacios y se apropian de la historia. Los más grandes presentan sus trabajos a los más chicos en la Maratón Literaria Inter-nivelada.\n\nLa semana sigue un ritmo progresivo: activación lectora, lectura guiada, análisis de textos, producción escrita y expresión oral. Cada día construye sobre el anterior hasta culminar con actos de premiación y un desfile de disfraces literarios.\n\nLos Desafíos Digitales extienden la celebración a las familias: compartir fotos con su libro preferido o en su espacio de lectura favorito. Porque leer no termina en la sala de clases.\n\nLa semana cierra reconociendo a los estudiantes en cinco categorías: Mejor Lector/a, Mejor Escritor/a, Expresión Oral, Creatividad Literaria y Participación y Esfuerzo.",
+      recurrencia: "anual",
+      edicion: {
+        titulo:
+          "Fomento Lector 2026 — De Peter Pan a Alicia en el país de las maravillas",
+        slug: "fomento-lector-2026",
+        extracto:
+          "Peter Pan, Papelucho, El Principito, Coraline, Alicia en el país de las maravillas — cada curso eligió su aventura literaria.",
+        contenido:
+          "<h3>Temáticas por curso — Edición 2026</h3><ul><li><strong>Prebásica:</strong> Peter Pan de James Matthew Barrie</li><li><strong>1° básico:</strong> Cuentos infantiles</li><li><strong>2° básico:</strong> Poemas</li><li><strong>3° básico:</strong> Fábulas infantiles</li><li><strong>4° básico:</strong> Leyendas chilenas</li><li><strong>5° básico:</strong> Autores infantiles chilenos</li><li><strong>6° básico:</strong> Papelucho y Marcela Paz</li><li><strong>7° básico:</strong> Shrek de William Steig</li><li><strong>8° básico:</strong> El zar y la camisa de León Tolstoi</li><li><strong>1° medio:</strong> El Principito de Antoine de Saint-Exupéry</li><li><strong>2° medio:</strong> El gato negro de Edgar Allan Poe</li><li><strong>3° medio:</strong> Coraline de Neil Gaiman</li><li><strong>4° medio:</strong> Alicia en el país de las maravillas de Lewis Carroll</li></ul><h3>Cierre</h3><p>El viernes de la semana literaria, los pasillos de la Sede Los Carrera se llenaron de personajes. Peter Pan voló junto a Wendy, las hadas convivieron con princesas de cuentos, los fabulistas más pequeños representaron a su animal favorito y Papelucho apareció con su inseparable cuaderno. El desfile de disfraces literarios reunió a los estudiantes de educación básica caracterizados de sus personajes, convirtiendo los pasillos en un recorrido por todas las historias del año. Fue una de esas jornadas que los apoderados no quisieron perderse.</p><p>Los actos de premiación se realizaron en cada sede durante la tarde. En básica se reconoció la travesía colectiva: decoración de salas, murales, presentaciones orales y producción escrita. En media, los estudiantes expusieron sus análisis ante sus pares y recibieron retroalimentación de sus profesores de Lenguaje. Las categorías premiadas en ambas ceremonias fueron <strong>Mejor Lector/a</strong>, <strong>Mejor Escritor/a</strong>, <strong>Expresión Oral</strong>, <strong>Creatividad Literaria</strong> y <strong>Participación y Esfuerzo</strong>.</p><p>La Semana del Fomento Lector 2026 dejó en claro que cada alumno de Garden College tiene un libro que lo marcó este año. Uno donde encontró su personaje, su historia, y un poco de sí mismo.</p>",
+        fecha: new Date("2026-04-20"),
         destacada: true,
         estado: NoticiaEstado.PUBLICADA,
         imagenPortada: null,
