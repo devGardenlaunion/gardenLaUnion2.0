@@ -2,8 +2,7 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 import { getConfig } from "@/lib/config";
-import GaleriaDynamic from "@/components/public/shared/GaleriaDynamic";
-import { type FotoColumnas } from "@/components/public/shared/GaleriaColumnas";
+import GaleriaColumnas, { type FotoColumnas } from "@/components/public/shared/GaleriaColumnas";
 
 const GALERIA_DIR = path.join(process.cwd(), "public", "media", "Galeria");
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
@@ -65,7 +64,7 @@ export default async function Galeria() {
           <h2 className="section-heading">{titulo}</h2>
         </div>
 
-        <GaleriaDynamic fotos={fotos} className="max-w-6xl mx-auto" />
+        <GaleriaColumnas fotos={fotos} className="max-w-6xl mx-auto" />
       </div>
     </section>
   );

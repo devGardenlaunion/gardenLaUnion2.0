@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { redesSociales } from "@/data/redes";
 
@@ -146,9 +147,12 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
           {/* Logo + Nombre */}
           <a href={logoHref} className="flex items-center gap-3 group">
             <div className="w-14 h-14 lg:w-[4.5rem] lg:h-[4.5rem] rounded-full overflow-hidden bg-white shadow-md p-0.5 shrink-0 -my-2">
-              <img
+              <Image
                 src="/media/Logo/cropped-cropped-logo.png"
                 alt="Logo Garden College"
+                width={72}
+                height={72}
+                priority
                 className="w-full h-full object-contain"
               />
             </div>

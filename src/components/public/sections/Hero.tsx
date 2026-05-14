@@ -1,3 +1,5 @@
+import HeroVideo from "./HeroVideo";
+
 const MOBILE_PLACEHOLDER = "https://picsum.photos/seed/gc-hero/800/600";
 
 interface HeroProps {
@@ -15,17 +17,7 @@ export default function Hero({ nombre, slogan, mision, imagenMobile }: HeroProps
       className="relative min-h-[85vh] lg:min-h-screen flex items-center justify-center overflow-hidden"
     >
       {/* Background — video (desktop + landscape) */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        aria-hidden="true"
-        className="absolute inset-0 pt-4 w-full h-full object-cover hidden landscape:block md:block"
-      >
-        <source src="/media/Hero/heroShort.webm" type="video/webm" />
-      </video>
+      <HeroVideo />
 
       {/* Background — imagen fija (mobile portrait) */}
       <img

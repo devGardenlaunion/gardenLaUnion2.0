@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { ColumnsPhotoAlbum } from "react-photo-album";
 import SSR from "react-photo-album/ssr";
 import "react-photo-album/columns.css";
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
+import Video from "yet-another-react-lightbox/plugins/video";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
@@ -14,24 +16,25 @@ export interface FotoColumnas {
   width: number;
   height: number;
   alt: string;
+  poster?: string;
+  sources?: { src: string; type: string }[];
 }
 
 interface GaleriaColumnasProps {
   fotos: FotoColumnas[];
-  /**
-   * Espaciado en px entre fotos. Default: 10.
-   */
   spacing?: number;
-  /**
-   * Función que devuelve el número de columnas según el ancho del contenedor.
-   * Default: 2 (móvil) → 3 (tablet) → 4 (desktop).
-   */
   columns?: (containerWidth: number) => number;
-  /**
-   * Muestra barra de thumbnails en el lightbox. Default: true.
-   */
   showThumbnails?: boolean;
   className?: string;
+}
+
+const VIDEO_RE = /\.(mp4|webm|mov)$/i;
+const isVideo = (src: string) => VIDEO_RE.test(src);
+
+function getMimeType(src: string): string {
+  if (/\.webm$/i.test(src)) return "video/webm";
+  if (/\.mov$/i.test(src)) return "video/quicktime";
+  return "video/mp4";
 }
 
 function defaultColumns(w: number) {
@@ -46,7 +49,40 @@ export default function GaleriaColumnas({
   showThumbnails = true,
   className,
 }: GaleriaColumnasProps) {
-  const [index, setIndex] = useState(-1);
+  const [lbIndex, setLbIndex] = useState(-1);
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [toastVisible, setToastVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // Only show items that have a visual: pure images or videos with a poster
+  const displayFotos = fotos.filter((f) => !isVideo(f.src) || !!f.poster);
+
+  // Every item in displayFotos renders a <Image>, so imageCount === displayFotos.length
+  const imageCount = displayFotos.length;
+  const pct = imageCount > 0 ? Math.round((loadedCount / imageCount) * 100) : 100;
+  const allLoaded = pct >= 100;
+
+  // Hide toast shortly after all images finish loading
+  useEffect(() => {
+    if (allLoaded && imageCount > 0 && mounted) {
+      const t = setTimeout(() => setToastVisible(false), 1800);
+      return () => clearTimeout(t);
+    }
+  }, [allLoaded, imageCount, mounted]);
+
+  // Failsafe: force-complete after 8 s (slow network / broken images)
+  useEffect(() => {
+    if (!allLoaded && mounted && imageCount > 0) {
+      const t = setTimeout(() => setLoadedCount(imageCount), 8000);
+      return () => clearTimeout(t);
+    }
+  }, [allLoaded, imageCount, mounted]);
+
+  const handleImageLoad = useCallback(() => {
+    setLoadedCount((prev) => Math.min(prev + 1, imageCount));
+  }, [imageCount]);
 
   if (fotos.length === 0) {
     return (
@@ -56,33 +92,110 @@ export default function GaleriaColumnas({
     );
   }
 
+  // Map poster URL → original video src so render.image can detect video thumbnails
+  const videoByPoster = new Map<string, string>(
+    displayFotos
+      .filter((f) => isVideo(f.src) && f.poster)
+      .map((f) => [f.poster!, f.src])
+  );
+
+  // Album shows poster instead of the raw video src
+  const albumPhotos = displayFotos.map((f) =>
+    isVideo(f.src) && f.poster ? { ...f, src: f.poster } : f
+  );
+
+  // Lightbox slides for all display items — images and video slides
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lightboxSlides: any[] = displayFotos.map((f) => {
+    if (isVideo(f.src)) {
+      return {
+        type: "video",
+        sources: f.sources ?? [{ src: f.src, type: getMimeType(f.src) }],
+        ...(f.poster && { poster: f.poster }),
+        width: f.width,
+        height: f.height,
+      };
+    }
+    return { src: f.src, width: f.width, height: f.height, alt: f.alt };
+  });
+
   return (
     <div className={className}>
+      {/* [&_.react-photo-album--track]:!justify-start fixes uneven vertical gaps:
+          react-photo-album uses justify-content:space-between per column, which
+          stretches gaps in shorter columns. flex-start keeps uniform row-gap. */}
+      <div className="[&_.react-photo-album--track]:!justify-start">
       <SSR breakpoints={[375, 640, 1200]}>
         <ColumnsPhotoAlbum
-          photos={fotos}
+          photos={albumPhotos}
           spacing={spacing}
           columns={columns}
-          onClick={({ index: i }) => setIndex(i)}
+          onClick={({ index }) => setLbIndex(index)}
           render={{
-            image: (imageProps) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                {...imageProps}
-                alt={imageProps.alt ?? "Galería Garden College"}
-                className="rounded-lg cursor-pointer object-cover hover:brightness-90 transition-[filter,transform] duration-300 hover:scale-[1.01]"
-              />
-            ),
+            image: ({ src, alt, width, height, sizes, loading, style }) => {
+              const videoSrc = videoByPoster.get(src ?? "");
+
+              if (videoSrc) {
+                // Poster image + play button overlay — looks like a photo, acts like a video
+                return (
+                  <div
+                    className="relative group overflow-hidden rounded-lg cursor-pointer"
+                    style={{ ...(style as React.CSSProperties), position: "relative" }}
+                  >
+                    <Image
+                      src={src!}
+                      alt="Vista previa de video"
+                      width={typeof width === "number" ? width : 1920}
+                      height={typeof height === "number" ? height : 1080}
+                      sizes={sizes ?? "(max-width: 640px) 50vw, 33vw"}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      loading={loading ?? "lazy"}
+                      onLoad={handleImageLoad}
+                    />
+                    {/* Play button — pointer-events-none so the parent handles click */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-black/55 backdrop-blur-[2px] rounded-full flex items-center justify-center border-2 border-white/75 shadow-xl transition-transform duration-200 group-hover:scale-110">
+                        <svg
+                          className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Image
+                  src={src!}
+                  alt={alt ?? "Galería Garden College"}
+                  width={typeof width === "number" ? width : 1200}
+                  height={typeof height === "number" ? height : 800}
+                  sizes={sizes ?? "(max-width: 640px) 50vw, 33vw"}
+                  style={style}
+                  loading={loading ?? "lazy"}
+                  className="rounded-lg cursor-pointer object-cover hover:brightness-90 transition-[filter,transform] duration-300 hover:scale-[1.01]"
+                  onLoad={handleImageLoad}
+                />
+              );
+            },
           }}
         />
       </SSR>
+      </div>
 
+      {/* Lightbox — prev/next navigate images AND videos seamlessly */}
       <Lightbox
-        open={index >= 0}
-        index={index}
-        close={() => setIndex(-1)}
-        slides={fotos}
-        on={{ view: ({ index: i }) => setIndex(i) }}
+        open={lbIndex >= 0}
+        index={lbIndex}
+        close={() => setLbIndex(-1)}
+        slides={lightboxSlides}
+        on={{ view: ({ index }) => setLbIndex(index) }}
+        video={{ autoPlay: true, playsInline: true, preload: "auto" }}
         styles={{
           container: {
             backgroundColor: "rgba(17, 24, 39, 0.55)",
@@ -90,7 +203,7 @@ export default function GaleriaColumnas({
             WebkitBackdropFilter: "blur(14px)",
           },
         }}
-        plugins={showThumbnails ? [Thumbnails] : []}
+        plugins={showThumbnails ? [Thumbnails, Video] : [Video]}
         thumbnails={{
           position: "bottom",
           width: 80,
@@ -101,6 +214,52 @@ export default function GaleriaColumnas({
           gap: 8,
         }}
       />
+
+      {/* Loading toast — aparece mientras cargan las imágenes, desaparece al terminar */}
+      {mounted && toastVisible && imageCount > 0 && (
+        <div
+          className={`fixed bottom-6 right-6 z-[10000] flex items-center gap-3 px-4 py-2.5 rounded-full shadow-lg border text-sm font-body transition-colors duration-300 ${
+            allLoaded
+              ? "bg-gc-green border-gc-green/30 text-white animate-pulse"
+              : "bg-white/95 border-gc-green-100 text-gc-green-800 backdrop-blur-sm"
+          }`}
+        >
+          {allLoaded ? (
+            <>
+              <svg
+                className="w-4 h-4 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Galería lista</span>
+            </>
+          ) : (
+            <>
+              <svg
+                className="w-4 h-4 shrink-0 animate-spin text-gc-green"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span>Cargando galería</span>
+              <div className="w-16 h-1.5 bg-gc-green-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gc-green rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="text-gc-green-800/50 text-xs w-7 text-right tabular-nums">{pct}%</span>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

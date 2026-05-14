@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import type { MultimediaItem, EdicionMinima } from "@/components/public/shared/EventModal";
+import AutoplayVideo from "@/components/public/shared/AutoplayVideo";
 
 export type EventoMinimo = {
   id: string;
@@ -16,6 +17,7 @@ export type EdicionCard = {
   extracto: string;
   contenido: string;
   imagenPortada: string | null;
+  heroVideo: string | null;
   fecha: string;
   destacada: boolean;
   evento: EventoMinimo & { ediciones: EdicionMinima[] };
@@ -64,7 +66,13 @@ export default function EventosWrapper({
             className="w-full text-left mb-6 lg:mb-8 group block"
           >
             <div className="relative rounded-2xl overflow-hidden min-h-[320px] sm:min-h-[400px] flex items-end">
-              {heroEdicion.imagenPortada ? (
+              {heroEdicion.heroVideo ? (
+                <AutoplayVideo
+                  src={heroEdicion.heroVideo}
+                  poster={heroEdicion.imagenPortada ?? undefined}
+                  className="absolute inset-0 w-full h-full object-cover hidden landscape:block md:block"
+                />
+              ) : heroEdicion.imagenPortada ? (
                 <img
                   src={heroEdicion.imagenPortada}
                   alt={heroEdicion.titulo}
@@ -73,6 +81,8 @@ export default function EventosWrapper({
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800" />
               )}
+              {/* Tint uniforme — evita que el video supere el texto en las esquinas */}
+              <div className="absolute inset-0 bg-gc-green-900/40" />
               <div className="absolute inset-0 bg-gradient-to-t from-gc-green-900/90 via-gc-green-900/30 to-transparent" />
               <div className="relative p-6 lg:p-10 w-full">
                 <div className="flex flex-wrap items-center gap-2 mb-3">

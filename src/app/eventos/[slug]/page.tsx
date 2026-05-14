@@ -1,11 +1,51 @@
+import fs from "fs";
+import path from "path";
+import sharp from "sharp";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
-import { getMediaImages } from "@/lib/media";
+import { getMediaImages, getMediaVideos } from "@/lib/media";
 import Navbar from "@/components/public/sections/Navbar";
 import Footer from "@/components/public/sections/Footer";
+import GaleriaPolaroid, { type FotoPolaroid } from "@/components/public/shared/GaleriaPolaroid";
+import GaleriaColumnas, { type FotoColumnas } from "@/components/public/shared/GaleriaColumnas";
+import AutoplayVideo from "@/components/public/shared/AutoplayVideo";
+
+const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+
+async function getFotosGrande(mediaBase: string): Promise<FotoColumnas[]> {
+  const dir = path.join(process.cwd(), "public", "media", mediaBase);
+  if (!fs.existsSync(dir)) return [];
+
+  const archivos = fs
+    .readdirSync(dir)
+    .filter((f) => {
+      const full = path.join(dir, f);
+      return fs.statSync(full).isFile() && IMAGE_EXTS.has(path.extname(f).toLowerCase());
+    })
+    .sort();
+
+  if (archivos.length === 0) return [];
+
+  return Promise.all(
+    archivos.map(async (archivo) => {
+      const nombre = path.basename(archivo, path.extname(archivo));
+      try {
+        const meta = await sharp(path.join(dir, archivo)).metadata();
+        return {
+          src: `/media/${mediaBase}/${archivo}`,
+          width: meta.width ?? 1200,
+          height: meta.height ?? 800,
+          alt: nombre.replace(/[-_]/g, " "),
+        };
+      } catch {
+        return { src: `/media/${mediaBase}/${archivo}`, width: 1200, height: 800, alt: nombre.replace(/[-_]/g, " ") };
+      }
+    })
+  );
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -78,18 +118,68 @@ export default async function EventoPage({ params }: Props) {
   ];
 
   const year = edicion.fecha.getFullYear();
-  const mediaBase = `eventos/${edicion.evento.slug}/${year}`;
+  const eventBase = `eventos/${edicion.evento.slug}`;
+  const mediaBase = `${eventBase}/${year}`;
 
+  const fotosGrande = await getFotosGrande(mediaBase);
   const fotosDB = edicion.multimedia.filter((m) => m.tipo === "foto");
-  const fotosCarpeta = getMediaImages(mediaBase);
+  const fotosCarpeta = getMediaImages(`${eventBase}/polaroid`);
   const urlsDB = new Set(fotosDB.map((f) => f.url));
   const fotosExtra = fotosCarpeta.filter((f) => !urlsDB.has(f.src));
 
-  // Portada: BD → hero/ de la carpeta → null
-  const heroSrc =
-    edicion.imagenPortada ??
-    (getMediaImages(`${mediaBase}/hero`)[0]?.src ?? null);
+  const VIDEO_URL_RE = /\.(mp4|webm|mov)$/i;
+  const fotosPolaroid: FotoPolaroid[] = [
+    ...fotosDB
+      .filter((f) => !VIDEO_URL_RE.test(f.url))
+      .map((f) => ({ src: f.url, caption: f.titulo || "" })),
+    ...fotosExtra,
+  ];
+
+  // Hero: video permanente del evento > imagen BD > imagen carpeta año
+  const heroVideo = getMediaVideos(`${eventBase}/hero`)[0] ?? null;
+  const heroSrc = heroVideo
+    ? null
+    : (edicion.imagenPortada ?? getMediaImages(`${mediaBase}/hero`)[0]?.src ?? null);
+
   const videos = edicion.multimedia.filter((m) => m.tipo === "youtube");
+
+  // Videos locales mezclados en la galería — se ponen al inicio
+  const videoDir = path.join(process.cwd(), "public", "media", mediaBase);
+
+  // Group by stem so .mp4 + .webm of the same clip become one item with multiple sources
+  const videosByStem = new Map<string, string[]>();
+  getMediaVideos(mediaBase).forEach((src) => {
+    const stem = path.basename(src, path.extname(src));
+    videosByStem.set(stem, [...(videosByStem.get(stem) ?? []), src]);
+  });
+
+  const videoItems: FotoColumnas[] = Array.from(videosByStem.entries()).map(([stem, srcs]) => {
+    const is219 = stem.toLowerCase().includes("21-9");
+    const posterExt = [".jpg", ".webp", ".jpeg", ".png"].find((ext) =>
+      fs.existsSync(path.join(videoDir, `${stem}${ext}`))
+    );
+    // MP4 first: iOS uses hardware H.264 decoder; WebM second: VP9 for desktop
+    const sources: { src: string; type: string }[] = [
+      ...(srcs.some((s) => s.endsWith(".mp4"))  ? [{ src: `/media/${mediaBase}/${stem}.mp4`,  type: "video/mp4"       }] : []),
+      ...(srcs.some((s) => s.endsWith(".webm")) ? [{ src: `/media/${mediaBase}/${stem}.webm`, type: "video/webm"      }] : []),
+      ...(srcs.some((s) => s.endsWith(".mov"))  ? [{ src: `/media/${mediaBase}/${stem}.mov`,  type: "video/quicktime" }] : []),
+    ];
+    return {
+      src: srcs[0],
+      width: is219 ? 2560 : 1920,
+      height: 1080,
+      alt: "",
+      ...(posterExt && { poster: `/media/${mediaBase}/${stem}${posterExt}` }),
+      sources,
+    };
+  });
+  // Exclude poster images from fotosGrande — they're already shown as video thumbnails
+  const videoPosterUrls = new Set(videoItems.map((v) => v.poster).filter(Boolean) as string[]);
+  const galeriaItems: FotoColumnas[] = [
+    ...videoItems,
+    ...fotosGrande.filter((f) => !videoPosterUrls.has(f.src)),
+  ];
+
   const otrasEdiciones = edicion.evento.ediciones.filter(
     (e) => e.slug !== edicion.slug
   );
@@ -106,13 +196,18 @@ export default async function EventoPage({ params }: Props) {
       <main className="pt-20 bg-gc-warm min-h-screen">
         {/* Hero del evento */}
         <div className="relative min-h-[50vh] flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800 overflow-hidden">
-          {heroSrc && (
+          {heroVideo ? (
+            <AutoplayVideo
+              src={heroVideo}
+              className="absolute inset-0 w-full h-full object-cover hidden landscape:block md:block"
+            />
+          ) : heroSrc ? (
             <img
               src={heroSrc}
               alt={edicion.titulo}
               className="absolute inset-0 w-full h-full object-cover"
             />
-          )}
+          ) : null}
           {/* Scrim superior — evita que el navbar se pierda en fondos claros */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
           {/* Scrim inferior — garantiza legibilidad del texto siempre */}
@@ -145,38 +240,55 @@ export default async function EventoPage({ params }: Props) {
               {edicion.extracto}
             </p>
 
-            {/* Contenido HTML */}
-            <div
-              className="prose prose-lg max-w-none font-body text-gc-green-800/80 leading-relaxed mb-10
-                         prose-headings:font-display prose-headings:text-gc-green-800
-                         prose-p:text-gc-green-800/80 prose-p:leading-relaxed
-                         prose-a:text-gc-green prose-a:no-underline hover:prose-a:underline"
-              dangerouslySetInnerHTML={{ __html: edicion.contenido }}
-            />
-
-            {/* Fotos — combina BD + carpeta public/media/eventos/[slug]/ */}
-            {(fotosDB.length > 0 || fotosExtra.length > 0) && (
-              <div className="mb-10">
-                <h2 className="text-xl font-display font-bold text-gc-green-800 mb-4">Galería</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {fotosDB.map((foto) => (
-                    <div key={foto.id} className="aspect-square rounded-xl overflow-hidden bg-gc-green/10">
-                      <img src={foto.url} alt={foto.titulo || ""} className="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                  ))}
-                  {fotosExtra.map((foto) => (
-                    <div key={foto.src} className="aspect-square rounded-xl overflow-hidden bg-gc-green/10">
-                      <img src={foto.src} alt="" className="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                  ))}
-                </div>
+            {/* Tradición del evento */}
+            {edicion.evento.descripcion && (
+              <div className="mb-8 space-y-4">
+                {edicion.evento.descripcion.split("\n\n").map((parrafo, i) => (
+                  <p key={i} className="text-gc-green-800/80 font-body leading-relaxed">
+                    {parrafo}
+                  </p>
+                ))}
               </div>
             )}
 
-            {/* Videos */}
+            {/* Separador edición */}
+            <div className="flex items-center gap-4 my-8">
+              <div className="h-px flex-1 bg-gc-green-100" />
+              <span className="text-sm font-body font-semibold text-gc-green-800/50 uppercase tracking-wider whitespace-nowrap">
+                Edición {year}
+              </span>
+              <div className="h-px flex-1 bg-gc-green-100" />
+            </div>
+
+            {/* Contenido HTML + galería polaroid en 2 columnas */}
+            {fotosPolaroid.length > 0 ? (
+              <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start mb-10">
+                <div className="order-2 lg:order-1">
+                  <div
+                    className="prose prose-lg max-w-none font-body text-gc-green-800/80 leading-relaxed
+                               prose-headings:font-display prose-headings:text-gc-green-800
+                               prose-p:text-gc-green-800/80 prose-p:leading-relaxed
+                               prose-a:text-gc-green prose-a:no-underline hover:prose-a:underline"
+                    dangerouslySetInnerHTML={{ __html: edicion.contenido }}
+                  />
+                </div>
+                <div className="order-1 lg:order-2 relative z-20 lg:sticky lg:top-24 lg:mt-6">
+                  <GaleriaPolaroid fotos={fotosPolaroid} lightboxMode="inline" />
+                </div>
+              </div>
+            ) : (
+              <div
+                className="prose prose-lg max-w-none font-body text-gc-green-800/80 leading-relaxed mb-10
+                           prose-headings:font-display prose-headings:text-gc-green-800
+                           prose-p:text-gc-green-800/80 prose-p:leading-relaxed
+                           prose-a:text-gc-green prose-a:no-underline hover:prose-a:underline"
+                dangerouslySetInnerHTML={{ __html: edicion.contenido }}
+              />
+            )}
+
+            {/* YouTube embeds */}
             {videos.length > 0 && (
               <div className="mb-10">
-                <h2 className="text-xl font-display font-bold text-gc-green-800 mb-4">Video</h2>
                 <div className="grid gap-4">
                   {videos.map((video) => (
                     <div key={video.id} className="aspect-video rounded-xl overflow-hidden">
@@ -189,6 +301,21 @@ export default async function EventoPage({ params }: Props) {
                       />
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Galería — fotos y videos mezclados, full viewport width */}
+            {galeriaItems.length > 0 && (
+              <div className="mb-10">
+                <h2 className="text-xl font-display font-bold text-gc-green-800 mb-4">
+                  Galería — {edicion.evento.nombre} {year}
+                </h2>
+                <div style={{
+                  marginLeft: "calc(50% - 50vw + 10px)",
+                  marginRight: "calc(50% - 50vw + 10px)",
+                }}>
+                  <GaleriaColumnas fotos={galeriaItems} />
                 </div>
               </div>
             )}
