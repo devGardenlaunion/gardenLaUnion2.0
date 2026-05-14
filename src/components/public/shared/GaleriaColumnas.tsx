@@ -77,7 +77,7 @@ export default function GaleriaColumnas({
     if (lbIndex >= 0) {
       if (isMobile && !isIOS) {
         document.documentElement.requestFullscreen?.()
-          .then(() => screen.orientation?.lock("landscape").catch(() => {}))
+          .then(() => (screen.orientation as any)?.lock?.("landscape").catch(() => {}))
           .catch(() => {});
       } else if (isIOS && isMobile) {
         setIosHintShow(true);
@@ -87,7 +87,7 @@ export default function GaleriaColumnas({
         return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
       }
     } else {
-      screen.orientation?.unlock?.();
+      (screen.orientation as any)?.unlock?.();
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
   }, [lbIndex, isMobile, isIOS]);
