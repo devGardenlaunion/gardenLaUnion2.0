@@ -8,7 +8,6 @@ import "react-photo-album/columns.css";
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import Video from "yet-another-react-lightbox/plugins/video";
-import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
@@ -66,21 +65,20 @@ export default function GaleriaColumnas({
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     setIsIOS(ios);
-    const update = () => {
-      const mobile = window.innerWidth < 640;
-      setIsMobile(mobile);
-      setThumbPos(mobile ? "start" : "bottom");
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    // Detectar móvil una sola vez — estable a través de cambios de orientación.
+    // maxTouchPoints > 0 es más confiable que innerWidth porque no varía al rotar.
+    const mobile = navigator.maxTouchPoints > 0;
+    setIsMobile(mobile);
+    setThumbPos(mobile ? "start" : "bottom");
   }, []);
 
   // Fullscreen automático al abrir el lightbox — solo en móvil
   useEffect(() => {
     if (lbIndex >= 0) {
       if (isMobile && !isIOS) {
-        document.documentElement.requestFullscreen?.().catch(() => {});
+        document.documentElement.requestFullscreen?.()
+          .then(() => screen.orientation?.lock("landscape").catch(() => {}))
+          .catch(() => {});
       } else if (isIOS && isMobile) {
         setIosHintShow(true);
         const t1 = setTimeout(() => setIosHintVisible(true), 50);
@@ -89,6 +87,7 @@ export default function GaleriaColumnas({
         return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
       }
     } else {
+      screen.orientation?.unlock?.();
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
   }, [lbIndex, isMobile, isIOS]);
@@ -240,10 +239,7 @@ export default function GaleriaColumnas({
             WebkitBackdropFilter: "blur(14px)",
           },
         }}
-        plugins={isMobile
-          ? (showThumbnails ? [Thumbnails, Video, Fullscreen] : [Video, Fullscreen])
-          : (showThumbnails ? [Thumbnails, Video] : [Video])
-        }
+        plugins={showThumbnails ? [Thumbnails, Video] : [Video]}
         thumbnails={{
           position: thumbPos,
           width: 80,
