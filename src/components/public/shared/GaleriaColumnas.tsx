@@ -8,6 +8,7 @@ import "react-photo-album/columns.css";
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import Video from "yet-another-react-lightbox/plugins/video";
+import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
@@ -53,8 +54,44 @@ export default function GaleriaColumnas({
   const [loadedCount, setLoadedCount] = useState(0);
   const [toastVisible, setToastVisible] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [thumbPos, setThumbPos] = useState<"bottom" | "start">("bottom");
+  const [isMobile, setIsMobile] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [iosHintShow, setIosHintShow] = useState(false);
+  const [iosHintVisible, setIosHintVisible] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    const ios =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    setIsIOS(ios);
+    const update = () => {
+      const mobile = window.innerWidth < 640;
+      setIsMobile(mobile);
+      setThumbPos(mobile ? "start" : "bottom");
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  // Fullscreen automático al abrir el lightbox — solo en móvil
+  useEffect(() => {
+    if (lbIndex >= 0) {
+      if (isMobile && !isIOS) {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+      } else if (isIOS && isMobile) {
+        setIosHintShow(true);
+        const t1 = setTimeout(() => setIosHintVisible(true), 50);
+        const t2 = setTimeout(() => setIosHintVisible(false), 2800);
+        const t3 = setTimeout(() => setIosHintShow(false), 3600);
+        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+      }
+    } else {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    }
+  }, [lbIndex, isMobile, isIOS]);
 
   // Only show items that have a visual: pure images or videos with a poster
   const displayFotos = fotos.filter((f) => !isVideo(f.src) || !!f.poster);
@@ -203,9 +240,12 @@ export default function GaleriaColumnas({
             WebkitBackdropFilter: "blur(14px)",
           },
         }}
-        plugins={showThumbnails ? [Thumbnails, Video] : [Video]}
+        plugins={isMobile
+          ? (showThumbnails ? [Thumbnails, Video, Fullscreen] : [Video, Fullscreen])
+          : (showThumbnails ? [Thumbnails, Video] : [Video])
+        }
         thumbnails={{
-          position: "bottom",
+          position: thumbPos,
           width: 80,
           height: 60,
           border: 2,
@@ -258,6 +298,16 @@ export default function GaleriaColumnas({
               <span className="text-gc-green-800/50 text-xs w-7 text-right tabular-nums">{pct}%</span>
             </>
           )}
+        </div>
+      )}
+      {/* Aviso iOS — pantalla completa no disponible */}
+      {iosHintShow && (
+        <div
+          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[10001] px-4 py-2 bg-black/75 text-white/90 text-xs rounded-full backdrop-blur-sm whitespace-nowrap pointer-events-none transition-opacity duration-700 ${
+            iosHintVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          Pantalla completa no disponible en iOS — limitación del navegador
         </div>
       )}
     </div>
