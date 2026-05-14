@@ -42,7 +42,9 @@ backups/
 # SSL certs
 certs/
 
-# Archivos media pesados — nunca commitear (>50MB rompe Vercel free tier)
+# Archivos media pesados — nunca commitear sin comprimir
 public/documentos/Hero_optimizar.mp4
 public/documentos/Archivador.zip
 *.mp4
+# Excepción: videos de eventos comprimidos (<10 MB) sí van en git
+!public/media/**/*.mp4
