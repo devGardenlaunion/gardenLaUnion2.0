@@ -184,6 +184,10 @@ export default async function EventoPage({ params }: Props) {
     (e) => e.slug !== edicion.slug
   );
 
+  const parrafos = edicion.evento.descripcion?.split("\n\n").filter(Boolean) ?? [];
+  const introParrafos = parrafos.slice(0, 2);
+  const cuerpoParrafos = parrafos.slice(2);
+
   return (
     <>
       <Navbar
@@ -240,50 +244,33 @@ export default async function EventoPage({ params }: Props) {
               {edicion.extracto}
             </p>
 
-            {/* Tradición del evento */}
-            {edicion.evento.descripcion && (
-              <div className="mb-8 space-y-4">
-                {edicion.evento.descripcion.split("\n\n").map((parrafo, i) => (
-                  <p key={i} className="text-gc-green-800/80 font-body leading-relaxed">
-                    {parrafo}
+            {/* Texto intro — ancho completo */}
+            {introParrafos.length > 0 && (
+              <div className="mb-10 space-y-5">
+                {introParrafos.map((p, i) => (
+                  <p key={i} className="text-gc-green-800/80 font-body leading-relaxed text-lg">
+                    {p}
                   </p>
                 ))}
               </div>
             )}
 
-            {/* Separador edición */}
-            <div className="flex items-center gap-4 my-8">
-              <div className="h-px flex-1 bg-gc-green-100" />
-              <span className="text-sm font-body font-semibold text-gc-green-800/50 uppercase tracking-wider whitespace-nowrap">
-                Edición {year}
-              </span>
-              <div className="h-px flex-1 bg-gc-green-100" />
-            </div>
-
-            {/* Contenido HTML + galería polaroid en 2 columnas */}
-            {fotosPolaroid.length > 0 ? (
-              <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start mb-10">
-                <div className="order-2 lg:order-1">
-                  <div
-                    className="prose prose-lg max-w-none font-body text-gc-green-800/80 leading-relaxed
-                               prose-headings:font-display prose-headings:text-gc-green-800
-                               prose-p:text-gc-green-800/80 prose-p:leading-relaxed
-                               prose-a:text-gc-green prose-a:no-underline hover:prose-a:underline"
-                    dangerouslySetInnerHTML={{ __html: edicion.contenido }}
-                  />
+            {/* Texto cuerpo + galería polaroid — 2 columnas */}
+            {(cuerpoParrafos.length > 0 || fotosPolaroid.length > 0) && (
+              <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-start mb-14">
+                <div className="space-y-5">
+                  {cuerpoParrafos.map((p, i) => (
+                    <p key={i} className="text-gc-green-800/80 font-body leading-relaxed">
+                      {p}
+                    </p>
+                  ))}
                 </div>
-                <div className="order-1 lg:order-2 relative z-20 lg:sticky lg:top-24 lg:mt-6">
-                  <GaleriaPolaroid fotos={fotosPolaroid} lightboxMode="inline" />
-                </div>
+                {fotosPolaroid.length > 0 && (
+                  <div className="lg:sticky lg:top-24 pl-4">
+                    <GaleriaPolaroid fotos={fotosPolaroid} lightboxMode="inline" desorden={0.5} />
+                  </div>
+                )}
               </div>
-            ) : (
-              <div
-                className="prose prose-lg max-w-none font-body text-gc-green-800/80 leading-relaxed mb-10
-                           prose-headings:font-display prose-headings:text-gc-green-800
-                           prose-p:text-gc-green-800/80 prose-p:leading-relaxed
-                           prose-a:text-gc-green prose-a:no-underline hover:prose-a:underline"
-                dangerouslySetInnerHTML={{ __html: edicion.contenido }}
-              />
             )}
 
             {/* YouTube embeds */}
@@ -305,18 +292,18 @@ export default async function EventoPage({ params }: Props) {
               </div>
             )}
 
-            {/* Galería — fotos y videos mezclados, full viewport width */}
+            {/* Galería — fotos y videos con márgenes normales de página */}
             {galeriaItems.length > 0 && (
               <div className="mb-10">
-                <h2 className="text-xl font-display font-bold text-gc-green-800 mb-4">
-                  Galería — {edicion.evento.nombre} {year}
-                </h2>
-                <div style={{
-                  marginLeft: "calc(50% - 50vw + 10px)",
-                  marginRight: "calc(50% - 50vw + 10px)",
-                }}>
-                  <GaleriaColumnas fotos={galeriaItems} />
+                <div className="border-l-4 border-gc-gold pl-4 mb-6">
+                  <p className="text-xs font-body font-semibold text-gc-green-600 uppercase tracking-widest mb-1">
+                    {edicion.evento.nombre} · {year}
+                  </p>
+                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-gc-green-800">
+                    Galería
+                  </h2>
                 </div>
+                <GaleriaColumnas fotos={galeriaItems} />
               </div>
             )}
 
