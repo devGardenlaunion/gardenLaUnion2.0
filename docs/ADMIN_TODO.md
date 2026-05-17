@@ -5,6 +5,17 @@
 
 ---
 
+## ⚠️ Decisión de arquitectura — texto de ediciones de eventos
+
+El texto narrativo de cada edición (ej: Fomento Lector 2026) vive en **`Edicion.contenido`** (campo HTML).
+Es el **único campo** que el admin debe editar para cambiar el texto de la subpágina del evento.
+
+- `Evento.descripcion` ya **no se renderiza** en la subpágina — se conserva en BD como referencia histórica pero no aparece en la web.
+- La subpágina muestra: extracto (blockquote) → `edicion.contenido` (full width) → galería polaroid → galería columnas.
+- El editor WYSIWYG del panel admin debe apuntar a `Edicion.contenido`.
+
+---
+
 ## Documentación relacionada (leer antes de empezar)
 
 | Archivo | Para qué sirve |
