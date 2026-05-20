@@ -42,6 +42,108 @@ function defaultColumns(w: number) {
   return 3;
 }
 
+// ─── Strip de thumbnails mobile ──────────────────────────────────────────────
+// Ventana deslizante de WINDOW_SIZE fotos + flechas arriba/abajo.
+// Solo se monta en mobile; desktop usa el plugin Thumbnails de YARL.
+const WINDOW_SIZE = 5;
+
+interface MobileThumbStripProps {
+  photos: FotoColumnas[];
+  activeIndex: number;
+  windowStart: number;
+  onSelect: (index: number) => void;
+  onScrollUp: () => void;
+  onScrollDown: () => void;
+}
+
+function MobileThumbStrip({
+  photos,
+  activeIndex,
+  windowStart,
+  onSelect,
+  onScrollUp,
+  onScrollDown,
+}: MobileThumbStripProps) {
+  const total = photos.length;
+  const canUp = windowStart > 0;
+  const canDown = windowStart + WINDOW_SIZE < total;
+
+  return (
+    <div
+      className="absolute left-0 top-0 bottom-0 flex flex-col items-center justify-center gap-2 select-none z-10"
+      style={{ width: 68 }}
+    >
+      {/* Flecha arriba — fade cuando no hay más fotos */}
+      <button
+        onClick={canUp ? onScrollUp : undefined}
+        className={`flex items-center justify-center w-8 h-8 rounded-full text-white bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+          canUp ? "opacity-90 active:scale-90" : "opacity-20 pointer-events-none"
+        }`}
+        aria-label="Anteriores"
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+        </svg>
+      </button>
+
+      {/* Ventana de WINDOW_SIZE thumbnails */}
+      {Array.from({ length: WINDOW_SIZE }, (_, i) => {
+        const globalIdx = windowStart + i;
+        if (globalIdx >= total) return null;
+        const photo = photos[globalIdx];
+        const src = isVideo(photo.src) && photo.poster ? photo.poster : photo.src;
+        const isActive = globalIdx === activeIndex;
+
+        return (
+          <button
+            key={globalIdx}
+            onClick={() => onSelect(globalIdx)}
+            className={`relative shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+              isActive
+                ? "border-white shadow-[0_0_0_2px_rgba(255,255,255,0.35)] scale-105"
+                : "border-white/25 opacity-55 active:opacity-90 active:scale-95"
+            }`}
+            style={{ width: 52, height: 52 }}
+            aria-label={`Imagen ${globalIdx + 1}`}
+            aria-pressed={isActive}
+          >
+            <Image
+              src={src}
+              alt={photo.alt}
+              fill
+              sizes="52px"
+              className="object-cover"
+              style={{ pointerEvents: "none" }}
+            />
+            {isVideo(photo.src) && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <svg className="w-3 h-3 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            )}
+          </button>
+        );
+      })}
+
+      {/* Flecha abajo — fade cuando no hay más fotos */}
+      <button
+        onClick={canDown ? onScrollDown : undefined}
+        className={`flex items-center justify-center w-8 h-8 rounded-full text-white bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+          canDown ? "opacity-90 active:scale-90" : "opacity-20 pointer-events-none"
+        }`}
+        aria-label="Siguientes"
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+// ─── Componente principal ─────────────────────────────────────────────────────
+
 export default function GaleriaColumnas({
   fotos,
   spacing = 10,
@@ -60,7 +162,9 @@ export default function GaleriaColumnas({
   const [iosHintVisible, setIosHintVisible] = useState(false);
   const [rotateHintShow, setRotateHintShow] = useState(false);
   const [rotateHintVisible, setRotateHintVisible] = useState(false);
-  const thumbRafRef = useRef<number | null>(null);
+  // Ventana deslizante del strip mobile: índice global del primer thumb visible
+  const [windowStart, setWindowStart] = useState(0);
+  const videoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -113,137 +217,56 @@ export default function GaleriaColumnas({
     }
   }, [lbIndex, isMobile, isIOS]);
 
-  // Thumbnail strip — inertia drag vertical en mobile.
-  // El strip está a la izquierda (position:"start") y scrollea en Y.
-  // Problema: long-tap activa gestos nativos del browser que roban el touch.
-  // Solución: touch-action:none + threshold para distinguir tap de drag.
-  // Los taps (<8px de movimiento) propagan normalmente → thumbnail selection funciona.
-  const lbOpen = lbIndex >= 0;
-  useEffect(() => {
-    if (!lbOpen || !isMobile || !showThumbnails) return;
-
-    let track: HTMLElement | null = null;
-    let vel = 0;
-    let startY = 0;
-    let lastY = 0;
-    let lastT = 0;
-    let dragging = false;
-    let attempts = 0;
-    let mounted = true;
-    let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
-    const DRAG_THRESHOLD = 8; // px — por debajo de esto es tap, no drag
-
-    const cancelRaf = () => {
-      if (thumbRafRef.current !== null) {
-        cancelAnimationFrame(thumbRafRef.current);
-        thumbRafRef.current = null;
-      }
-    };
-
-    const runInertia = () => {
-      if (!track) return;
-      vel *= 0.92;
-      if (Math.abs(vel) < 0.4) { thumbRafRef.current = null; return; }
-      track.scrollTop += vel;
-      thumbRafRef.current = requestAnimationFrame(runInertia);
-    };
-
-    const onStart = (e: TouchEvent) => {
-      cancelRaf();
-      dragging = false;
-      startY = e.touches[0].clientY;
-      lastY = startY;
-      lastT = performance.now();
-      vel = 0;
-    };
-
-    const onMove = (e: TouchEvent) => {
-      if (!track) return;
-      const totalDY = startY - e.touches[0].clientY;
-
-      if (!dragging) {
-        // Bajo el umbral = tap en curso, no interferir
-        if (Math.abs(totalDY) < DRAG_THRESHOLD) return;
-        dragging = true;
-      }
-
-      // Solo bloqueamos propagación una vez confirmado el drag
-      e.stopPropagation();
-      const now = performance.now();
-      const dy = lastY - e.touches[0].clientY;
-      const dt = Math.max(now - lastT, 1);
-      vel = vel * 0.4 + (dy / dt) * 0.6;   // EMA — más peso a muestras recientes
-      track.scrollTop += dy;
-      lastY = e.touches[0].clientY;
-      lastT = now;
-    };
-
-    const onEnd = () => {
-      if (!dragging) return;                // fue un tap → dejar que el browser lo procese
-      dragging = false;
-      vel *= 16;                            // px/ms → px/frame a 60fps
-      if (Math.abs(vel) > 0.4) thumbRafRef.current = requestAnimationFrame(runInertia);
-    };
-
-    // touchcancel: el browser tomó control del touch (ej. iOS long-press sobre img
-    // dispara el menú "guardar" aunque tengamos touch-action:none en el track).
-    // Reseteamos estado para que el próximo touch arranque limpio.
-    const onCancel = () => {
-      dragging = false;
-      vel = 0;
-      cancelRaf();
-    };
-
-    const noCtx = (e: Event) => e.preventDefault();
-
-    const attach = (): boolean => {
-      track = document.querySelector(".yarl__thumbnails_track") as HTMLElement | null;
-      if (!track) return false;
-
-      track.style.touchAction = "none";
-      (track.style as any).webkitUserSelect = "none";
-      track.style.userSelect = "none";
-
-      track.addEventListener("touchstart", onStart, { passive: true });
-      track.addEventListener("touchmove", onMove, { passive: true });
-      track.addEventListener("touchend", onEnd, { passive: true });
-      track.addEventListener("touchcancel", onCancel, { passive: true });
-      track.addEventListener("contextmenu", noCtx);
-
-      // pointer-events:none en <img> → el touch cae al <button> padre.
-      // Así el long-press en usuario lento NO activa el menú nativo de imagen de iOS/Android,
-      // que es lo que dispara touchcancel y rompe el drag.
-      track.querySelectorAll("img").forEach((img) => {
-        img.style.pointerEvents = "none";
-        (img.style as any).webkitTouchCallout = "none";
-        img.draggable = false;
-      });
-
-      return true;
-    };
-
-    const tryAttach = () => {
-      if (!mounted) return;
-      if (!attach() && attempts++ < 8) pendingTimeout = setTimeout(tryAttach, 80);
-    };
-    tryAttach();
-
-    return () => {
-      mounted = false;
-      if (pendingTimeout) clearTimeout(pendingTimeout);
-      cancelRaf();
-      if (!track) return;
-      track.removeEventListener("touchstart", onStart);
-      track.removeEventListener("touchmove", onMove);
-      track.removeEventListener("touchend", onEnd);
-      track.removeEventListener("touchcancel", onCancel);
-      track.removeEventListener("contextmenu", noCtx);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lbOpen, isMobile, showThumbnails]);
-
   // Only show items that have a visual: pure images or videos with a poster
   const displayFotos = fotos.filter((f) => !isVideo(f.src) || !!f.poster);
+
+  // Sincroniza la ventana con lbIndex: el thumb activo siempre queda visible.
+  // Rango máximo dentro de la ventana: posición 0 → WINDOW_SIZE-1 (salto i=0 a i=4).
+  useEffect(() => {
+    if (lbIndex < 0) return;
+    setWindowStart((prev) => {
+      if (lbIndex < prev) return lbIndex;                              // subió fuera de la ventana
+      if (lbIndex >= prev + WINDOW_SIZE) return lbIndex - WINDOW_SIZE + 1; // bajó fuera de la ventana
+      return prev;                                                     // ya está dentro
+    });
+  }, [lbIndex]);
+
+  // Autoplay con delay al llegar a un slide de video.
+  // Identifica el <video> por src exacto para no reproducir slides adyacentes.
+  useEffect(() => {
+    if (videoPlayRef.current) {
+      clearTimeout(videoPlayRef.current);
+      videoPlayRef.current = null;
+    }
+    // Pausa todo al navegar (evita audio de slides no visibles)
+    document.querySelectorAll(".yarl__root video").forEach((v) =>
+      (v as HTMLVideoElement).pause()
+    );
+    if (lbIndex < 0) return;
+    const foto = displayFotos[lbIndex];
+    if (!foto || !isVideo(foto.src)) return;
+
+    const targetSrc = foto.sources?.[0]?.src ?? foto.src;
+    videoPlayRef.current = setTimeout(() => {
+      const match = Array.from(
+        document.querySelectorAll(".yarl__root video") as NodeListOf<HTMLVideoElement>
+      ).find((v) =>
+        Array.from(v.querySelectorAll("source")).some(
+          (s) => s.getAttribute("src") === targetSrc
+        ) || v.getAttribute("src") === targetSrc
+      );
+      match?.play().catch(() => {});
+      videoPlayRef.current = null;
+    }, 400);
+
+    return () => {
+      if (videoPlayRef.current) {
+        clearTimeout(videoPlayRef.current);
+        videoPlayRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lbIndex]);
 
   // Every item in displayFotos renders a <Image>, so imageCount === displayFotos.length
   const imageCount = displayFotos.length;
@@ -269,6 +292,17 @@ export default function GaleriaColumnas({
   const handleImageLoad = useCallback(() => {
     setLoadedCount((prev) => Math.min(prev + 1, imageCount));
   }, [imageCount]);
+
+  // Navegación de la ventana mobile — saltan de a WINDOW_SIZE
+  const handleWindowUp = useCallback(() => {
+    setWindowStart((w) => Math.max(0, w - WINDOW_SIZE));
+  }, []);
+
+  const handleWindowDown = useCallback(() => {
+    setWindowStart((w) =>
+      Math.min(Math.max(0, displayFotos.length - WINDOW_SIZE), w + WINDOW_SIZE)
+    );
+  }, [displayFotos.length]);
 
   if (fotos.length === 0) {
     return (
@@ -304,6 +338,9 @@ export default function GaleriaColumnas({
     }
     return { src: f.src, width: f.width, height: f.height, alt: f.alt };
   });
+
+  // Strip mobile activo solo con >1 foto (con 1 foto no tiene sentido el strip)
+  const showMobileStrip = isMobile && showThumbnails && displayFotos.length > 1;
 
   return (
     <div className={className}>
@@ -374,14 +411,16 @@ export default function GaleriaColumnas({
       </SSR>
       </div>
 
-      {/* Lightbox — prev/next navigate images AND videos seamlessly */}
+      {/* Lightbox
+          Mobile: plugin Thumbnails desactivado → strip propio via render.controls.
+          Desktop: plugin Thumbnails nativo con position según orientación. */}
       <Lightbox
         open={lbIndex >= 0}
         index={lbIndex}
         close={() => setLbIndex(-1)}
         slides={lightboxSlides}
         on={{ view: ({ index }) => setLbIndex(index) }}
-        video={{ autoPlay: true, playsInline: true, preload: "auto" }}
+        video={{ autoPlay: false, playsInline: true, preload: "auto" }}
         styles={{
           container: {
             backgroundColor: "rgba(17, 24, 39, 0.55)",
@@ -389,16 +428,28 @@ export default function GaleriaColumnas({
             WebkitBackdropFilter: "blur(14px)",
           },
         }}
-        plugins={showThumbnails ? [Thumbnails, Video] : [Video]}
-        thumbnails={{
-          position: thumbPos,
-          width: 80,
-          height: 60,
-          border: 2,
-          borderRadius: 6,
-          padding: 4,
-          gap: 8,
-        }}
+        plugins={isMobile ? [Video] : showThumbnails ? [Thumbnails, Video] : [Video]}
+        thumbnails={
+          !isMobile && showThumbnails
+            ? { position: thumbPos, width: 80, height: 60, border: 2, borderRadius: 6, padding: 4, gap: 8 }
+            : undefined
+        }
+        render={
+          showMobileStrip
+            ? {
+                controls: () => (
+                  <MobileThumbStrip
+                    photos={displayFotos}
+                    activeIndex={lbIndex}
+                    windowStart={windowStart}
+                    onSelect={setLbIndex}
+                    onScrollUp={handleWindowUp}
+                    onScrollDown={handleWindowDown}
+                  />
+                ),
+              }
+            : undefined
+        }
       />
 
       {/* Loading toast — aparece mientras cargan las imágenes, desaparece al terminar */}
