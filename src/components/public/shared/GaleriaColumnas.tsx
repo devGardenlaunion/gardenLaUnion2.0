@@ -60,7 +60,7 @@ export default function GaleriaColumnas({
   const [iosHintVisible, setIosHintVisible] = useState(false);
   const [rotateHintShow, setRotateHintShow] = useState(false);
   const [rotateHintVisible, setRotateHintVisible] = useState(false);
-  const thumbDragCleanup = useRef<(() => void) | null>(null);
+  const thumbRafRef = useRef<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -82,24 +82,16 @@ export default function GaleriaColumnas({
         // requestFullscreen puede no existir (Opera mobile, algunos browsers)
         // Si ?.() devuelve undefined no encadenar .then/.catch — TypeError silencioso
         const fsPromise = document.documentElement.requestFullscreen?.();
-        const showRotateHint = () => {
-          setRotateHintShow(true);
-          setTimeout(() => setRotateHintVisible(true), 50);
-          setTimeout(() => setRotateHintVisible(false), 2800);
-          setTimeout(() => setRotateHintShow(false), 3600);
-        };
         if (fsPromise instanceof Promise) {
           fsPromise
-            .then(() => {
-              // Fullscreen OK — ahora intentar bloquear orientación a landscape
-              const lockPromise = (screen.orientation as any)?.lock?.("landscape");
-              if (lockPromise instanceof Promise) {
-                lockPromise.catch(showRotateHint); // lock rechazado (Opera, Firefox mobile)
-              } else {
-                showRotateHint(); // API no disponible
-              }
-            })
-            .catch(showRotateHint); // fullscreen rechazado
+            .then(() => (screen.orientation as any)?.lock?.("landscape").catch(() => {}))
+            .catch(() => {
+              // Fullscreen rechazado (Opera, policy restrictions) — sugerir rotar manualmente
+              setRotateHintShow(true);
+              setTimeout(() => setRotateHintVisible(true), 50);
+              setTimeout(() => setRotateHintVisible(false), 2800);
+              setTimeout(() => setRotateHintShow(false), 3600);
+            });
         } else {
           // API no disponible — mostrar hint igualmente
           setRotateHintShow(true);
@@ -121,78 +113,107 @@ export default function GaleriaColumnas({
     }
   }, [lbIndex, isMobile, isIOS]);
 
-  // Drag-to-scroll en la tira de miniaturas —————————————————————————————————
-  // yarl usa overflow:hidden en el container y mueve el track interno via
-  // CSS transform:translateY/X — el scroll no sirve. Solución: leer el transform
-  // actual del track, sumarle el delta del gesto y re-aplicarlo, clampeando
-  // para no salir de los límites. stopPropagation() evita que yarl navegue slides.
+  // Thumbnail strip — inertia drag on mobile.
+  // Long-tap activa gestos del browser (guardar imagen, menú contextual) que roban el
+  // touch y cortan el scroll. touch-action:none lo desactiva; la inertia manual
+  // hace que el desplazamiento sea proporcional a la velocidad del arrastre.
+  const lbOpen = lbIndex >= 0;
   useEffect(() => {
-    if (!showThumbnails || lbIndex < 0) {
-      thumbDragCleanup.current?.();
-      thumbDragCleanup.current = null;
-      return;
-    }
+    if (!lbOpen || !isMobile || !showThumbnails) return;
 
-    const timer = setTimeout(() => {
-      const tc = document.querySelector<HTMLElement>(".yarl__thumbnails_container");
-      if (!tc) return;
-      const track = tc.querySelector<HTMLElement>(".yarl__thumbnails_track");
+    let track: HTMLElement | null = null;
+    let vel = 0;        // px/ms acumulado via EMA
+    let lastX = 0;
+    let lastT = 0;
+    let dragging = false;
+    let attempts = 0;
+    let mounted = true;
+    let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const cancelRaf = () => {
+      if (thumbRafRef.current !== null) {
+        cancelAnimationFrame(thumbRafRef.current);
+        thumbRafRef.current = null;
+      }
+    };
+
+    const runInertia = () => {
       if (!track) return;
+      vel *= 0.92;                                    // fricción — 0.92 ≈ 400ms deslizando a vel máxima
+      if (Math.abs(vel) < 0.4) { thumbRafRef.current = null; return; }
+      track.scrollLeft += vel;
+      thumbRafRef.current = requestAnimationFrame(runInertia);
+    };
 
-      const vertical = thumbPos === "start";
-      let sx = 0, sy = 0, ss = 0, active = false;
+    const onStart = (e: TouchEvent) => {
+      cancelRaf();
+      dragging = true;
+      lastX = e.touches[0].clientX;
+      lastT = performance.now();
+      vel = 0;
+    };
 
-      const getOffset = () => {
-        const matrix = new DOMMatrix(window.getComputedStyle(track).transform);
-        return vertical ? matrix.m42 : matrix.m41;
-      };
+    const onMove = (e: TouchEvent) => {
+      if (!dragging || !track) return;
+      e.stopPropagation();                            // evita que el lightbox interprete el drag como swipe
+      const now = performance.now();
+      const dx = lastX - e.touches[0].clientX;       // positivo = arrastra hacia la izquierda
+      const dt = Math.max(now - lastT, 1);
+      vel = vel * 0.4 + (dx / dt) * 0.6;             // EMA: pondera más las muestras recientes
+      track.scrollLeft += dx;
+      lastX = e.touches[0].clientX;
+      lastT = now;
+    };
 
-      const clamp = (v: number) => {
-        const containerSize = vertical ? tc.clientHeight : tc.clientWidth;
-        const trackSize = vertical ? track.offsetHeight : track.offsetWidth;
-        return Math.min(0, Math.max(containerSize - trackSize, v));
-      };
+    const onEnd = () => {
+      if (!dragging) return;
+      dragging = false;
+      vel *= 16;                                      // escala px/ms → px/frame a 60fps
+      thumbRafRef.current = requestAnimationFrame(runInertia);
+    };
 
-      const onDown = (e: PointerEvent) => {
-        sx = e.clientX; sy = e.clientY;
-        ss = getOffset();
-        active = true;
-        track.style.transition = "none";
-      };
-      const onMove = (e: PointerEvent) => {
-        if (!active) return;
-        const dx = e.clientX - sx;
-        const dy = e.clientY - sy;
-        const primary = vertical ? Math.abs(dy) : Math.abs(dx);
-        const secondary = vertical ? Math.abs(dx) : Math.abs(dy);
-        if (primary > 5 && primary > secondary) {
-          e.stopPropagation();
-          const delta = vertical ? dy : dx;
-          const next = clamp(ss + delta);
-          track.style.transform = vertical ? `translateY(${next}px)` : `translateX(${next}px)`;
-        }
-      };
-      const onUp = () => {
-        if (active) { active = false; track.style.transition = ""; }
-      };
+    const noCtx = (e: Event) => e.preventDefault();
 
-      tc.addEventListener("pointerdown", onDown);
-      tc.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
+    const attach = (): boolean => {
+      track = document.querySelector(".yarl__thumbnails_track") as HTMLElement | null;
+      if (!track) return false;
 
-      thumbDragCleanup.current = () => {
-        tc.removeEventListener("pointerdown", onDown);
-        tc.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-      };
-    }, 150);
+      track.style.touchAction = "none";               // desactiva gestos nativos del browser en este elemento
+      (track.style as any).webkitUserSelect = "none";
+      track.style.userSelect = "none";
+
+      track.addEventListener("touchstart", onStart, { passive: true });
+      track.addEventListener("touchmove", onMove, { passive: true });
+      track.addEventListener("touchend", onEnd, { passive: true });
+      track.addEventListener("contextmenu", noCtx);
+
+      track.querySelectorAll("img").forEach((img) => {
+        img.addEventListener("contextmenu", noCtx);
+        (img.style as any).webkitTouchCallout = "none";
+        img.draggable = false;
+      });
+
+      return true;
+    };
+
+    const tryAttach = () => {
+      if (!mounted) return;
+      if (!attach() && attempts++ < 8) pendingTimeout = setTimeout(tryAttach, 80);
+    };
+    tryAttach();
 
     return () => {
-      clearTimeout(timer);
-      thumbDragCleanup.current?.();
-      thumbDragCleanup.current = null;
+      mounted = false;
+      if (pendingTimeout) clearTimeout(pendingTimeout);
+      cancelRaf();
+      if (!track) return;
+      track.removeEventListener("touchstart", onStart);
+      track.removeEventListener("touchmove", onMove);
+      track.removeEventListener("touchend", onEnd);
+      track.removeEventListener("contextmenu", noCtx);
     };
-  }, [lbIndex, showThumbnails, thumbPos]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lbOpen, isMobile, showThumbnails]);
 
   // Only show items that have a visual: pure images or videos with a poster
   const displayFotos = fotos.filter((f) => !isVideo(f.src) || !!f.poster);
@@ -334,7 +355,6 @@ export default function GaleriaColumnas({
         slides={lightboxSlides}
         on={{ view: ({ index }) => setLbIndex(index) }}
         video={{ autoPlay: true, playsInline: true, preload: "auto" }}
-        carousel={{ finite: true, preload: lightboxSlides.length }}
         styles={{
           container: {
             backgroundColor: "rgba(17, 24, 39, 0.55)",
