@@ -113,22 +113,25 @@ export default function GaleriaColumnas({
     }
   }, [lbIndex, isMobile, isIOS]);
 
-  // Thumbnail strip — inertia drag on mobile.
-  // Long-tap activa gestos del browser (guardar imagen, menú contextual) que roban el
-  // touch y cortan el scroll. touch-action:none lo desactiva; la inertia manual
-  // hace que el desplazamiento sea proporcional a la velocidad del arrastre.
+  // Thumbnail strip — inertia drag vertical en mobile.
+  // El strip está a la izquierda (position:"start") y scrollea en Y.
+  // Problema: long-tap activa gestos nativos del browser que roban el touch.
+  // Solución: touch-action:none + threshold para distinguir tap de drag.
+  // Los taps (<8px de movimiento) propagan normalmente → thumbnail selection funciona.
   const lbOpen = lbIndex >= 0;
   useEffect(() => {
     if (!lbOpen || !isMobile || !showThumbnails) return;
 
     let track: HTMLElement | null = null;
-    let vel = 0;        // px/ms acumulado via EMA
-    let lastX = 0;
+    let vel = 0;
+    let startY = 0;
+    let lastY = 0;
     let lastT = 0;
     let dragging = false;
     let attempts = 0;
     let mounted = true;
     let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
+    const DRAG_THRESHOLD = 8; // px — por debajo de esto es tap, no drag
 
     const cancelRaf = () => {
       if (thumbRafRef.current !== null) {
@@ -139,37 +142,56 @@ export default function GaleriaColumnas({
 
     const runInertia = () => {
       if (!track) return;
-      vel *= 0.92;                                    // fricción — 0.92 ≈ 400ms deslizando a vel máxima
+      vel *= 0.92;
       if (Math.abs(vel) < 0.4) { thumbRafRef.current = null; return; }
-      track.scrollLeft += vel;
+      track.scrollTop += vel;
       thumbRafRef.current = requestAnimationFrame(runInertia);
     };
 
     const onStart = (e: TouchEvent) => {
       cancelRaf();
-      dragging = true;
-      lastX = e.touches[0].clientX;
+      dragging = false;
+      startY = e.touches[0].clientY;
+      lastY = startY;
       lastT = performance.now();
       vel = 0;
     };
 
     const onMove = (e: TouchEvent) => {
-      if (!dragging || !track) return;
-      e.stopPropagation();                            // evita que el lightbox interprete el drag como swipe
+      if (!track) return;
+      const totalDY = startY - e.touches[0].clientY;
+
+      if (!dragging) {
+        // Bajo el umbral = tap en curso, no interferir
+        if (Math.abs(totalDY) < DRAG_THRESHOLD) return;
+        dragging = true;
+      }
+
+      // Solo bloqueamos propagación una vez confirmado el drag
+      e.stopPropagation();
       const now = performance.now();
-      const dx = lastX - e.touches[0].clientX;       // positivo = arrastra hacia la izquierda
+      const dy = lastY - e.touches[0].clientY;
       const dt = Math.max(now - lastT, 1);
-      vel = vel * 0.4 + (dx / dt) * 0.6;             // EMA: pondera más las muestras recientes
-      track.scrollLeft += dx;
-      lastX = e.touches[0].clientX;
+      vel = vel * 0.4 + (dy / dt) * 0.6;   // EMA — más peso a muestras recientes
+      track.scrollTop += dy;
+      lastY = e.touches[0].clientY;
       lastT = now;
     };
 
     const onEnd = () => {
-      if (!dragging) return;
+      if (!dragging) return;                // fue un tap → dejar que el browser lo procese
       dragging = false;
-      vel *= 16;                                      // escala px/ms → px/frame a 60fps
-      thumbRafRef.current = requestAnimationFrame(runInertia);
+      vel *= 16;                            // px/ms → px/frame a 60fps
+      if (Math.abs(vel) > 0.4) thumbRafRef.current = requestAnimationFrame(runInertia);
+    };
+
+    // touchcancel: el browser tomó control del touch (ej. iOS long-press sobre img
+    // dispara el menú "guardar" aunque tengamos touch-action:none en el track).
+    // Reseteamos estado para que el próximo touch arranque limpio.
+    const onCancel = () => {
+      dragging = false;
+      vel = 0;
+      cancelRaf();
     };
 
     const noCtx = (e: Event) => e.preventDefault();
@@ -178,17 +200,21 @@ export default function GaleriaColumnas({
       track = document.querySelector(".yarl__thumbnails_track") as HTMLElement | null;
       if (!track) return false;
 
-      track.style.touchAction = "none";               // desactiva gestos nativos del browser en este elemento
+      track.style.touchAction = "none";
       (track.style as any).webkitUserSelect = "none";
       track.style.userSelect = "none";
 
       track.addEventListener("touchstart", onStart, { passive: true });
       track.addEventListener("touchmove", onMove, { passive: true });
       track.addEventListener("touchend", onEnd, { passive: true });
+      track.addEventListener("touchcancel", onCancel, { passive: true });
       track.addEventListener("contextmenu", noCtx);
 
+      // pointer-events:none en <img> → el touch cae al <button> padre.
+      // Así el long-press en usuario lento NO activa el menú nativo de imagen de iOS/Android,
+      // que es lo que dispara touchcancel y rompe el drag.
       track.querySelectorAll("img").forEach((img) => {
-        img.addEventListener("contextmenu", noCtx);
+        img.style.pointerEvents = "none";
         (img.style as any).webkitTouchCallout = "none";
         img.draggable = false;
       });
@@ -210,6 +236,7 @@ export default function GaleriaColumnas({
       track.removeEventListener("touchstart", onStart);
       track.removeEventListener("touchmove", onMove);
       track.removeEventListener("touchend", onEnd);
+      track.removeEventListener("touchcancel", onCancel);
       track.removeEventListener("contextmenu", noCtx);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
