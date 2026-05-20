@@ -1,5 +1,6 @@
-import GaleriaPolaroid, { FotoPolaroid } from "@/components/public/shared/GaleriaPolaroid";
+import GaleriaPolaroid from "@/components/public/shared/GaleriaPolaroid";
 import InfoCard from "@/components/public/shared/InfoCard";
+import { getMediaImages } from "@/lib/media";
 
 interface Sello {
   titulo: string;
@@ -11,7 +12,7 @@ interface QuienesSomosProps {
   mision: string;
   vision: string;
   resena: string;
-  fotos?: FotoPolaroid[];
+  directorioPolaroid?: string;
   sellos?: Sello[];
 }
 
@@ -36,22 +37,14 @@ const iconMap: Record<string, JSX.Element> = {
   ),
 };
 
-const FOTOS_PLACEHOLDER: FotoPolaroid[] = [
-  { src: "https://picsum.photos/seed/gc-qs-1/400/400", caption: "Vida en el colegio" },
-  { src: "https://picsum.photos/seed/gc-qs-2/400/400", caption: "Actividades 2024" },
-  { src: "https://picsum.photos/seed/gc-qs-3/400/400", caption: "Comunidad Garden" },
-  { src: "https://picsum.photos/seed/gc-qs-4/400/400", caption: "Talleres y deportes" },
-  { src: "https://picsum.photos/seed/gc-qs-5/400/400", caption: "Nuestra historia" },
-  { src: "https://picsum.photos/seed/gc-qs-6/400/400", caption: "Formación integral" },
-];
-
 export default function QuienesSomos({
   mision,
   vision,
   resena,
-  fotos = FOTOS_PLACEHOLDER,
+  directorioPolaroid = "QuienesSomos/polaroid",
   sellos = [],
 }: QuienesSomosProps) {
+  const fotos = getMediaImages(directorioPolaroid);
   return (
     <section id="quienes-somos" className="pt-12 pb-8">
       <div className="container-gc">

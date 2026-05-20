@@ -58,6 +58,8 @@ export default function GaleriaColumnas({
   const [isIOS, setIsIOS] = useState(false);
   const [iosHintShow, setIosHintShow] = useState(false);
   const [iosHintVisible, setIosHintVisible] = useState(false);
+  const [rotateHintShow, setRotateHintShow] = useState(false);
+  const [rotateHintVisible, setRotateHintVisible] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -76,9 +78,27 @@ export default function GaleriaColumnas({
   useEffect(() => {
     if (lbIndex >= 0) {
       if (isMobile && !isIOS) {
-        document.documentElement.requestFullscreen?.()
-          .then(() => (screen.orientation as any)?.lock?.("landscape").catch(() => {}))
-          .catch(() => {});
+        // requestFullscreen puede no existir (Opera mobile, algunos browsers)
+        // Si ?.() devuelve undefined no encadenar .then/.catch — TypeError silencioso
+        const fsPromise = document.documentElement.requestFullscreen?.();
+        if (fsPromise instanceof Promise) {
+          fsPromise
+            .then(() => (screen.orientation as any)?.lock?.("landscape").catch(() => {}))
+            .catch(() => {
+              // Fullscreen rechazado (Opera, policy restrictions) — sugerir rotar manualmente
+              setRotateHintShow(true);
+              setTimeout(() => setRotateHintVisible(true), 50);
+              setTimeout(() => setRotateHintVisible(false), 2800);
+              setTimeout(() => setRotateHintShow(false), 3600);
+            });
+        } else {
+          // API no disponible — mostrar hint igualmente
+          setRotateHintShow(true);
+          const t1 = setTimeout(() => setRotateHintVisible(true), 50);
+          const t2 = setTimeout(() => setRotateHintVisible(false), 2800);
+          const t3 = setTimeout(() => setRotateHintShow(false), 3600);
+          return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+        }
       } else if (isIOS && isMobile) {
         setIosHintShow(true);
         const t1 = setTimeout(() => setIosHintVisible(true), 50);
@@ -304,6 +324,20 @@ export default function GaleriaColumnas({
           }`}
         >
           Pantalla completa no disponible en iOS — limitación del navegador
+        </div>
+      )}
+      {/* Aviso rotate — pantalla completa no soportada por el browser (Opera, etc.) */}
+      {rotateHintShow && (
+        <div
+          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[10001] flex items-center gap-2 px-4 py-2 bg-black/75 text-white/90 text-xs rounded-full backdrop-blur-sm whitespace-nowrap pointer-events-none transition-opacity duration-700 ${
+            rotateHintVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Gira el dispositivo · Diseñado para modo horizontal
         </div>
       )}
     </div>

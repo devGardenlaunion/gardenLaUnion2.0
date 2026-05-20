@@ -128,12 +128,17 @@ export default async function EventoPage({ params }: Props) {
   const fotosExtra = fotosCarpeta.filter((f) => !urlsDB.has(f.src));
 
   const VIDEO_URL_RE = /\.(mp4|webm|mov)$/i;
-  const fotosPolaroid: FotoPolaroid[] = [
+  const fotosPolaroidBase: FotoPolaroid[] = [
     ...fotosDB
       .filter((f) => !VIDEO_URL_RE.test(f.url))
       .map((f) => ({ src: f.url, caption: f.titulo || "" })),
     ...fotosExtra,
   ];
+  // Si no hay fotos dedicadas al polaroid, usar las primeras 4 de la galería del año
+  const fotosPolaroid: FotoPolaroid[] =
+    fotosPolaroidBase.length > 0
+      ? fotosPolaroidBase
+      : fotosGrande.slice(0, 4).map((f) => ({ src: f.src, caption: f.alt }));
 
   // Hero: video permanente del evento > imagen BD > imagen carpeta año
   const heroVideo = getMediaVideos(`${eventBase}/hero`)[0] ?? null;
