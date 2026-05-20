@@ -122,11 +122,10 @@ export default function GaleriaColumnas({
   }, [lbIndex, isMobile, isIOS]);
 
   // Drag-to-scroll en la tira de miniaturas —————————————————————————————————
-  // yarl captura todos los pointer events en su root para swipe de navegación,
-  // por lo que el thumbnail container nunca los recibe de forma natural.
-  // Solución: interceptar en el container y llamar stopPropagation() solo cuando
-  // el gesto es en el eje de la tira (vertical para "start", horizontal para "bottom").
-  // Un umbral de 5 px evita bloquear taps normales sobre las miniaturas.
+  // yarl usa overflow:hidden en el container y mueve el track interno via
+  // CSS transform:translateY/X — el scroll no sirve. Solución: leer el transform
+  // actual del track, sumarle el delta del gesto y re-aplicarlo, clampeando
+  // para no salir de los límites. stopPropagation() evita que yarl navegue slides.
   useEffect(() => {
     if (!showThumbnails || lbIndex < 0) {
       thumbDragCleanup.current?.();
@@ -137,14 +136,28 @@ export default function GaleriaColumnas({
     const timer = setTimeout(() => {
       const tc = document.querySelector<HTMLElement>(".yarl__thumbnails_container");
       if (!tc) return;
+      const track = tc.querySelector<HTMLElement>(".yarl__thumbnails_track");
+      if (!track) return;
 
       const vertical = thumbPos === "start";
       let sx = 0, sy = 0, ss = 0, active = false;
 
+      const getOffset = () => {
+        const matrix = new DOMMatrix(window.getComputedStyle(track).transform);
+        return vertical ? matrix.m42 : matrix.m41;
+      };
+
+      const clamp = (v: number) => {
+        const containerSize = vertical ? tc.clientHeight : tc.clientWidth;
+        const trackSize = vertical ? track.offsetHeight : track.offsetWidth;
+        return Math.min(0, Math.max(containerSize - trackSize, v));
+      };
+
       const onDown = (e: PointerEvent) => {
         sx = e.clientX; sy = e.clientY;
-        ss = vertical ? tc.scrollTop : tc.scrollLeft;
+        ss = getOffset();
         active = true;
+        track.style.transition = "none";
       };
       const onMove = (e: PointerEvent) => {
         if (!active) return;
@@ -154,11 +167,14 @@ export default function GaleriaColumnas({
         const secondary = vertical ? Math.abs(dx) : Math.abs(dy);
         if (primary > 5 && primary > secondary) {
           e.stopPropagation();
-          if (vertical) tc.scrollTop = ss - dy;
-          else tc.scrollLeft = ss - dx;
+          const delta = vertical ? dy : dx;
+          const next = clamp(ss + delta);
+          track.style.transform = vertical ? `translateY(${next}px)` : `translateX(${next}px)`;
         }
       };
-      const onUp = () => { active = false; };
+      const onUp = () => {
+        if (active) { active = false; track.style.transition = ""; }
+      };
 
       tc.addEventListener("pointerdown", onDown);
       tc.addEventListener("pointermove", onMove);
@@ -318,6 +334,7 @@ export default function GaleriaColumnas({
         slides={lightboxSlides}
         on={{ view: ({ index }) => setLbIndex(index) }}
         video={{ autoPlay: true, playsInline: true, preload: "auto" }}
+        carousel={{ finite: true, preload: lightboxSlides.length }}
         styles={{
           container: {
             backgroundColor: "rgba(17, 24, 39, 0.55)",
