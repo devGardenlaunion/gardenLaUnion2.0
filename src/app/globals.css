@@ -153,6 +153,30 @@
 }
 
 /* =============================================
+   YARL — THUMBNAIL STRIP SCROLL
+   Permite arrastrar la tira de miniaturas en mobile sin que el lightbox
+   capture el gesto como swipe de navegación entre imágenes.
+   ============================================= */
+.yarl__thumbnails_container--bottom,
+.yarl__thumbnails_container--top {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+.yarl__thumbnails_container--start,
+.yarl__thumbnails_container--end {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+.yarl__thumbnails_container--bottom:active,
+.yarl__thumbnails_container--top:active,
+.yarl__thumbnails_container--start:active,
+.yarl__thumbnails_container--end:active {
+  cursor: grabbing;
+}
+
+/* =============================================
    ANIMACIONES
    ============================================= */
 @keyframes carousel-fade {

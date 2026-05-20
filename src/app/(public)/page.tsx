@@ -1,5 +1,5 @@
 import { getConfig } from "@/lib/config";
-import { getMediaImages, getMediaCover } from "@/lib/media";
+import { getMediaCover } from "@/lib/media";
 import { redesSociales } from "@/data/redes";
 import Navbar from "@/components/public/sections/Navbar";
 import Hero from "@/components/public/sections/Hero";
@@ -20,7 +20,6 @@ export default async function HomePage() {
   const config = await getConfig();
 
   // ── Media desde carpetas ────────────────────────────────────────────────
-  const fotosQuienesSomos  = getMediaImages("QuienesSomos/polaroid");
   const imagenAdmision     = getMediaCover("Admision");
   const imagenHeroMobile   = getMediaCover("Hero");
 
@@ -81,7 +80,6 @@ export default async function HomePage() {
           mision={config["institucional.mision"] || ""}
           vision={config["institucional.vision"] || ""}
           resena={config["institucional.resena"] || ""}
-          fotos={fotosQuienesSomos.length > 0 ? fotosQuienesSomos : undefined}
           sellos={sellos}
         />
 

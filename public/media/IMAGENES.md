@@ -64,34 +64,21 @@ Tarjetas de la sección Niveles Educativos. El componente muestra `aspect-[2/1]`
 
 ---
 
-### Quiénes Somos — `/media/QuienesSomos/`
+### Quiénes Somos — `/media/QuienesSomos/polaroid/`
 
 Fotos para el componente GaleriaPolaroid. Se muestran en efecto polaroid interactivo (cuadradas o verticales).
+El componente `QuienesSomos` las carga automáticamente — **todas las imágenes en la carpeta aparecen**.
 
 | Propiedad | Valor |
 |-----------|-------|
-| Cantidad | 6 fotos (el componente usa índices 0–5) |
+| Cantidad | Sin límite — todas las imágenes de la carpeta se muestran |
 | Aspecto preferido | Cuadrado o levemente vertical (3:4) |
 | Dimensiones | 400×400 px mínimo |
 | Formato | WebP |
-| Nombre | Libre — el componente recibe array de `src` |
+| Nombre | Sin espacios — usar `qs-01.webp`, `qs-02.webp`... para controlar el orden (alfabético) |
 
-Archivos actuales (11 disponibles, se usan los primeros 6 que pase el admin):
-```
-20250527_151201_resultado.webp
-fotogc07_resultado.webp
-IMG_0076_resultado.webp
-IMG-20250410-WA0013_resultado.webp
-IMG-20250424-WA0072_resultado.webp
-IMG_4887_resultado.webp
-IMG_6739_resultado.webp
-IMG_6936-min_resultado.webp
-WhatsApp Image 2026-03-09 at 12.13.16 PM_resultado.webp
-WhatsApp Image 2026-03-30 at 10.06.39 AM-min_resultado.webp
-WhatsApp Image 2026-03-30 at 10.06.41 AM_resultado.webp
-WhatsApp Image 2026-04-08 at 10.34.59 AM-min_resultado.webp
-```
-> Para el admin: renombrar a `qs-01.webp`, `qs-02.webp`... para facilitar el orden.
+> Para agregar o reemplazar fotos: basta con poner/quitar archivos de esta carpeta.
+> No se necesita tocar código. Los cambios aparecen en la próxima recarga (dev) o en ≤60 s (producción ISR).
 
 ---
 
@@ -104,21 +91,10 @@ Fotos del mosaico masonry. El sistema lee hasta **9 imágenes**, ordenadas alfab
 | Cantidad máxima | 9 (el resto se ignora) |
 | Aspecto | Libre — el layout masonry se adapta |
 | Formato | WebP |
-| Nombre | Prefijo numérico para controlar orden: `01-actividad.webp`, `02-evento.webp`... |
+| Nombre | Sin espacios — prefijo numérico para controlar orden: `01-actividad.webp`, `02-evento.webp`... |
 
-Archivos actuales (9 disponibles):
-```
-IMG_0213.webp
-IMG_0248.webp
-IMG_0436_resultado.webp
-IMG-20250410-WA0011.webp
-IMG_3396.webp
-IMG_4879.webp
-IMG_7188-min_resultado.webp
-WhatsApp Image 2026-03-23 at 5.17.51 PM.webp
-zekpy_WhatsApp Image 2026-03-23 at 8.45.36 AM_resultado.webp
-```
-> Renombrar con prefijo numérico para controlar qué 9 se muestran y en qué orden.
+> Para agregar o reemplazar fotos: basta con poner/quitar archivos de esta carpeta.
+> No se necesita tocar código. Los cambios aparecen en ≤60 s (producción ISR).
 
 ---
 

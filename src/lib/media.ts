@@ -26,7 +26,7 @@ export function getMediaImages(
     .filter((f) => IMAGE_EXTS.has(path.extname(f).toLowerCase()))
     .sort()
     .map((f) => ({
-      src: `/media/${section}/${f}`,
+      src: `/media/${section}/${encodeURIComponent(f)}`,
       caption: "",
     }));
 }
