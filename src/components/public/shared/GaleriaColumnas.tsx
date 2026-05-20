@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { ColumnsPhotoAlbum } from "react-photo-album";
 import SSR from "react-photo-album/ssr";
@@ -60,6 +60,7 @@ export default function GaleriaColumnas({
   const [iosHintVisible, setIosHintVisible] = useState(false);
   const [rotateHintShow, setRotateHintShow] = useState(false);
   const [rotateHintVisible, setRotateHintVisible] = useState(false);
+  const thumbDragCleanup = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -81,16 +82,24 @@ export default function GaleriaColumnas({
         // requestFullscreen puede no existir (Opera mobile, algunos browsers)
         // Si ?.() devuelve undefined no encadenar .then/.catch — TypeError silencioso
         const fsPromise = document.documentElement.requestFullscreen?.();
+        const showRotateHint = () => {
+          setRotateHintShow(true);
+          setTimeout(() => setRotateHintVisible(true), 50);
+          setTimeout(() => setRotateHintVisible(false), 2800);
+          setTimeout(() => setRotateHintShow(false), 3600);
+        };
         if (fsPromise instanceof Promise) {
           fsPromise
-            .then(() => (screen.orientation as any)?.lock?.("landscape").catch(() => {}))
-            .catch(() => {
-              // Fullscreen rechazado (Opera, policy restrictions) — sugerir rotar manualmente
-              setRotateHintShow(true);
-              setTimeout(() => setRotateHintVisible(true), 50);
-              setTimeout(() => setRotateHintVisible(false), 2800);
-              setTimeout(() => setRotateHintShow(false), 3600);
-            });
+            .then(() => {
+              // Fullscreen OK — ahora intentar bloquear orientación a landscape
+              const lockPromise = (screen.orientation as any)?.lock?.("landscape");
+              if (lockPromise instanceof Promise) {
+                lockPromise.catch(showRotateHint); // lock rechazado (Opera, Firefox mobile)
+              } else {
+                showRotateHint(); // API no disponible
+              }
+            })
+            .catch(showRotateHint); // fullscreen rechazado
         } else {
           // API no disponible — mostrar hint igualmente
           setRotateHintShow(true);
@@ -111,6 +120,63 @@ export default function GaleriaColumnas({
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
   }, [lbIndex, isMobile, isIOS]);
+
+  // Drag-to-scroll en la tira de miniaturas —————————————————————————————————
+  // yarl captura todos los pointer events en su root para swipe de navegación,
+  // por lo que el thumbnail container nunca los recibe de forma natural.
+  // Solución: interceptar en el container y llamar stopPropagation() solo cuando
+  // el gesto es en el eje de la tira (vertical para "start", horizontal para "bottom").
+  // Un umbral de 5 px evita bloquear taps normales sobre las miniaturas.
+  useEffect(() => {
+    if (!showThumbnails || lbIndex < 0) {
+      thumbDragCleanup.current?.();
+      thumbDragCleanup.current = null;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const tc = document.querySelector<HTMLElement>(".yarl__thumbnails_container");
+      if (!tc) return;
+
+      const vertical = thumbPos === "start";
+      let sx = 0, sy = 0, ss = 0, active = false;
+
+      const onDown = (e: PointerEvent) => {
+        sx = e.clientX; sy = e.clientY;
+        ss = vertical ? tc.scrollTop : tc.scrollLeft;
+        active = true;
+      };
+      const onMove = (e: PointerEvent) => {
+        if (!active) return;
+        const dx = e.clientX - sx;
+        const dy = e.clientY - sy;
+        const primary = vertical ? Math.abs(dy) : Math.abs(dx);
+        const secondary = vertical ? Math.abs(dx) : Math.abs(dy);
+        if (primary > 5 && primary > secondary) {
+          e.stopPropagation();
+          if (vertical) tc.scrollTop = ss - dy;
+          else tc.scrollLeft = ss - dx;
+        }
+      };
+      const onUp = () => { active = false; };
+
+      tc.addEventListener("pointerdown", onDown);
+      tc.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+
+      thumbDragCleanup.current = () => {
+        tc.removeEventListener("pointerdown", onDown);
+        tc.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      thumbDragCleanup.current?.();
+      thumbDragCleanup.current = null;
+    };
+  }, [lbIndex, showThumbnails, thumbPos]);
 
   // Only show items that have a visual: pure images or videos with a poster
   const displayFotos = fotos.filter((f) => !isVideo(f.src) || !!f.poster);
