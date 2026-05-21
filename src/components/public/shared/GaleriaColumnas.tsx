@@ -240,6 +240,7 @@ export default function GaleriaColumnas({
   const [rotateHintVisible, setRotateHintVisible] = useState(false);
   const [windowStart, setWindowStart] = useState(0);
   const videoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userVolumeRef = useRef<number>(0.6);
 
   // Detección de dispositivo — una sola vez al montar
   useEffect(() => {
@@ -305,14 +306,21 @@ export default function GaleriaColumnas({
       clearTimeout(videoPlayRef.current);
       videoPlayRef.current = null;
     }
-    document.querySelectorAll(".yarl__root video").forEach((v) =>
-      (v as HTMLVideoElement).pause()
-    );
+    document.querySelectorAll(".yarl__root video").forEach((v) => {
+      const vid = v as HTMLVideoElement;
+      vid.pause();
+      vid.volume = userVolumeRef.current;
+    });
     if (lbIndex < 0) return;
     const foto = displayFotos[lbIndex];
     if (!foto || !isVideo(foto.src)) return;
 
     const targetSrc = foto.sources?.[0]?.src ?? foto.src;
+    let activeVideo: HTMLVideoElement | null = null;
+    const onVolumeChange = () => {
+      if (activeVideo) userVolumeRef.current = activeVideo.volume;
+    };
+
     videoPlayRef.current = setTimeout(() => {
       const match = Array.from(
         document.querySelectorAll(".yarl__root video") as NodeListOf<HTMLVideoElement>
@@ -321,7 +329,12 @@ export default function GaleriaColumnas({
           (s) => s.getAttribute("src") === targetSrc
         ) || v.getAttribute("src") === targetSrc
       );
-      match?.play().catch(() => {});
+      if (match) {
+        match.volume = userVolumeRef.current;
+        match.play().catch(() => {});
+        activeVideo = match;
+        match.addEventListener("volumechange", onVolumeChange);
+      }
       videoPlayRef.current = null;
     }, 400);
 
@@ -330,6 +343,7 @@ export default function GaleriaColumnas({
         clearTimeout(videoPlayRef.current);
         videoPlayRef.current = null;
       }
+      activeVideo?.removeEventListener("volumechange", onVolumeChange);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lbIndex]);
