@@ -169,6 +169,9 @@ export default async function EventoPage({ params }: Props) {
       ...(srcs.some((s) => s.endsWith(".webm")) ? [{ src: `/media/${mediaBase}/${stem}.webm`, type: "video/webm"      }] : []),
       ...(srcs.some((s) => s.endsWith(".mov"))  ? [{ src: `/media/${mediaBase}/${stem}.mov`,  type: "video/quicktime" }] : []),
     ];
+    if (!posterExt) {
+      console.warn(`[eventos/${slug}] Video sin poster: "${stem}" — agrega una imagen con el mismo nombre (ej: ${stem}.webp)`);
+    }
     return {
       src: srcs[0],
       width: is219 ? 2560 : 1920,
