@@ -76,7 +76,8 @@ function ThumbButton({
   size: { w: number; h: number };
   onSelect: () => void;
 }) {
-  const src = isVideo(photo.src) && photo.poster ? photo.poster : photo.src;
+  const isPureVideo = isVideo(photo.src) && !photo.poster;
+  const imgSrc = isVideo(photo.src) && photo.poster ? photo.poster : photo.src;
   return (
     <button
       onClick={onSelect}
@@ -89,14 +90,18 @@ function ThumbButton({
       aria-label={`Imagen ${globalIdx + 1}`}
       aria-pressed={isActive}
     >
-      <Image
-        src={src}
-        alt={photo.alt}
-        fill
-        sizes={`${size.w}px`}
-        className="object-cover"
-        style={{ pointerEvents: "none" }}
-      />
+      {isPureVideo ? (
+        <div className="absolute inset-0 bg-[#0f172a]" />
+      ) : (
+        <Image
+          src={imgSrc}
+          alt={photo.alt}
+          fill
+          sizes={`${size.w}px`}
+          className="object-cover"
+          style={{ pointerEvents: "none" }}
+        />
+      )}
       {isVideo(photo.src) && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <svg className="w-3 h-3 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -281,8 +286,8 @@ export default function GaleriaColumnas({
     }
   }, [lbIndex, isMobile, isIOS]);
 
-  // Solo fotos con visual propio: imágenes puras o videos que tienen poster
-  const displayFotos = fotos.filter((f) => !isVideo(f.src) || !!f.poster);
+  // Incluye todos los items: imágenes y videos (con o sin poster)
+  const displayFotos = fotos;
 
   // Ventana deslizante: mantiene el thumb activo siempre dentro del rango visible
   useEffect(() => {
@@ -329,7 +334,8 @@ export default function GaleriaColumnas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lbIndex]);
 
-  const imageCount = displayFotos.length;
+  // Solo cuentan items que disparan onLoad (imágenes reales o videos con poster)
+  const imageCount = displayFotos.filter((f) => !isVideo(f.src) || !!f.poster).length;
   const pct = imageCount > 0 ? Math.round((loadedCount / imageCount) * 100) : 100;
   const allLoaded = pct >= 100;
 
@@ -371,14 +377,19 @@ export default function GaleriaColumnas({
     );
   }
 
-  // Mapeo poster → src de video para el render de la galería en columnas
+  // poster → video src (para videos que tienen poster)
   const videoByPoster = new Map<string, string>(
     displayFotos
       .filter((f) => isVideo(f.src) && f.poster)
       .map((f) => [f.poster!, f.src])
   );
 
-  // El álbum muestra el poster en vez del src de video crudo
+  // video src → true (para videos sin poster — muestran placeholder oscuro en el grid)
+  const noPosterVideoSrcs = new Set<string>(
+    displayFotos.filter((f) => isVideo(f.src) && !f.poster).map((f) => f.src)
+  );
+
+  // El álbum muestra poster en vez del video crudo; sin poster, el src queda como video URL
   const albumPhotos = displayFotos.map((f) =>
     isVideo(f.src) && f.poster ? { ...f, src: f.poster } : f
   );
@@ -424,6 +435,7 @@ export default function GaleriaColumnas({
             render={{
               image: ({ src, alt, width, height, sizes, loading, style }) => {
                 const videoSrc = videoByPoster.get(src ?? "");
+                const isNoPosterVideo = noPosterVideoSrcs.has(src ?? "");
 
                 if (videoSrc) {
                   return (
@@ -441,6 +453,23 @@ export default function GaleriaColumnas({
                         loading={loading ?? "lazy"}
                         onLoad={handleImageLoad}
                       />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-black/55 backdrop-blur-[2px] rounded-full flex items-center justify-center border-2 border-white/75 shadow-xl transition-transform duration-200 group-hover:scale-110">
+                          <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (isNoPosterVideo) {
+                  return (
+                    <div
+                      className="relative group overflow-hidden rounded-lg cursor-pointer bg-[#0f172a]"
+                      style={{ ...(style as React.CSSProperties), position: "relative" }}
+                    >
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="w-12 h-12 sm:w-14 sm:h-14 bg-black/55 backdrop-blur-[2px] rounded-full flex items-center justify-center border-2 border-white/75 shadow-xl transition-transform duration-200 group-hover:scale-110">
                           <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
