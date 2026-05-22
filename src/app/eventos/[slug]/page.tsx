@@ -158,8 +158,8 @@ export default async function EventoPage({ params }: Props) {
     videosByStem.set(stem, [...(videosByStem.get(stem) ?? []), src]);
   });
 
+  // width/height son placeholder 16:9 — GaleriaColumnas sondea las dimensiones reales del archivo
   const videoItems: FotoColumnas[] = Array.from(videosByStem.entries()).map(([stem, srcs]) => {
-    const is219 = stem.toLowerCase().includes("21-9");
     const posterExt = [".jpg", ".webp", ".jpeg", ".png"].find((ext) =>
       fs.existsSync(path.join(videoDir, `${stem}${ext}`))
     );
@@ -174,8 +174,8 @@ export default async function EventoPage({ params }: Props) {
     }
     return {
       src: srcs[0],
-      width: is219 ? 2560 : 1920,
-      height: 1080,
+      width: 16,
+      height: 9,
       alt: "",
       ...(posterExt && { poster: `/media/${mediaBase}/${stem}${posterExt}` }),
       sources,
