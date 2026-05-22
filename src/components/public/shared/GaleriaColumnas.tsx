@@ -239,6 +239,7 @@ export default function GaleriaColumnas({
   const [rotateHintShow, setRotateHintShow] = useState(false);
   const [rotateHintVisible, setRotateHintVisible] = useState(false);
   const [windowStart, setWindowStart] = useState(0);
+  const [resolvedFotos, setResolvedFotos] = useState<FotoColumnas[]>(fotos);
   const videoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userVolumeRef = useRef<number>(0.6);
 
@@ -251,6 +252,47 @@ export default function GaleriaColumnas({
     setIsIOS(ios);
     // maxTouchPoints > 0 es más confiable que innerWidth (no varía al rotar)
     setIsMobile(navigator.maxTouchPoints > 0);
+  }, []);
+
+  // Sondea dimensiones reales de cada video — loadedmetadata es metadata-only, no descarga el archivo completo
+  useEffect(() => {
+    const videoFotos = fotos.filter((f) => isVideo(f.src));
+    if (videoFotos.length === 0) return;
+
+    let cancelled = false;
+
+    Promise.all(
+      videoFotos.map(
+        (foto) =>
+          new Promise<{ src: string; width: number; height: number }>((resolve) => {
+            const vid = document.createElement("video");
+            vid.preload = "metadata";
+            vid.onloadedmetadata = () => {
+              resolve({
+                src: foto.src,
+                width: vid.videoWidth || foto.width,
+                height: vid.videoHeight || foto.height,
+              });
+            };
+            vid.onerror = () => resolve({ src: foto.src, width: foto.width, height: foto.height });
+            vid.src = foto.sources?.[0]?.src ?? foto.src;
+          })
+      )
+    ).then((results) => {
+      if (cancelled) return;
+      const dimMap = new Map(results.map((r) => [r.src, r]));
+      setResolvedFotos(
+        fotos.map((f) => {
+          if (!isVideo(f.src)) return f;
+          const d = dimMap.get(f.src);
+          return d ? { ...f, width: d.width, height: d.height } : f;
+        })
+      );
+    });
+
+    return () => { cancelled = true; };
+  // fotos es un prop estable de Server Component — solo corre al montar
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fullscreen automático al abrir el lightbox — solo en móvil no-iOS
@@ -288,7 +330,8 @@ export default function GaleriaColumnas({
   }, [lbIndex, isMobile, isIOS]);
 
   // Incluye todos los items: imágenes y videos (con o sin poster)
-  const displayFotos = fotos;
+  // resolvedFotos reemplaza a fotos con dimensiones reales una vez que el sondeo termina
+  const displayFotos = resolvedFotos;
 
   // Ventana deslizante: mantiene el thumb activo siempre dentro del rango visible
   useEffect(() => {
@@ -300,17 +343,13 @@ export default function GaleriaColumnas({
     });
   }, [lbIndex]);
 
-  // Autoplay de video con delay — espera la transición de slide antes de reproducir
+  // Volumen persistido — YARL maneja el play/pause con autoPlay:true.
+  // Este efecto solo aplica el volumen guardado y escucha cambios del usuario.
   useEffect(() => {
     if (videoPlayRef.current) {
       clearTimeout(videoPlayRef.current);
       videoPlayRef.current = null;
     }
-    document.querySelectorAll(".yarl__root video").forEach((v) => {
-      const vid = v as HTMLVideoElement;
-      vid.pause();
-      vid.volume = userVolumeRef.current;
-    });
     if (lbIndex < 0) return;
     const foto = displayFotos[lbIndex];
     if (!foto || !isVideo(foto.src)) return;
@@ -331,12 +370,11 @@ export default function GaleriaColumnas({
       );
       if (match) {
         match.volume = userVolumeRef.current;
-        match.play().catch(() => {});
         activeVideo = match;
         match.addEventListener("volumechange", onVolumeChange);
       }
       videoPlayRef.current = null;
-    }, 400);
+    }, 100);
 
     return () => {
       if (videoPlayRef.current) {
@@ -414,6 +452,7 @@ export default function GaleriaColumnas({
     if (isVideo(f.src)) {
       return {
         type: "video",
+        autoPlay: true,
         sources: f.sources ?? [{ src: f.src, type: getMimeType(f.src) }],
         ...(f.poster && { poster: f.poster }),
         width: f.width,
@@ -526,7 +565,7 @@ export default function GaleriaColumnas({
         close={() => setLbIndex(-1)}
         slides={lightboxSlides}
         on={{ view: ({ index }) => setLbIndex(index) }}
-        video={{ autoPlay: false, playsInline: true, preload: "auto" }}
+        video={{ autoPlay: true, playsInline: true, preload: "auto" }}
         carousel={{ finite: true }}
         plugins={[Video]}
         styles={{
