@@ -66,6 +66,22 @@ export default function DocumentViewer({
         >
           {/* Header sidebar — fijo */}
           <div className="flex-shrink-0">
+            {/* Volver a recursos — h-11 para alinearse con el toolbar del panel PDF */}
+            <a
+              href="/#recursos"
+              className="h-11 flex items-center gap-2 px-4 border-b border-gc-gray-200
+                         font-body font-semibold text-sm text-gc-green-800
+                         hover:bg-gc-green-50 transition-colors group"
+            >
+              <svg
+                className="w-4 h-4 shrink-0 transition-transform duration-150 group-hover:-translate-x-0.5"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Volver a recursos
+            </a>
+
             {/* Filtros + cerrar en una sola línea */}
             <div className="px-3 py-2 border-b border-gc-gray-200 flex items-center gap-1.5 flex-wrap">
               {["Todos", ...categorias].map((cat) => (
@@ -190,7 +206,7 @@ export default function DocumentViewer({
           </div>
 
           {/* Visor PDF — ocupa todo el espacio restante */}
-          <div className="flex-1 overflow-hidden bg-gc-gray-100">
+          <div className="flex-1 overflow-hidden bg-gc-gray-100 px-[5%]">
             {/* Desktop: iframe — sin key para evitar remount y flash de layout */}
             <iframe
               src={`${selectedDoc.url}#view=FitH`}

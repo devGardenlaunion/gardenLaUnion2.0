@@ -16,10 +16,10 @@ export const recursos: RecursoItem[] = [
     id: 'pei',
     nombre: 'Proyecto Educativo',
     descripcion: 'PEI — Misión, visión y lineamientos',
-    url: '/documentos',
+    url: '/documentos?doc=pei',
     tipo: 'documento',
     grupo: 'interno',
-    nuevaPestana: true,
+    nuevaPestana: false,
   },
   {
     id: 'reglamento-convivencia',
@@ -28,7 +28,7 @@ export const recursos: RecursoItem[] = [
     url: '/documentos?doc=reglamento-convivencia',
     tipo: 'documento',
     grupo: 'interno',
-    nuevaPestana: true,
+    nuevaPestana: false,
   },
   {
     id: 'centro-documentacion',
@@ -37,7 +37,7 @@ export const recursos: RecursoItem[] = [
     url: '/documentos',
     tipo: 'documento',
     grupo: 'interno',
-    nuevaPestana: true,
+    nuevaPestana: false,
   },
   {
     id: 'sae-mineduc',

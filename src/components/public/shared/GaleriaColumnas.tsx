@@ -393,6 +393,7 @@ export default function GaleriaColumnas({
 
   useEffect(() => {
     if (allLoaded && imageCount > 0 && mounted) {
+      window.dispatchEvent(new CustomEvent("galeria:lista"));
       const t = setTimeout(() => setToastVisible(false), 1800);
       return () => clearTimeout(t);
     }
