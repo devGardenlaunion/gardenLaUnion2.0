@@ -40,6 +40,12 @@ export default function HashScrollClient({ mediaUrl, mediaType }: HashScrollClie
     const hash = window.location.hash.slice(1); // quitar el "#"
     if (SKIP_HASHES.has(hash)) return;
 
+    // Cortar inmediatamente cualquier scroll suave en curso (el que lanza el
+    // router de Next.js al navegar a /#hash desde una página secundaria).
+    // Se hace aquí, antes de mostrar el overlay, para que el usuario no vea
+    // la animación de desplazamiento.
+    document.documentElement.style.scrollBehavior = "auto";
+
     targetRef.current = hash;
     setVisible(true);
 
@@ -49,18 +55,35 @@ export default function HashScrollClient({ mediaUrl, mediaType }: HashScrollClie
       if (dismissed) return;
       dismissed = true;
 
-      // Scroll corregido mientras el overlay aún cubre la pantalla
-      const el = document.getElementById(targetRef.current);
-      el?.scrollIntoView({ behavior: "instant" });
+      // Double rAF: asegura que el layout esté completamente asentado antes de
+      // corregir el scroll (imágenes desde CDN cacheada en producción).
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = document.getElementById(targetRef.current);
+          el?.scrollIntoView({ behavior: "instant" });
 
-      // Esperar un frame para que el scroll aplique, luego fade-out
-      setTimeout(() => {
-        setFading(true);
-        setTimeout(() => setVisible(false), 550);
-      }, 80);
+          // Restaurar scroll-behavior después de que el scroll se aplique
+          requestAnimationFrame(() => {
+            document.documentElement.style.scrollBehavior = "";
+          });
+
+          setTimeout(() => {
+            setFading(true);
+            setTimeout(() => setVisible(false), 550);
+          }, 80);
+        });
+      });
     }
 
     const handler = () => dismiss();
+
+    // Race condition fix: si el evento ya se disparó antes de que este
+    // componente montara (CDN cache en producción), el flag global lo captura.
+    if ((window as any).__galeriaLista) {
+      dismiss();
+      return;
+    }
+
     window.addEventListener("galeria:lista", handler);
 
     // Failsafe: si la galería tarda más de 8s (mismo timeout que su propio failsafe)
@@ -69,6 +92,7 @@ export default function HashScrollClient({ mediaUrl, mediaType }: HashScrollClie
     return () => {
       window.removeEventListener("galeria:lista", handler);
       clearTimeout(failsafe);
+      document.documentElement.style.scrollBehavior = "";
     };
   }, []);
 

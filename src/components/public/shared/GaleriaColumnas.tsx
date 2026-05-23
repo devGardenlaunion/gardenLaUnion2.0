@@ -393,6 +393,9 @@ export default function GaleriaColumnas({
 
   useEffect(() => {
     if (allLoaded && imageCount > 0 && mounted) {
+      // Flag global: permite que HashScrollClient detecte el evento aunque haya
+      // montado después del dispatch (race condition con CDN cache en producción)
+      (window as any).__galeriaLista = true;
       window.dispatchEvent(new CustomEvent("galeria:lista"));
       const t = setTimeout(() => setToastVisible(false), 1800);
       return () => clearTimeout(t);
