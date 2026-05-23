@@ -77,8 +77,16 @@ garden-web/
 │   └── restore.sh               # Restore PostgreSQL
 ├── .env.example                 # Template de variables
 └── docs/
-    ├── GUIA_CONTENIDO_CONVIVENCIA.md
-    └── DEPLOY.md
+    ├── README.md                    # Índice de documentación
+    ├── SETUP_DEV.md                 # Setup entorno local
+    ├── UX_CONTEXT.md                # Informe UX/UI completo
+    ├── PERFORMANCE_AUDIT.md         # Auditoría de rendimiento
+    └── admin/                       # Documentación del panel admin
+        ├── README.md
+        ├── BLUEPRINT_EVENTOS.md     # Referencia canónica de eventos
+        ├── REQUISITOS.md            # Checklist de implementación del admin
+        ├── GALERIAS.md              # Arquitectura de componentes de galería
+        └── CONVIVENCIA.md           # Guía editorial sección convivencia
 ```
 
 ### Rutas públicas (SSR para SEO)
@@ -240,7 +248,7 @@ El orden y contenido de cada sección se basa en el PEI del colegio y el anális
 - Logros concretos: campaña "Un Colegio Sin Bullying", cero denuncias
 - Enfoque: ambiente seguro, respeto, valores cristianos
 - Testimonios o cifras de impacto (editables desde panel)
-- Ver `docs/GUIA_CONTENIDO_CONVIVENCIA.md` para guía de contenido
+- Ver `docs/admin/CONVIVENCIA.md` para guía de contenido
 
 ### 5. Niveles Educativos
 - Parvularia (Pre-Kínder, Kínder) — Sede Los Carrera 387

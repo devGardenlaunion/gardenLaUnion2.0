@@ -67,11 +67,18 @@ async function main() {
       orden: 6,
     },
     {
+      clave: "institucional.ciudad",
+      valor: "La Unión",
+      tipo: "text",
+      grupo: "institucional",
+      orden: 7,
+    },
+    {
       clave: "institucional.rbd",
       valor: "22743-9",
       tipo: "text",
       grupo: "institucional",
-      orden: 7,
+      orden: 8,
     },
     {
       clave: "institucional.director",

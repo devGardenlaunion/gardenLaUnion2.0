@@ -38,6 +38,7 @@ interface EventosWrapperProps {
   titulo: string;
   subtitulo: string;
   badge: string;
+  nombre: string;
 }
 
 export default function EventosWrapper({
@@ -46,6 +47,7 @@ export default function EventosWrapper({
   titulo,
   subtitulo,
   badge,
+  nombre,
 }: EventosWrapperProps) {
   if (!heroEdicion && gridEdiciones.length === 0) return null;
 
@@ -65,7 +67,7 @@ export default function EventosWrapper({
             href={`/eventos/${heroEdicion.slug}`}
             className="w-full text-left mb-6 lg:mb-8 group block"
           >
-            <div className="relative rounded-2xl overflow-hidden min-h-[320px] sm:min-h-[400px] flex items-end">
+            <div className="relative rounded-2xl overflow-hidden min-h-[360px] sm:min-h-[480px] flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800">
               {heroEdicion.heroVideo ? (
                 <AutoplayVideo
                   src={heroEdicion.heroVideo}
@@ -75,33 +77,30 @@ export default function EventosWrapper({
               ) : heroEdicion.imagenPortada ? (
                 <img
                   src={heroEdicion.imagenPortada}
-                  alt={heroEdicion.titulo}
+                  alt={heroEdicion.evento.nombre}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800" />
-              )}
-              {/* Tint uniforme — evita que el video supere el texto en las esquinas */}
-              <div className="absolute inset-0 bg-gc-green-900/40" />
-              <div className="absolute inset-0 bg-gradient-to-t from-gc-green-900/90 via-gc-green-900/30 to-transparent" />
+              ) : null}
+              {/* Tint uniforme sobre el video */}
+              <div className="absolute inset-0 bg-gc-green-900/50" />
+              {/* Gradiente inferior — oscurece la zona del texto */}
+              <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(20,56,50,0.95) 0%, rgba(20,56,50,0.55) 40%, transparent 70%)" }} />
               <div className="relative p-6 lg:p-10 w-full">
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className="inline-flex items-center px-3 py-1 bg-gc-gold/20 text-gc-gold-light text-xs font-semibold rounded-full backdrop-blur-sm border border-gc-gold/20">
-                    {heroEdicion.evento.nombre} · {format(new Date(heroEdicion.fecha), "yyyy", { locale: es })}
-                  </span>
-                </div>
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white mb-3 leading-tight max-w-3xl">
-                  {heroEdicion.titulo}
+                <span className="inline-flex items-center px-3 py-1 bg-gc-gold/20 text-gc-gold-light text-xs font-semibold rounded-full backdrop-blur-sm border border-gc-gold/20 mb-4 block w-fit">
+                  {heroEdicion.evento.nombre}
+                </span>
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white mb-2 leading-tight">
+                  {heroEdicion.evento.nombre}
                 </h3>
-                <time className="text-white/60 text-sm font-body block mb-4">
-                  {format(new Date(heroEdicion.fecha), "d 'de' MMMM, yyyy", { locale: es })}
-                </time>
+                <p className="text-white/60 text-sm font-body mb-4 capitalize">
+                  {format(new Date(heroEdicion.fecha), "MMMM", { locale: es })}{nombre ? ` · ${nombre}` : ""}
+                </p>
                 <p className="text-white/80 font-body text-base max-w-2xl mb-6 leading-relaxed line-clamp-2">
                   {heroEdicion.extracto}
                 </p>
-                <span className="btn-primary text-sm">
+                <span className="btn-primary text-sm inline-flex items-center gap-2">
                   Ver evento
-                  <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
                 </span>
@@ -124,7 +123,7 @@ export default function EventosWrapper({
                     {edicion.imagenPortada ? (
                       <img
                         src={edicion.imagenPortada}
-                        alt={edicion.titulo}
+                        alt={edicion.evento.nombre}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
@@ -143,11 +142,11 @@ export default function EventosWrapper({
                     </div>
                   </div>
                   <div className="p-4 lg:p-5">
-                    <time className="text-xs text-gc-green-800/40 font-body">
-                      {format(new Date(edicion.fecha), "d 'de' MMMM, yyyy", { locale: es })}
+                    <time className="text-xs text-gc-green-800/40 font-body capitalize">
+                      {format(new Date(edicion.fecha), "MMMM", { locale: es })}
                     </time>
                     <h3 className="text-base font-display font-bold text-gc-green-800 mt-1 mb-2 line-clamp-2 group-hover:text-gc-green transition-colors">
-                      {edicion.titulo}
+                      {edicion.evento.nombre}
                     </h3>
                     <p className="text-gc-green-800/60 font-body text-sm leading-relaxed line-clamp-2">
                       {edicion.extracto}
