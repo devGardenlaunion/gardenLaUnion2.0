@@ -133,6 +133,7 @@ export default async function EventosDestacados() {
         "Tradiciones que construyen comunidad cada año"
       }
       badge={config["eventos.badge"] || "Lo que vivimos"}
+      nombre={config["institucional.nombre"] || "Garden College"}
     />
   );
 }

@@ -75,17 +75,17 @@ export async function generateMetadata({ params }: Props) {
   if (!edicion || edicion.estado !== "PUBLICADA") return {};
 
   return {
-    title: `${edicion.titulo} — Garden College`,
+    title: `${edicion.evento.nombre} — Garden College`,
     description: edicion.extracto,
     openGraph: {
-      title: edicion.titulo,
+      title: edicion.evento.nombre,
       description: edicion.extracto,
       type: "article",
       ...(edicion.imagenPortada && { images: [{ url: edicion.imagenPortada }] }),
     },
     twitter: {
       card: "summary_large_image",
-      title: edicion.titulo,
+      title: edicion.evento.nombre,
       description: edicion.extracto,
       ...(edicion.imagenPortada && { images: [edicion.imagenPortada] }),
     },
@@ -102,6 +102,7 @@ export default async function EventoPage({ params }: Props) {
   if (!edicion || edicion.estado !== "PUBLICADA") notFound();
 
   const nombre = config["institucional.nombre"] || "Garden College";
+  const ciudad = config["institucional.ciudad"] || "";
   const sedes = [
     {
       nombre: config["contacto.sede_basica.nombre"] || "Sede Básica",
@@ -188,13 +189,14 @@ export default async function EventoPage({ params }: Props) {
     ...fotosGrande.filter((f) => !videoPosterUrls.has(f.src)),
   ];
 
+  const parrafos = edicion.evento.descripcion?.split("\n\n").filter(Boolean) ?? [];
+  const introParrafos = parrafos.slice(0, 2);
+  const cuerpoParrafos = parrafos.slice(2);
+
   const otrasEdiciones = edicion.evento.ediciones.filter(
     (e) => e.slug !== edicion.slug
   );
 
-  const parrafos = edicion.evento.descripcion?.split("\n\n").filter(Boolean) ?? [];
-  const introParrafos = parrafos.slice(0, 2);
-  const cuerpoParrafos = parrafos.slice(2);
 
   return (
     <>
@@ -216,31 +218,33 @@ export default async function EventoPage({ params }: Props) {
           ) : heroSrc ? (
             <img
               src={heroSrc}
-              alt={edicion.titulo}
+              alt={edicion.evento.nombre}
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : null}
-          {/* Scrim superior — evita que el navbar se pierda en fondos claros */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
-          {/* Scrim inferior — garantiza legibilidad del texto siempre */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-          <div className="relative container-gc pb-10 pt-14">
-            <a href="/#eventos" className="inline-flex items-center gap-2 text-white/50 hover:text-white/80 text-sm font-body mb-6 transition-colors">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-              Volver a Eventos
-            </a>
-            <br />
-            <span className="inline-flex items-center px-4 py-1.5 bg-gc-gold/20 text-gc-gold-light text-sm font-semibold rounded-full border border-gc-gold/20 mb-4">
-              {edicion.evento.nombre} · {format(edicion.fecha, "yyyy", { locale: es })}
-            </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mb-4 leading-tight max-w-4xl drop-shadow-lg">
-              {edicion.titulo}
-            </h1>
-            <time className="text-white/70 text-sm font-body drop-shadow">
-              {format(edicion.fecha, "d 'de' MMMM, yyyy", { locale: es })}
-            </time>
+          {/* Tint uniforme sobre el video */}
+          <div className="absolute inset-0 bg-gc-green-900/50" />
+          {/* Gradiente inferior — oscurece la zona del texto */}
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(20,56,50,0.95) 0%, rgba(20,56,50,0.55) 40%, transparent 70%)" }} />
+          <div className="relative container-gc w-full pb-10 pt-14">
+            <div className="max-w-3xl mx-auto">
+              <a href="/#eventos" className="inline-flex items-center gap-2 text-white/50 hover:text-white/80 text-sm font-body mb-6 transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Volver a Eventos
+              </a>
+              <br />
+              <span className="inline-flex items-center px-4 py-1.5 bg-gc-gold/20 text-gc-gold-light text-sm font-semibold rounded-full border border-gc-gold/20 mb-4">
+                {edicion.evento.nombre}
+              </span>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mb-2 leading-tight drop-shadow-lg">
+                {edicion.evento.nombre}
+              </h1>
+              <p className="text-white/60 text-base font-body drop-shadow capitalize">
+                {format(edicion.fecha, "MMMM", { locale: es })}{nombre ? ` · ${nombre}` : ""}{ciudad ? ` · ${ciudad}` : ""}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -305,10 +309,10 @@ export default async function EventoPage({ params }: Props) {
               <div className="mb-10">
                 <div className="border-l-4 border-gc-gold pl-4 mb-6">
                   <p className="text-xs font-body font-semibold text-gc-green-600 uppercase tracking-widest mb-1">
-                    {edicion.evento.nombre} · {year}
+                    {edicion.evento.nombre}
                   </p>
                   <h2 className="text-2xl sm:text-3xl font-display font-bold text-gc-green-800">
-                    Galería
+                    Galería {year}
                   </h2>
                 </div>
                 <GaleriaColumnas fotos={galeriaItems} />
@@ -328,7 +332,7 @@ export default async function EventoPage({ params }: Props) {
                       href={`/eventos/${ed.slug}`}
                       className="px-4 py-2 bg-white border border-gc-green-100 text-gc-green-800 text-sm font-body rounded-full hover:bg-gc-green hover:text-white hover:border-gc-green transition-colors"
                     >
-                      {format(new Date(ed.fecha), "yyyy", { locale: es })} — {ed.titulo.substring(0, 35)}{ed.titulo.length > 35 ? "…" : ""}
+                      {new Date(ed.fecha).getFullYear()}
                     </a>
                   ))}
                 </div>
