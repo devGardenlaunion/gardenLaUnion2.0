@@ -2,6 +2,7 @@ import { getConfig } from "@/lib/config";
 import { getMediaCover } from "@/lib/media";
 import { redesSociales } from "@/data/redes";
 import Navbar from "@/components/public/sections/Navbar";
+import HashScrollClient from "@/components/public/shared/HashScrollClient";
 import Hero from "@/components/public/sections/Hero";
 import QuienesSomos from "@/components/public/sections/QuienesSomos";
 import Convivencia from "@/components/public/sections/Convivencia";
@@ -62,6 +63,13 @@ export default async function HomePage() {
 
   return (
     <>
+      {/*
+        HashScrollClient: corrige el scroll al navegar desde páginas secundarias con hash.
+        Para activar el loop de media: pasar mediaUrl y mediaType.
+        Ej: mediaUrl="/media/LoadingOverlay/loop.mp4" mediaType="mp4"
+        El archivo debe ir en public/media/LoadingOverlay/ (< 2MB, sin audio).
+      */}
+      <HashScrollClient />
       <Navbar
         nombre={nombre}
         telefonoBasica={sedes[0]?.telefono}

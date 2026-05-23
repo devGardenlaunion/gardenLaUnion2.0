@@ -61,8 +61,7 @@ function TarjetaInterna({ recurso }: { recurso: RecursoItem }) {
   return (
     <a
       href={recurso.url}
-      target="_blank"
-      rel="noopener noreferrer"
+      {...(recurso.nuevaPestana && { target: "_blank", rel: "noopener noreferrer" })}
       className={`flex items-start gap-3 p-4 rounded-xl border hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 no-underline ${
         esDestacada
           ? "bg-gc-green-50 border-gc-green/40"
@@ -79,10 +78,12 @@ function TarjetaInterna({ recurso }: { recurso: RecursoItem }) {
         <p className="font-body text-xs text-gc-gray-400 mt-0.5">
           {recurso.descripcion}
         </p>
-        <p className="font-body text-[10px] text-gc-gray-300 flex items-center gap-1 mt-1">
-          <IconoFlecha />
-          abre en nueva pestaña
-        </p>
+        {recurso.nuevaPestana && (
+          <p className="font-body text-[10px] text-gc-gray-300 flex items-center gap-1 mt-1">
+            <IconoFlecha />
+            abre en nueva pestaña
+          </p>
+        )}
       </div>
     </a>
   );

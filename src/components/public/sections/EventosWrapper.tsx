@@ -67,7 +67,7 @@ export default function EventosWrapper({
             href={`/eventos/${heroEdicion.slug}`}
             className="w-full text-left mb-6 lg:mb-8 group block"
           >
-            <div className="relative rounded-2xl overflow-hidden min-h-[360px] sm:min-h-[480px] flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800">
+            <div className="relative rounded-2xl overflow-hidden min-h-[270px] sm:min-h-[360px] flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800">
               {heroEdicion.heroVideo ? (
                 <AutoplayVideo
                   src={heroEdicion.heroVideo}
