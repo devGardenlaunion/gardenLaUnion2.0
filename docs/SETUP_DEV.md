@@ -1,6 +1,7 @@
 # Setup de Desarrollo — Garden College Web
 
-> Documento escrito para sobrevivir un formateo de SO. Si estás leyendo esto después de reinstalar, sigue los pasos en orden.
+> Documento escrito para sobrevivir un formateo de SO. Si estás leyendo esto
+> después de reinstalar, sigue los pasos en orden.
 
 ---
 
@@ -8,37 +9,48 @@
 
 | Capa | Herramienta | Dónde vive |
 |------|-------------|------------|
-| Framework | Next.js (App Router) | Local |
-| Base de datos | **Neon** (PostgreSQL cloud) | neon.tech — misma para dev y prod |
-| Deploy prod | **Vercel** | Conectado al repo GitHub, auto-deploy en cada push a `main` |
-| Auth prod | NextAuth + Google OAuth 2.0 | Variables en Vercel |
+| Framework | Next.js 16 (App Router) | Local |
+| Contenido | Archivos del repo (`src/content/`, `public/media/`) | Git |
+| Base de datos | **Ninguna** | — |
+| Deploy | **Vercel** | Auto-deploy en cada push a `main` |
 
-> **Nota:** El `docker-compose.yml` y el `Dockerfile` existen pero son para un futuro deploy en Oracle Cloud. **En el flujo actual no se usa Docker.**
+> **No hay base de datos.** Neon, Prisma y el panel admin se retiraron: ningún
+> código los usaba y el panel eran cuatro 404 detrás de un login. El detalle
+> está en [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md).
+>
+> **Tampoco hay Docker.** El `Dockerfile` y los `docker-compose.yml` se
+> eliminaron: existían para un deploy en Oracle Cloud que no ocurrió, y ya no
+> construían sin Prisma.
 
 ---
 
 ## Requisitos del sistema
+
+**Node.js 20 o superior.** Next 16 no corre en 18 — falla con
+`Node.js version ">=20.9.0" is required`.
 
 ```bash
 # Arch Linux
 sudo pacman -S nodejs npm git
 
 # Verificar
-node --version   # debe ser LTS (20.x o 22.x)
+node --version   # 20.x, 22.x o superior
 npm --version
 ```
 
-Alternativa con nvm (recomendada para manejar versiones):
+Alternativa con nvm o fnm (recomendada si hay varios proyectos con versiones
+distintas):
+
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 source ~/.bashrc   # o el archivo de tu shell
-nvm install --lts
-nvm use --lts
+nvm install 20
+nvm use 20
 ```
 
 ---
 
-## Paso 1 — Clonar el repo (si no está)
+## Paso 1 — Clonar el repo
 
 ```bash
 git clone https://github.com/TU_USUARIO/TU_REPO.git gardenLaUnion2.0
@@ -53,38 +65,16 @@ cd gardenLaUnion2.0
 cp .env.example .env
 ```
 
-Editar `.env` y completar **solo estas variables** para que funcione en dev:
+Para desarrollo basta con:
 
 ```env
-# ← La URL completa de Neon. La encuentras en:
-# neon.tech → tu proyecto → "Connection Details" → copiar la connection string
-DATABASE_URL=postgresql://usuario:password@host.neon.tech/neondb?sslmode=require
-
-# ← Inventar uno (no importa el valor en dev)
-DB_PASSWORD=cualquier_cosa
-
-# ← Para dev
 SITE_URL=http://localhost:3000
-
-# ← Generar con: openssl rand -base64 32
-AUTH_SECRET=GENERAR_CON_OPENSSL
-
-# ← Dejar como placeholder en dev (el skip auth lo reemplaza)
-GOOGLE_CLIENT_ID=placeholder.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=placeholder
-
-ALLOWED_EMAIL_DOMAIN=gardenlaunion.cl
-NODE_ENV=development
-
-# ← true = salta el login de Google, accedes directo a /admin
-NEXT_PUBLIC_SKIP_AUTH=true
 ```
 
-**¿Dónde está la URL de Neon?**
-1. Entrar a [neon.tech](https://neon.tech) con tu cuenta
-2. Seleccionar el proyecto `garden` (o el nombre que tenga)
-3. Panel principal → sección **"Connection Details"** o botón **"Connect"**
-4. Copiar la connection string completa (tiene formato `postgresql://...@...neon.tech/neondb?sslmode=require`)
+**El resto es opcional.** Las variables `SMTP_*` sólo afectan al formulario de
+contacto: sin ellas el sitio anda igual, pero enviar el formulario devuelve
+error 502. Si necesitás probar el envío, completá las seis variables de correo
+según [`.env.example`](../.env.example).
 
 ---
 
@@ -96,73 +86,65 @@ npm install
 
 ---
 
-## Paso 4 — Verificar la BD (solo si es una BD nueva o recién creada)
-
-```bash
-# Si la BD ya tiene datos de antes, esto NO es necesario
-npx prisma migrate dev
-npx prisma db seed
-```
-
-Si la BD ya estaba funcionando, basta con:
-```bash
-npx prisma generate   # regenera el client local
-```
-
----
-
-## Paso 5 — Arrancar
+## Paso 4 — Arrancar
 
 ```bash
 npm run dev
 ```
 
-Abrir [http://localhost:3000](http://localhost:3000). Listo.
+Abrir [http://localhost:3000](http://localhost:3000). Listo. No hay migraciones
+ni seed que correr: el contenido son archivos que ya están en el repo.
+
+---
+
+## Antes de pushear
+
+```bash
+npm run build
+```
+
+Es lo mismo que corre Vercel, así que si pasa acá pasa allá. Dos cosas a
+revisar en la salida:
+
+1. Que no haya errores de TypeScript (el build los chequea).
+2. Que la **única** ruta marcada `ƒ (Dynamic)` sea `/api/contacto`. Si aparece
+   otra, el sitio se va a publicar sin fotos — el porqué está en
+   [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md#por-qué-el-sitio-es-100-estático).
 
 ---
 
 ## Deploy a producción
 
-**No hay comando manual.** El deploy es automático:
+**No hay comando manual.** Commit y push a `main`; Vercel despliega en ~2-3
+minutos.
 
-1. Hacer commit y push a `main`
-2. Vercel detecta el push y despliega automáticamente
-3. En ~2-3 minutos el cambio está en producción
-
-**¿Dónde están las variables de entorno de producción?**
-→ Vercel dashboard → proyecto `garden-college` (o el nombre que tenga) → **Settings → Environment Variables**
-
-Las variables que deben estar ahí:
-- `DATABASE_URL` (la misma URL de Neon, o una branch separada de prod)
-- `AUTH_SECRET`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `ALLOWED_EMAIL_DOMAIN`
-- `SITE_URL` = `https://gardencollege.cl`
-- `NODE_ENV` = `production`
-- `NEXT_PUBLIC_SKIP_AUTH` = `false`
-
----
-
-## Migraciones de BD en producción
-
-Vercel no corre migraciones automáticamente. Cuando hay una nueva migración:
-
-```bash
-# Apuntar a la BD de producción temporalmente
-DATABASE_URL="url-de-neon-prod" npx prisma migrate deploy
-```
-
-O correrla directamente desde Neon console (para migraciones simples).
+Variables de entorno de producción: Vercel dashboard → proyecto → **Settings →
+Environment Variables**. Guía completa en
+[DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md).
 
 ---
 
 ## Comandos útiles
 
 ```bash
-npm run dev              # servidor de desarrollo
-npx prisma studio        # UI para ver/editar la BD en el navegador
-npx prisma migrate dev   # aplicar migraciones nuevas en dev
-npx prisma db seed       # repoblar con datos iniciales
-npx prisma generate      # regenerar el client (después de cambios en schema)
+npm run dev          # servidor de desarrollo
+npm run build        # build de producción (chequeo obligatorio antes de pushear)
+npm run typecheck    # tsc --noEmit
+npm run lint         # ESLint
+
+node scripts/generar-og-image.js   # regenera la tarjeta de redes sociales
+node scripts/probar-smtp.js        # verifica el correo del formulario de contacto
 ```
+
+---
+
+## Dónde se edita el contenido
+
+| Qué | Dónde |
+|-----|-------|
+| Textos del sitio | `src/content/config.ts` |
+| Eventos / historias | `src/content/eventos.ts` |
+| Fotos y videos | `public/media/<Seccion>/` |
+| Documentos PDF | `public/documentos/` + la lista en `src/app/documentos/page.tsx` |
+
+Guías: [CONTENIDO.md](./CONTENIDO.md) y [EVENTOS.md](./EVENTOS.md).

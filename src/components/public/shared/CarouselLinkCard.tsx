@@ -1,16 +1,58 @@
-// Imágenes: coloca los archivos en public/media/carousel-cards/<nombre-del-card>/
-// Las primeras 3 imágenes del array se usan; el resto se ignora.
-// Si no se proveen imágenes se muestra un placeholder visual.
-// El keyframe "carousel-fade" está definido en globals.css (ciclo 9s, 3 imágenes).
+import Image from "next/image";
 
-const DELAYS = ["0s", "-6s", "-3s"] as const;
+// Imágenes: coloca los archivos en public/media/carousel-cards/<nombre-del-card>/
+// Se usan TODAS las imágenes recibidas — el crossfade se ajusta a la cantidad.
+// Si no se proveen imágenes se muestra un placeholder visual.
+//
+// `href` es opcional: sin él la card es puramente visual (se renderiza como
+// <div>, sin flecha ni hover de link). Así la usa la sección Sellos.
+
+// Segundos que cada imagen permanece en pantalla (incl. transición).
+const SEG_POR_IMAGEN = 3.5;
 
 interface CarouselLinkCardProps {
-  href: string;
-  title: string;
+  href?: string;
+  /** Sin title ni label, la card es solo imágenes rotando (sin overlay de texto). */
+  title?: string;
   label?: string;
   images?: string[];
+  /**
+   * "cover" (default): la foto llena la card y se recorta lo que sobra.
+   * "contain": la foto se muestra completa (sin recortar), con un fondo
+   *   desenfocado de la misma imagen rellenando el espacio sobrante. Útil cuando
+   *   las fotos tienen proporciones mixtas y no se quiere recortar ninguna.
+   */
+  fit?: "cover" | "contain";
+  /**
+   * Texto alternativo del carrusel.
+   *
+   * Lo lleva sólo la PRIMERA foto: las demás quedan con alt="" porque están
+   * apiladas en el mismo lugar rotando por CSS. Si todas llevaran alt, un lector
+   * de pantalla leería N descripciones seguidas de algo que se ve como una sola
+   * imagen. Con una basta para que la card no sea invisible ni para Google
+   * Imágenes ni para quien no ve la pantalla.
+   */
+  alt?: string;
   className?: string;
+}
+
+/**
+ * Genera el keyframe de crossfade para N imágenes.
+ *
+ * El anterior estaba hardcodeado en globals.css para exactamente 3 slides. Con
+ * cantidad variable hay que calcular las ventanas: cada imagen ocupa un "slot"
+ * de 100/n del ciclo, con un fade que se solapa con la siguiente para el
+ * crossfade. Se emite como <style> junto a la card (un nombre por cantidad).
+ */
+function keyframesPara(n: number): { nombre: string; css: string } {
+  const nombre = `cf-${n}`;
+  const slot = 100 / n;
+  const fade = Math.min(slot * 0.35, 8);
+  const r = (x: number) => Math.round(x * 100) / 100;
+  const css = `@keyframes ${nombre}{0%{opacity:0}${r(fade)}%{opacity:1}${r(
+    slot
+  )}%{opacity:1}${r(slot + fade)}%{opacity:0}100%{opacity:0}}`;
+  return { nombre, css };
 }
 
 function Placeholder() {
@@ -32,53 +74,108 @@ export default function CarouselLinkCard({
   title,
   label,
   images = [],
+  fit = "cover",
+  alt = "",
   className = "",
 }: CarouselLinkCardProps) {
-  const slides = images.slice(0, 3);
+  const slides = images;
   const hasImages = slides.length > 0;
+  const esLink = !!href;
+  const animar = slides.length > 1;
+  const hayTexto = !!(title || label);
+  const contain = fit === "contain";
+
+  const Wrapper = esLink ? "a" : "div";
+  const kf = animar ? keyframesPara(slides.length) : null;
+  const duracion = slides.length * SEG_POR_IMAGEN;
 
   return (
-    <a
-      href={href}
-      className={`rounded-xl overflow-hidden border border-gc-green-100/15 hover:border-gc-gold/30 transition-colors block group relative ${className}`}
+    <Wrapper
+      {...(esLink ? { href } : {})}
+      className={`rounded-xl overflow-hidden border border-gc-green-100/15 transition-colors block group relative ${
+        esLink ? "hover:border-gc-gold/30" : ""
+      } ${contain ? "bg-gc-green-900" : ""} ${className}`}
       style={{ minHeight: "160px" }}
     >
+      {kf && <style dangerouslySetInnerHTML={{ __html: kf.css }} />}
+
       {hasImages ? (
         slides.map((src, i) => (
-          <img
+          // Cada slide es un contenedor que se anima (crossfade). En modo
+          // "contain" lleva dos capas: fondo desenfocado (cover) + foto completa
+          // (contain), para no recortar nada sin dejar barras vacías.
+          <div
             key={src}
-            src={src}
-            alt=""
-            aria-hidden
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ animation: `carousel-fade 9s ${DELAYS[i]} infinite` }}
-          />
+            className="absolute inset-0"
+            style={
+              animar
+                ? {
+                    opacity: 0,
+                    animation: `${kf!.nombre} ${duracion}s ${
+                      -(i * SEG_POR_IMAGEN)
+                    }s infinite`,
+                  }
+                : undefined
+            }
+          >
+            {contain && (
+              <>
+                <Image
+                  src={src}
+                  alt=""
+                  aria-hidden
+                  fill
+                  sizes="(max-width: 1024px) 60vw, 360px"
+                  className="object-cover scale-110 blur-2xl"
+                />
+                <div className="absolute inset-0 bg-gc-green-900/30" />
+              </>
+            )}
+            <Image
+              src={src}
+              alt={i === 0 ? alt : ""}
+              aria-hidden={i !== 0 || !alt}
+              fill
+              sizes="(max-width: 1024px) 60vw, 360px"
+              className={contain ? "object-contain" : "object-cover"}
+            />
+          </div>
         ))
       ) : (
         <Placeholder />
       )}
 
-      {/* Fade negro garantizado sobre la foto */}
-      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent" />
+      {/* Overlay de texto: solo si hay title/label. Sin texto (p.ej. Admisión)
+          la card es imagen pura, sin el fade negro ni la flecha. */}
+      {hayTexto && (
+        <>
+          {/* Fade negro garantizado sobre la foto */}
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent" />
 
-      {/* Texto + flecha */}
-      <div className="absolute inset-x-0 bottom-0 p-4 flex items-end justify-between gap-3">
-        <div>
-          {label && (
-            <p className="text-gc-green-100/55 font-body text-xs mb-1 leading-snug">
-              {label}
-            </p>
-          )}
-          <span className="text-white font-display font-bold text-base leading-tight">
-            {title}
-          </span>
-        </div>
-        <div className="w-9 h-9 rounded-lg bg-gc-gold/20 text-gc-gold-light flex items-center justify-center shrink-0 group-hover:bg-gc-gold/30 transition-colors">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </div>
-      </div>
-    </a>
+          {/* Texto + flecha */}
+          <div className="absolute inset-x-0 bottom-0 p-4 flex items-end justify-between gap-3">
+            <div>
+              {label && (
+                <p className="text-gc-green-100/55 font-body text-xs mb-1 leading-snug">
+                  {label}
+                </p>
+              )}
+              {title && (
+                <span className="text-white font-display font-bold text-base leading-tight">
+                  {title}
+                </span>
+              )}
+            </div>
+            {esLink && (
+              <div className="w-9 h-9 rounded-lg bg-gc-gold/20 text-gc-gold-light flex items-center justify-center shrink-0 group-hover:bg-gc-gold/30 transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </Wrapper>
   );
 }

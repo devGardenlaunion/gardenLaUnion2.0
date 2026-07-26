@@ -9,7 +9,7 @@
 
 **Componente público:** `src/components/public/GaleriaColumnas.tsx`  
 **Tipo de dato:** `FotoColumnas` (exportado desde el mismo componente)  
-**API auxiliar:** `src/app/api/media/galeria/route.ts` (útil para admin)  
+**API auxiliar:** ya no existe — `/api/media/galeria` se eliminó (nadie lo llamaba y leía `public/` con `fs`, lo que falla en Vercel). `Galeria.tsx` lee el filesystem directo en el build.  
 **Fuente de imágenes:** `public/media/Galeria/` (archivos físicos en servidor)  
 **Estado:** Implementado y activo en `Galeria.tsx`.
 
@@ -61,7 +61,7 @@ Cuando se desarrolle `/admin/galeria`, agregar:
 - Pantalla de **upload** a `public/media/Galeria/` (usar sharp para optimizar a webp).
 - Botón de **eliminar** foto (borra archivo físico).
 - Vista previa del grid antes de publicar.
-- El endpoint `/api/media/galeria` ya existe y sirve de base para el admin.
+- El endpoint `/api/media/galeria` fue eliminado. Si el admin lo necesita, hay que rehacerlo leyendo desde el storage del panel, no desde `public/`.
 - Considerar mover a Object Storage (S3-compatible) en producción en vez de filesystem.
 
 ---

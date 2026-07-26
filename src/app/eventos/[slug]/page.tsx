@@ -1,12 +1,22 @@
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
-import { getMediaImages, getMediaVideos } from "@/lib/media";
+import { altDesdeArchivo, getMediaImages, getMediaVideos } from "@/lib/media";
+import { absUrl, OG_IMAGE, jsonLdBreadcrumb } from "@/lib/seo";
+import {
+  getEvento,
+  getEventosPublicados,
+  getEdicionActiva,
+  getAniosEvento,
+  getMediaEvento,
+  getParrafos,
+} from "@/lib/eventos";
+import JsonLd from "@/components/public/shared/JsonLd";
 import Navbar from "@/components/public/sections/Navbar";
 import Footer from "@/components/public/sections/Footer";
 import GaleriaPolaroid, { type FotoPolaroid } from "@/components/public/shared/GaleriaPolaroid";
@@ -15,7 +25,10 @@ import AutoplayVideo from "@/components/public/shared/AutoplayVideo";
 
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
-async function getFotosGrande(mediaBase: string): Promise<FotoColumnas[]> {
+async function getFotosGrande(
+  mediaBase: string,
+  altPorDefecto: string
+): Promise<FotoColumnas[]> {
   const dir = path.join(process.cwd(), "public", "media", mediaBase);
   if (!fs.existsSync(dir)) return [];
 
@@ -31,17 +44,13 @@ async function getFotosGrande(mediaBase: string): Promise<FotoColumnas[]> {
 
   return Promise.all(
     archivos.map(async (archivo) => {
-      const nombre = path.basename(archivo, path.extname(archivo));
+      const alt = altDesdeArchivo(archivo, altPorDefecto);
+      const src = `/media/${mediaBase}/${encodeURIComponent(archivo)}`;
       try {
         const meta = await sharp(path.join(dir, archivo)).metadata();
-        return {
-          src: `/media/${mediaBase}/${archivo}`,
-          width: meta.width ?? 1200,
-          height: meta.height ?? 800,
-          alt: nombre.replace(/[-_]/g, " "),
-        };
+        return { src, width: meta.width ?? 1200, height: meta.height ?? 800, alt };
       } catch {
-        return { src: `/media/${mediaBase}/${archivo}`, width: 1200, height: 800, alt: nombre.replace(/[-_]/g, " ") };
+        return { src, width: 1200, height: 800, alt };
       }
     })
   );
@@ -51,55 +60,56 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-async function getEdicion(slug: string) {
-  return prisma.edicion.findUnique({
-    where: { slug },
-    include: {
-      evento: {
-        include: {
-          ediciones: {
-            where: { estado: "PUBLICADA" },
-            orderBy: { fecha: "desc" },
-            select: { id: true, titulo: true, slug: true, fecha: true },
-          },
-        },
-      },
-      multimedia: { orderBy: { orden: "asc" } },
-    },
-  });
+/** Prerenderiza una página por evento publicado — el sitio queda estático. */
+export async function generateStaticParams() {
+  return getEventosPublicados().map((e) => ({ slug: e.slug }));
 }
 
-export async function generateMetadata({ params }: Props) {
+/**
+ * Sólo existen los slugs de generateStaticParams; cualquier otro es 404 directo
+ * sin invocar la función. Además de ser lo correcto para SEO (nada de páginas
+ * fantasma indexables), evita que un render en runtime intente leer
+ * public/media/ con `fs` — carpeta que no viaja en el bundle serverless.
+ */
+export const dynamicParams = false;
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const edicion = await getEdicion(slug);
-  if (!edicion || edicion.estado !== "PUBLICADA") return {};
+  const evento = getEvento(slug);
+  if (!evento) return {};
+
+  const ruta = `/eventos/${evento.slug}`;
+  // Para redes: la portada real del evento; si no hay, la imagen del sitio.
+  const portada = getMediaEvento(evento).portada;
+  const imagen = portada ? absUrl(portada) : absUrl(OG_IMAGE.url);
 
   return {
-    title: `${edicion.evento.nombre} — Garden College`,
-    description: edicion.extracto,
+    title: evento.nombre,
+    description: evento.extracto,
+    alternates: { canonical: ruta },
     openGraph: {
-      title: edicion.evento.nombre,
-      description: edicion.extracto,
       type: "article",
-      ...(edicion.imagenPortada && { images: [{ url: edicion.imagenPortada }] }),
+      url: ruta,
+      title: `${evento.nombre} — Garden College La Unión`,
+      description: evento.extracto,
+      publishedTime: evento.fecha,
+      images: [{ url: imagen, alt: evento.titulo }],
     },
     twitter: {
       card: "summary_large_image",
-      title: edicion.evento.nombre,
-      description: edicion.extracto,
-      ...(edicion.imagenPortada && { images: [edicion.imagenPortada] }),
+      title: `${evento.nombre} — Garden College La Unión`,
+      description: evento.extracto,
+      images: [imagen],
     },
   };
 }
 
 export default async function EventoPage({ params }: Props) {
   const { slug } = await params;
-  const [edicion, config] = await Promise.all([
-    getEdicion(slug),
-    getConfig(),
-  ]);
+  const evento = getEvento(slug);
+  if (!evento) notFound();
 
-  if (!edicion || edicion.estado !== "PUBLICADA") notFound();
+  const config = await getConfig();
 
   const nombre = config["institucional.nombre"] || "Garden College";
   const ciudad = config["institucional.ciudad"] || "";
@@ -118,23 +128,19 @@ export default async function EventoPage({ params }: Props) {
     },
   ];
 
-  const year = edicion.fecha.getFullYear();
-  const eventBase = `eventos/${edicion.evento.slug}`;
+  // El año de la galería sale de las carpetas, no de la fecha del texto.
+  const eventBase = `eventos/${evento.slug}`;
+  const year = getEdicionActiva(evento) ?? new Date(evento.fecha).getFullYear();
   const mediaBase = `${eventBase}/${year}`;
 
-  const fotosGrande = await getFotosGrande(mediaBase);
-  const fotosDB = edicion.multimedia.filter((m) => m.tipo === "foto");
-  const fotosCarpeta = getMediaImages(`${eventBase}/polaroid`);
-  const urlsDB = new Set(fotosDB.map((f) => f.url));
-  const fotosExtra = fotosCarpeta.filter((f) => !urlsDB.has(f.src));
+  // Alt de respaldo para las fotos cuyo nombre de archivo no describe nada.
+  const altEvento = `${evento.nombre} ${year} en ${nombre}${ciudad ? `, ${ciudad}` : ""}`;
 
-  const VIDEO_URL_RE = /\.(mp4|webm|mov)$/i;
-  const fotosPolaroidBase: FotoPolaroid[] = [
-    ...fotosDB
-      .filter((f) => !VIDEO_URL_RE.test(f.url))
-      .map((f) => ({ src: f.url, caption: f.titulo || "" })),
-    ...fotosExtra,
-  ];
+  const fotosGrande = await getFotosGrande(mediaBase, altEvento);
+  const fotosPolaroidBase: FotoPolaroid[] = getMediaImages(
+    `${eventBase}/polaroid`,
+    altEvento
+  );
   // Si no hay fotos dedicadas al polaroid, usar las primeras 4 de la galería del año
   const fotosPolaroid: FotoPolaroid[] =
     fotosPolaroidBase.length > 0
@@ -145,9 +151,9 @@ export default async function EventoPage({ params }: Props) {
   const heroVideo = getMediaVideos(`${eventBase}/hero`)[0] ?? null;
   const heroSrc = heroVideo
     ? null
-    : (edicion.imagenPortada ?? getMediaImages(`${mediaBase}/hero`)[0]?.src ?? null);
-
-  const videos = edicion.multimedia.filter((m) => m.tipo === "youtube");
+    : (getMediaImages(`${mediaBase}/hero`)[0]?.src ??
+       getMediaImages(`${eventBase}/hero`)[0]?.src ??
+       null);
 
   // Videos locales mezclados en la galería — se ponen al inicio
   const videoDir = path.join(process.cwd(), "public", "media", mediaBase);
@@ -177,7 +183,7 @@ export default async function EventoPage({ params }: Props) {
       src: srcs[0],
       width: 16,
       height: 9,
-      alt: "",
+      alt: altDesdeArchivo(stem, `Video de ${altEvento}`),
       ...(posterExt && { poster: `/media/${mediaBase}/${stem}${posterExt}` }),
       sources,
     };
@@ -189,17 +195,25 @@ export default async function EventoPage({ params }: Props) {
     ...fotosGrande.filter((f) => !videoPosterUrls.has(f.src)),
   ];
 
-  const parrafos = edicion.evento.descripcion?.split("\n\n").filter(Boolean) ?? [];
+  const parrafos = getParrafos(evento);
   const introParrafos = parrafos.slice(0, 2);
   const cuerpoParrafos = parrafos.slice(2);
 
-  const otrasEdiciones = edicion.evento.ediciones.filter(
-    (e) => e.slug !== edicion.slug
-  );
+  // "Ediciones anteriores" = los otros años que tienen carpeta de galería.
+  const otrosAnios = getAniosEvento(evento.slug).filter((a) => a !== year);
 
 
   return (
     <>
+      {/* Migas: Google las muestra en el resultado en vez de la URL cruda. */}
+      <JsonLd
+        data={jsonLdBreadcrumb([
+          { nombre: "Inicio", ruta: "/" },
+          { nombre: "Historias", ruta: "/#eventos" },
+          { nombre: evento.nombre, ruta: `/eventos/${evento.slug}` },
+        ])}
+      />
+
       <Navbar
         nombre={nombre}
         telefonoBasica={sedes[0]?.telefono}
@@ -218,7 +232,7 @@ export default async function EventoPage({ params }: Props) {
           ) : heroSrc ? (
             <img
               src={heroSrc}
-              alt={edicion.evento.nombre}
+              alt={evento.nombre}
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : null}
@@ -232,17 +246,20 @@ export default async function EventoPage({ params }: Props) {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                 </svg>
-                Volver a Eventos
+                Volver a Historias
               </a>
               <br />
               <span className="inline-flex items-center px-4 py-1.5 bg-gc-gold/20 text-gc-gold-light text-sm font-semibold rounded-full border border-gc-gold/20 mb-4">
-                {edicion.evento.nombre}
+                {evento.nombre}
               </span>
+              {/* El h1 usa `titulo` (descriptivo, con la edición) y no `nombre`,
+                  que ya se lee en el badge de arriba. Repetir el mismo string
+                  desperdiciaba el único h1 de la página. */}
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mb-2 leading-tight drop-shadow-lg">
-                {edicion.evento.nombre}
+                {evento.titulo}
               </h1>
               <p className="text-white/60 text-base font-body drop-shadow capitalize">
-                {format(edicion.fecha, "MMMM", { locale: es })}{nombre ? ` · ${nombre}` : ""}{ciudad ? ` · ${ciudad}` : ""}
+                {format(new Date(evento.fecha), "MMMM", { locale: es })}{nombre ? ` · ${nombre}` : ""}{ciudad ? ` · ${ciudad}` : ""}
               </p>
             </div>
           </div>
@@ -253,7 +270,7 @@ export default async function EventoPage({ params }: Props) {
           <div className="max-w-3xl mx-auto">
             {/* Extracto */}
             <p className="text-xl text-gc-green-800/70 font-body leading-relaxed mb-8 border-l-4 border-gc-green pl-5">
-              {edicion.extracto}
+              {evento.extracto}
             </p>
 
             {/* Texto intro — ancho completo */}
@@ -285,31 +302,12 @@ export default async function EventoPage({ params }: Props) {
               </div>
             )}
 
-            {/* YouTube embeds */}
-            {videos.length > 0 && (
-              <div className="mb-10">
-                <div className="grid gap-4">
-                  {videos.map((video) => (
-                    <div key={video.id} className="aspect-video rounded-xl overflow-hidden">
-                      <iframe
-                        src={video.url.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/") + "?rel=0"}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Galería — fotos y videos con márgenes normales de página */}
             {galeriaItems.length > 0 && (
               <div className="mb-10">
                 <div className="border-l-4 border-gc-gold pl-4 mb-6">
                   <p className="text-xs font-body font-semibold text-gc-green-600 uppercase tracking-widest mb-1">
-                    {edicion.evento.nombre}
+                    {evento.nombre}
                   </p>
                   <h2 className="text-2xl sm:text-3xl font-display font-bold text-gc-green-800">
                     Galería {year}
@@ -319,21 +317,20 @@ export default async function EventoPage({ params }: Props) {
               </div>
             )}
 
-            {/* Otras ediciones */}
-            {otrasEdiciones.length > 0 && (
+            {/* Ediciones anteriores — otros años con galería */}
+            {otrosAnios.length > 0 && (
               <div className="mb-10 p-6 bg-gc-cream rounded-2xl">
                 <p className="text-xs font-body font-semibold text-gc-green-800/40 uppercase tracking-wider mb-4">
-                  Ediciones anteriores — {edicion.evento.nombre}
+                  Ediciones anteriores — {evento.nombre}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {otrasEdiciones.map((ed) => (
-                    <a
-                      key={ed.slug}
-                      href={`/eventos/${ed.slug}`}
-                      className="px-4 py-2 bg-white border border-gc-green-100 text-gc-green-800 text-sm font-body rounded-full hover:bg-gc-green hover:text-white hover:border-gc-green transition-colors"
+                  {otrosAnios.map((anio) => (
+                    <span
+                      key={anio}
+                      className="px-4 py-2 bg-white border border-gc-green-100 text-gc-green-800/60 text-sm font-body rounded-full"
                     >
-                      {new Date(ed.fecha).getFullYear()}
-                    </a>
+                      {anio}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -344,7 +341,7 @@ export default async function EventoPage({ params }: Props) {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
-              Volver a Eventos
+              Volver a Historias
             </a>
           </div>
         </div>

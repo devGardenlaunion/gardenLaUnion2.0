@@ -29,7 +29,7 @@ interface HashScrollClientProps {
 }
 
 // Hashes que no necesitan corrección (están sobre la galería o son el top)
-const SKIP_HASHES = new Set(["", "inicio", "quienes-somos", "convivencia", "eventos"]);
+const SKIP_HASHES = new Set(["", "inicio", "quienes-somos", "sellos", "eventos"]);
 
 export default function HashScrollClient({ mediaUrl, mediaType }: HashScrollClientProps) {
   const [visible, setVisible] = useState(false);

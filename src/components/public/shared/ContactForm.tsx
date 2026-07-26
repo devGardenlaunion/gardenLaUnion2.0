@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 type FormState = "idle" | "loading" | "success" | "error";
 
@@ -8,9 +8,48 @@ interface ContactFormProps {
   sede: "basica" | "media";
 }
 
+const DOMINIOS_COMUNES = [
+  "gmail.com",
+  "hotmail.com",
+  "outlook.com",
+  "yahoo.com",
+  "icloud.com",
+  "live.com",
+];
+
+/** Distancia de edición ≤2 → probablemente un typo del dominio. */
+function sugerirDominio(email: string): string | null {
+  const dominio = email.split("@")[1]?.toLowerCase();
+  if (!dominio || DOMINIOS_COMUNES.includes(dominio)) return null;
+
+  for (const comun of DOMINIOS_COMUNES) {
+    if (distancia(dominio, comun) <= 2 && dominio !== comun) {
+      return email.split("@")[0] + "@" + comun;
+    }
+  }
+  return null;
+}
+
+function distancia(a: string, b: string): number {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+  return d[a.length][b.length];
+}
+
 export default function ContactForm({ sede }: ContactFormProps) {
   const [state, setState] = useState<FormState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [sugerencia, setSugerencia] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  // Momento en que se montó el form — la trampa de tiempo antibot.
+  const abiertoEn = useRef(Date.now());
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,6 +64,9 @@ export default function ContactForm({ sede }: ContactFormProps) {
       asunto: formData.get("asunto") as string,
       mensaje: formData.get("mensaje") as string,
       sede: formData.get("sede") as string,
+      // Antispam
+      companyWebsite: (formData.get("companyWebsite") as string) || "",
+      tiempoMs: Date.now() - abiertoEn.current,
     };
 
     try {
@@ -78,6 +120,21 @@ export default function ContactForm({ sede }: ContactFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <input type="hidden" name="sede" value={sede} />
+
+      {/* Honeypot: invisible para humanos, tentador para bots. Si viene lleno,
+          el server descarta el envío. No usar type="hidden" (los bots lo saltan);
+          se oculta con CSS y se saca del tab/lectores. */}
+      <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+        <label>
+          No completar este campo
+          <input
+            type="text"
+            name="companyWebsite"
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </label>
+      </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="nombre" className="label-gc">
@@ -103,9 +160,28 @@ export default function ContactForm({ sede }: ContactFormProps) {
             name="email"
             type="email"
             required
+            ref={emailRef}
+            onBlur={(e) => setSugerencia(sugerirDominio(e.target.value))}
+            onChange={() => sugerencia && setSugerencia(null)}
             className="input-gc"
             placeholder="tu@email.com"
           />
+          {sugerencia && (
+            <p className="text-xs text-gc-green-800/60 font-body mt-1">
+              ¿Quisiste decir{" "}
+              <button
+                type="button"
+                className="text-gc-green font-semibold underline"
+                onClick={() => {
+                  if (emailRef.current) emailRef.current.value = sugerencia;
+                  setSugerencia(null);
+                }}
+              >
+                {sugerencia}
+              </button>
+              ?
+            </p>
+          )}
         </div>
       </div>
 
@@ -179,6 +255,14 @@ export default function ContactForm({ sede }: ContactFormProps) {
           "Enviar mensaje"
         )}
       </button>
+
+      {/* Aviso de privacidad. TODO legal: validar el texto con la Ley 19.628
+          (datos personales) antes de publicar — se registra IP y ubicación. */}
+      <p className="text-xs text-gc-green-800/40 font-body text-center leading-relaxed">
+        Al enviar aceptas que registremos los datos del formulario y datos
+        técnicos de tu conexión (IP, ubicación aproximada) para responder tu
+        consulta y prevenir abusos.
+      </p>
     </form>
   );
 }

@@ -2,18 +2,13 @@ import GaleriaPolaroid from "@/components/public/shared/GaleriaPolaroid";
 import InfoCard from "@/components/public/shared/InfoCard";
 import { getMediaImages } from "@/lib/media";
 
-interface Sello {
-  titulo: string;
-  descripcion: string;
-  icono: string;
-}
-
+// Los sellos educativos ya no viven acá: se fusionaron con Convivencia en la
+// sección Sellos (src/components/public/sections/Sellos.tsx).
 interface QuienesSomosProps {
   mision: string;
   vision: string;
   resena: string;
   directorioPolaroid?: string;
-  sellos?: Sello[];
 }
 
 const iconMap: Record<string, JSX.Element> = {
@@ -42,9 +37,11 @@ export default function QuienesSomos({
   vision,
   resena,
   directorioPolaroid = "QuienesSomos/polaroid",
-  sellos = [],
 }: QuienesSomosProps) {
-  const fotos = getMediaImages(directorioPolaroid);
+  const fotos = getMediaImages(
+    directorioPolaroid,
+    "Comunidad escolar de Garden College, La Unión — Región de Los Ríos"
+  );
   return (
     <section id="quienes-somos" className="pt-12 pb-8">
       <div className="container-gc">
@@ -106,31 +103,6 @@ export default function QuienesSomos({
 
         </div>
       </div>
-
-      {/* Sellos educativos */}
-      {sellos.length > 0 && (
-        <div className="mt-16 lg:mt-24 border-t border-gc-gray-200 pt-12 lg:pt-16">
-          <div className="text-center mb-4">
-            <span className="badge-gold mb-4 inline-block">Lo que nos distingue</span>
-            <h2 className="section-heading">Sellos Educativos</h2>
-            <p className="section-subheading mx-auto mt-4">
-              Tres pilares que definen nuestra propuesta formativa
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
-            {sellos.map((sello) => (
-              <InfoCard
-                key={sello.titulo}
-                title={sello.titulo}
-                description={sello.descripcion}
-                icon={iconMap[sello.icono] ?? iconMap["globe"]}
-                accent="gold"
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   );
 }

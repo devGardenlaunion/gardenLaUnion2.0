@@ -15,8 +15,8 @@ interface NavbarProps {
 const navLinks = [
   { label: "Inicio", href: "#inicio" },
   { label: "Quiénes Somos", href: "#quienes-somos" },
-  { label: "Convivencia", href: "#convivencia" },
-  { label: "Eventos", href: "#eventos" },
+  { label: "Sellos", href: "#sellos" },
+  { label: "Historias", href: "#eventos" },
   { label: "Niveles", href: "#niveles" },
   { label: "Recursos", href: "#recursos" },
   { label: "Contacto", href: "#contacto" },

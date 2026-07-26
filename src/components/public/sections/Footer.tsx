@@ -10,8 +10,8 @@ interface FooterProps {
 
 const footerLinks = [
   { label: "Quiénes Somos", href: "#quienes-somos" },
-  { label: "Convivencia", href: "#convivencia" },
-  { label: "Eventos", href: "#eventos" },
+  { label: "Sellos", href: "#sellos" },
+  { label: "Historias", href: "#eventos" },
   { label: "Niveles", href: "#niveles" },
   { label: "Recursos", href: "#recursos" },
   { label: "Admisión", href: "#admision" },

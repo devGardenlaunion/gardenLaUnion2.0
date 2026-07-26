@@ -1,31 +1,45 @@
 import HeroVideo from "./HeroVideo";
 
-const MOBILE_PLACEHOLDER = "https://picsum.photos/seed/gc-hero/800/600";
-
 interface HeroProps {
   nombre: string;
   slogan: string;
   mision: string;
   imagenMobile?: string;
+  videoSources?: { src: string; type: string }[];
+  videoPoster?: string;
 }
 
-export default function Hero({ nombre, slogan, mision, imagenMobile }: HeroProps) {
-  const mobileSrc = imagenMobile ?? MOBILE_PLACEHOLDER;
+export default function Hero({
+  nombre,
+  slogan,
+  mision,
+  imagenMobile,
+  videoSources = [],
+  videoPoster,
+}: HeroProps) {
   return (
     <section
       id="inicio"
       className="relative min-h-[85vh] lg:min-h-screen flex items-center justify-center overflow-hidden"
     >
       {/* Background — video (desktop + landscape) */}
-      <HeroVideo />
+      <HeroVideo sources={videoSources} poster={videoPoster} />
 
-      {/* Background — imagen fija (mobile portrait) */}
-      <img
-        src={mobileSrc}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover block landscape:hidden md:hidden"
-      />
+      {/* Background — imagen fija (mobile portrait).
+          Es el LCP en celular, que es como llega la mayoría: va con
+          fetchPriority alto para que el navegador la pida antes que el resto.
+          Si no hay imagen no se renderiza nada: el degradado ya cubre el fondo
+          y un <img> roto costaría una petición 404 en la ruta crítica. */}
+      {imagenMobile && (
+        <img
+          src={imagenMobile}
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover block landscape:hidden md:hidden"
+        />
+      )}
 
       <div className="absolute inset-0 bg-gradient-to-br from-gc-green-900/90 via-gc-green-800/85 to-gc-green-800/80" />
 

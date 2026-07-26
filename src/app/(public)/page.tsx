@@ -1,11 +1,12 @@
 import { getConfig } from "@/lib/config";
-import { getMediaCover } from "@/lib/media";
+import { getMediaCover, getMediaImages, getMediaVideos } from "@/lib/media";
+import { shuffle } from "@/lib/utils";
 import { redesSociales } from "@/data/redes";
 import Navbar from "@/components/public/sections/Navbar";
 import HashScrollClient from "@/components/public/shared/HashScrollClient";
 import Hero from "@/components/public/sections/Hero";
 import QuienesSomos from "@/components/public/sections/QuienesSomos";
-import Convivencia from "@/components/public/sections/Convivencia";
+import Sellos from "@/components/public/sections/Sellos";
 import EventosDestacados from "@/components/public/sections/EventosDestacados";
 import Galeria from "@/components/public/sections/Galeria";
 import Niveles from "@/components/public/sections/Niveles";
@@ -14,37 +15,57 @@ import Admision from "@/components/public/sections/Admision";
 import Contacto from "@/components/public/sections/Contacto";
 import Footer from "@/components/public/sections/Footer";
 
-// ISR: regenerar la página cada 60 segundos
-export const revalidate = 60;
+/**
+ * Página 100% estática — se arma en el build y no se regenera en runtime.
+ *
+ * Es obligatorio que sea así: esta página lee los medios con `fs` desde
+ * public/media/. En Vercel, public/ se sirve por CDN y NO viaja dentro del
+ * bundle de la función serverless, así que cualquier render en runtime (ISR o
+ * SSR) encontraría las carpetas vacías y publicaría la home sin fotos ni video
+ * encima de la buena.
+ *
+ * No se pierde nada: el contenido vive en src/content/ y en public/media/, o
+ * sea que sólo cambia con un push — y cada push dispara un build nuevo.
+ */
+export const dynamic = "force-static";
 
 export default async function HomePage() {
   const config = await getConfig();
 
   // ── Media desde carpetas ────────────────────────────────────────────────
-  const imagenAdmision     = getMediaCover("Admision");
   const imagenHeroMobile   = getMediaCover("Hero");
+
+  // Carrusel de admisión: fotos reales de la comunidad desde la carpeta.
+  // Se barajan una vez por build, así el orden varía entre deploys.
+  const imagenesAdmision = shuffle(
+    getMediaImages("Admision").map((f) => f.src)
+  );
+
+  // Video del hero: se lee de public/media/Hero/ — cualquier nombre sirve.
+  // webm primero (más liviano) y mp4 de fallback si existe. El poster es la
+  // primera imagen de la carpeta, si hay.
+  const heroVideoSources = getMediaVideos("Hero")
+    .map((src) => ({
+      src,
+      type: /\.webm$/i.test(src)
+        ? "video/webm"
+        : /\.mov$/i.test(src)
+        ? "video/quicktime"
+        : "video/mp4",
+    }))
+    .sort((a, b) => (a.type === "video/webm" ? -1 : b.type === "video/webm" ? 1 : 0));
+
+  // Carrusel de la card visual de Sellos: se lee de la carpeta en vez de
+  // hardcodear nombres, así basta con soltar archivos ahí. Se usan todas; el
+  // shuffle solo define el orden del crossfade, que rota en cada build.
+  const imagenesSellos = shuffle(
+    getMediaImages("carousel-cards/convivencia").map((f) => f.src)
+  );
 
   const nombre = config["institucional.nombre"] || "Garden College";
   const slogan = config["institucional.slogan"] || "Educación sin fronteras";
 
-  const sellos = [
-    {
-      titulo: config["sellos.vida_saludable.titulo"] || "Vida Saludable",
-      descripcion: config["sellos.vida_saludable.descripcion"] || "",
-      icono: config["sellos.vida_saludable.icono"] || "heart-pulse",
-    },
-    {
-      titulo:
-        config["sellos.formacion_cristiana.titulo"] || "Formación Cristiana",
-      descripcion: config["sellos.formacion_cristiana.descripcion"] || "",
-      icono: config["sellos.formacion_cristiana.icono"] || "book-open",
-    },
-    {
-      titulo: config["sellos.ingles.titulo"] || "Inglés",
-      descripcion: config["sellos.ingles.descripcion"] || "",
-      icono: config["sellos.ingles.icono"] || "globe",
-    },
-  ];
+  const sellosCards = config["sellos.cards"] || [];
 
   const sedes = [
     {
@@ -82,21 +103,22 @@ export default async function HomePage() {
           slogan={slogan}
           mision={config["institucional.mision"] || ""}
           imagenMobile={imagenHeroMobile}
+          videoSources={heroVideoSources}
+          videoPoster={imagenHeroMobile}
         />
 
         <QuienesSomos
           mision={config["institucional.mision"] || ""}
           vision={config["institucional.vision"] || ""}
           resena={config["institucional.resena"] || ""}
-          sellos={sellos}
         />
 
-        <Convivencia
-          titulo={config["convivencia.titulo"] || "Convivencia y Valores"}
-          descripcion={config["convivencia.descripcion"] || ""}
-          logros={config["convivencia.logros"] || []}
-          pilares={config["convivencia.pilares"] || []}
-          testimonio={config["convivencia.testimonio"] || null}
+        <Sellos
+          titulo={config["sellos.titulo"] || "Lo que nos distingue"}
+          descripcion={config["sellos.descripcion"] || ""}
+          cta={config["sellos.cta"] || null}
+          cards={sellosCards}
+          imagenesCarrusel={imagenesSellos}
         />
 
         <EventosDestacados />
@@ -113,7 +135,7 @@ export default async function HomePage() {
         <Admision
           info={config["admision.info"] || ""}
           linkSae={config["admision.link_sae"] || "#"}
-          imagen={imagenAdmision}
+          imagenes={imagenesAdmision}
         />
 
         <Contacto sedes={sedes} redes={redesSociales} />

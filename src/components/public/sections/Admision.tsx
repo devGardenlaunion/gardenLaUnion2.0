@@ -1,12 +1,13 @@
 import Image from "next/image";
+import CarouselLinkCard from "@/components/public/shared/CarouselLinkCard";
 
 interface AdmisionProps {
   info: string;
   linkSae: string;
-  imagen?: string;
+  imagenes?: string[];
 }
 
-export default function Admision({ info, linkSae, imagen }: AdmisionProps) {
+export default function Admision({ info, linkSae, imagenes = [] }: AdmisionProps) {
   return (
     <section id="admision" className="pt-12 pb-8 section-alt">
       <div className="container-gc">
@@ -20,20 +21,17 @@ export default function Admision({ info, linkSae, imagen }: AdmisionProps) {
           <div className="card p-8 lg:p-12">
             <div className="grid md:grid-cols-2 gap-8 items-center">
 
-              {/* Imagen — izquierda en desktop, arriba en mobile */}
+              {/* Fotos reales de la comunidad — izquierda en desktop, arriba en mobile.
+                  Carrusel sin texto: dan calidez y confianza justo donde el
+                  apoderado decide, sin robarle foco al CTA (por eso stills, no video). */}
               <div className="order-1 md:order-none">
-                {/* TODO: reemplazar con foto real de admisión */}
-                {imagen ? (
-                  <div className="relative h-[380px] w-full rounded-xl overflow-hidden">
-                    <Image
-                      src={imagen}
-                      alt="Estudiantes Garden College"
-                      fill
-                      className="object-cover object-center"
-                      sizes="(max-width: 768px) 100vw, 400px"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-gc-green-900/40 to-transparent" />
-                  </div>
+                {imagenes.length > 0 ? (
+                  <CarouselLinkCard
+                    images={imagenes}
+                    fit="contain"
+                    alt="Estudiantes de Garden College, La Unión — proceso de admisión"
+                    className="h-[380px] w-full"
+                  />
                 ) : (
                   <div className="relative h-[380px] w-full rounded-xl overflow-hidden bg-gc-green flex items-center justify-center">
                     <div className="absolute inset-0 bg-gradient-to-t from-gc-green-900/40 to-transparent" />

@@ -2,7 +2,13 @@
 
 import { useRef, useEffect } from "react";
 
-export default function HeroVideo() {
+interface HeroVideoProps {
+  /** Fuentes del video, en orden de preferencia. Cada una lleva su MIME. */
+  sources: { src: string; type: string }[];
+  poster?: string;
+}
+
+export default function HeroVideo({ sources, poster }: HeroVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -34,10 +40,11 @@ export default function HeroVideo() {
       observer.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, []);
+  }, [sources]);
+
+  if (sources.length === 0) return null;
 
   return (
-    // TODO poster: generar con: ffmpeg -i public/media/Hero/heroShort.webm -vframes 1 public/media/Hero/hero-poster.jpg
     <video
       ref={videoRef}
       autoPlay
@@ -45,13 +52,13 @@ export default function HeroVideo() {
       muted
       playsInline
       preload="none"
-      poster="/media/Hero/hero-poster.jpg"
+      poster={poster}
       aria-hidden="true"
-      className="absolute inset-0 pt-4 w-full h-full object-cover hidden landscape:block md:block"
+      className="absolute inset-0 w-full h-full object-cover hidden landscape:block md:block"
     >
-      <source src="/media/Hero/heroShort.webm" type="video/webm" />
-      {/* TODO mp4: generar con: ffmpeg -i public/media/Hero/heroShort.webm public/media/Hero/heroShort.mp4 */}
-      <source src="/media/Hero/heroShort.mp4" type="video/mp4" />
+      {sources.map((s) => (
+        <source key={s.src} src={s.src} type={s.type} />
+      ))}
     </video>
   );
 }

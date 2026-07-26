@@ -47,7 +47,9 @@ export default function Niveles({ niveles, extras }: NivelesProps) {
                   <div className="relative aspect-[2/1]">
                     <Image
                       src={imgSrc}
-                      alt={nivel.nombre}
+                      // Con el nivel solo ("Prebásica") la imagen no dice de
+                      // qué colegio ni de dónde. Google Imágenes indexa el alt.
+                      alt={`${nivel.nombre} (${nivel.niveles}) en Garden College, La Unión`}
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

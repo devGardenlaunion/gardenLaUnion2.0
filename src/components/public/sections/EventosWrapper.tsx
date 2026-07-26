@@ -1,27 +1,16 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import type { MultimediaItem, EdicionMinima } from "@/components/public/shared/EventModal";
 import AutoplayVideo from "@/components/public/shared/AutoplayVideo";
-
-export type EventoMinimo = {
-  id: string;
-  nombre: string;
-  slug: string;
-  recurrencia: string;
-};
+import MicroGaleria from "@/components/public/shared/MicroGaleria";
 
 export type EdicionCard = {
-  id: string;
-  titulo: string;
   slug: string;
+  nombre: string;
+  titulo: string;
   extracto: string;
-  contenido: string;
+  fecha: string;
   imagenPortada: string | null;
   heroVideo: string | null;
-  fecha: string;
-  destacada: boolean;
-  evento: EventoMinimo & { ediciones: EdicionMinima[] };
-  multimedia: MultimediaItem[];
 };
 
 // Fondos alternativos cuando no hay imagen
@@ -34,7 +23,8 @@ const cardBgs = [
 interface EventosWrapperProps {
   heroEdicion: EdicionCard | null;
   gridEdiciones: EdicionCard[];
-  todosEventos: EventoMinimo[];
+  /** Fotos de la galería del hero. Solo llegan cuando es la única historia. */
+  fotosHero?: { src: string; caption?: string }[];
   titulo: string;
   subtitulo: string;
   badge: string;
@@ -44,12 +34,19 @@ interface EventosWrapperProps {
 export default function EventosWrapper({
   heroEdicion,
   gridEdiciones,
+  fotosHero = [],
   titulo,
   subtitulo,
   badge,
   nombre,
 }: EventosWrapperProps) {
   if (!heroEdicion && gridEdiciones.length === 0) return null;
+
+  // Mientras se decide qué actividades son anuales, la sección puede quedar con
+  // un solo evento. En ese caso el hero es todo lo que hay: crece para sostener
+  // la sección solo y suelta el margen inferior que existía para separarlo del
+  // grid. Al volver a haber grid, todo recupera las medidas originales.
+  const soloHero = gridEdiciones.length === 0;
 
   return (
     <section id="eventos" className="pt-12 pb-8 section-alt">
@@ -65,9 +62,15 @@ export default function EventosWrapper({
         {heroEdicion && (
           <a
             href={`/eventos/${heroEdicion.slug}`}
-            className="w-full text-left mb-6 lg:mb-8 group block"
+            className={`w-full text-left group block ${soloHero ? "" : "mb-6 lg:mb-8"}`}
           >
-            <div className="relative rounded-2xl overflow-hidden min-h-[270px] sm:min-h-[360px] flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800">
+            <div
+              className={`relative rounded-2xl overflow-hidden flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800 ${
+                soloHero
+                  ? "min-h-[320px] sm:min-h-[420px] lg:min-h-[480px]"
+                  : "min-h-[270px] sm:min-h-[360px]"
+              }`}
+            >
               {heroEdicion.heroVideo ? (
                 <AutoplayVideo
                   src={heroEdicion.heroVideo}
@@ -77,7 +80,7 @@ export default function EventosWrapper({
               ) : heroEdicion.imagenPortada ? (
                 <img
                   src={heroEdicion.imagenPortada}
-                  alt={heroEdicion.evento.nombre}
+                  alt={heroEdicion.nombre}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               ) : null}
@@ -87,10 +90,10 @@ export default function EventosWrapper({
               <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(20,56,50,0.95) 0%, rgba(20,56,50,0.55) 40%, transparent 70%)" }} />
               <div className="relative p-6 lg:p-10 w-full">
                 <span className="inline-flex items-center px-3 py-1 bg-gc-gold/20 text-gc-gold-light text-xs font-semibold rounded-full backdrop-blur-sm border border-gc-gold/20 mb-4 block w-fit">
-                  {heroEdicion.evento.nombre}
+                  {heroEdicion.nombre}
                 </span>
                 <h3 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white mb-2 leading-tight">
-                  {heroEdicion.evento.nombre}
+                  {heroEdicion.nombre}
                 </h3>
                 <p className="text-white/60 text-sm font-body mb-4 capitalize">
                   {format(new Date(heroEdicion.fecha), "MMMM", { locale: es })}{nombre ? ` · ${nombre}` : ""}
@@ -99,7 +102,7 @@ export default function EventosWrapper({
                   {heroEdicion.extracto}
                 </p>
                 <span className="btn-primary text-sm inline-flex items-center gap-2">
-                  Ver evento
+                  Ver historia
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
@@ -109,12 +112,27 @@ export default function EventosWrapper({
           </a>
         )}
 
+        {/*
+          Tira de miniaturas: solo cuando el hero es la única historia. Da
+          profundidad con material real (la galería del año) en vez de dejar
+          el espacio del grid vacío, y empuja tráfico a la subpágina.
+        */}
+        {soloHero && heroEdicion && fotosHero.length > 0 && (
+          <MicroGaleria
+            fotos={fotosHero}
+            href={`/eventos/${heroEdicion.slug}`}
+            aleatorio
+            alt={`Foto de ${heroEdicion.nombre}`}
+            className="mt-6 lg:mt-8"
+          />
+        )}
+
         {/* Grid de 3 */}
         {gridEdiciones.length > 0 && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-10 lg:mb-14">
             {gridEdiciones.map((edicion, i) => (
               <a
-                key={edicion.id}
+                key={edicion.slug}
                 href={`/eventos/${edicion.slug}`}
                 className="text-left group block"
               >
@@ -123,7 +141,7 @@ export default function EventosWrapper({
                     {edicion.imagenPortada ? (
                       <img
                         src={edicion.imagenPortada}
-                        alt={edicion.evento.nombre}
+                        alt={edicion.nombre}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
@@ -137,7 +155,7 @@ export default function EventosWrapper({
                     )}
                     <div className="absolute top-3 left-3">
                       <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm text-gc-green-800 text-xs font-body font-semibold rounded-md">
-                        {edicion.evento.nombre}
+                        {edicion.nombre}
                       </span>
                     </div>
                   </div>
@@ -146,7 +164,7 @@ export default function EventosWrapper({
                       {format(new Date(edicion.fecha), "MMMM", { locale: es })}
                     </time>
                     <h3 className="text-base font-display font-bold text-gc-green-800 mt-1 mb-2 line-clamp-2 group-hover:text-gc-green transition-colors">
-                      {edicion.evento.nombre}
+                      {edicion.nombre}
                     </h3>
                     <p className="text-gc-green-800/60 font-body text-sm leading-relaxed line-clamp-2">
                       {edicion.extracto}

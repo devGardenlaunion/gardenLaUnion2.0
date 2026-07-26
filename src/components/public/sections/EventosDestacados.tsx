@@ -1,132 +1,51 @@
-import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
-import { getMediaCover, getMediaVideos } from "@/lib/media";
-import EventosWrapper, { type EdicionCard, type EventoMinimo } from "./EventosWrapper";
+import {
+  getEventoDestacado,
+  getEventosGrid,
+  getMediaEvento,
+  type Evento,
+} from "@/lib/eventos";
+import EventosWrapper, { type EdicionCard } from "./EventosWrapper";
 
-function serializeEdicion(edicion: {
-  id: string;
-  titulo: string;
-  slug: string;
-  extracto: string;
-  contenido: string;
-  imagenPortada: string | null;
-  fecha: Date;
-  destacada: boolean;
-  evento: {
-    id: string;
-    nombre: string;
-    slug: string;
-    recurrencia: string;
-    ediciones: { id: string; titulo: string; slug: string; fecha: Date }[];
-  };
-  multimedia: {
-    id: string;
-    tipo: string;
-    url: string;
-    thumbnail: string | null;
-    titulo: string | null;
-    orden: number;
-  }[];
-}): EdicionCard {
-  const year = edicion.fecha.getFullYear();
-  // Video hero permanente del evento (carpeta eventos/[slug]/hero/)
-  const heroVideo = getMediaVideos(`eventos/${edicion.evento.slug}/hero`)[0] ?? null;
-  // Imagen: BD → carpeta año/hero (solo si no hay video)
-  const imagenPortada = heroVideo
-    ? null
-    : (edicion.imagenPortada ?? getMediaCover(`eventos/${edicion.evento.slug}/${year}/hero`) ?? null);
+/** Evento del contenido → card que espera el wrapper. */
+function aCard(evento: Evento): EdicionCard {
+  const media = getMediaEvento(evento);
 
   return {
-    ...edicion,
-    imagenPortada,
-    heroVideo,
-    fecha: edicion.fecha.toISOString(),
-    evento: {
-      ...edicion.evento,
-      ediciones: edicion.evento.ediciones.map((e) => ({
-        ...e,
-        fecha: e.fecha.toISOString(),
-      })),
-    },
+    slug: evento.slug,
+    nombre: evento.nombre,
+    titulo: evento.titulo,
+    extracto: evento.extracto,
+    fecha: evento.fecha,
+    // Si hay video de portada manda el video; si no, la imagen.
+    heroVideo: media.heroVideo,
+    imagenPortada: media.heroVideo ? null : media.portada,
   };
 }
 
-const edicionInclude = {
-  evento: {
-    include: {
-      ediciones: {
-        where: { estado: "PUBLICADA" as const },
-        orderBy: { fecha: "desc" as const },
-        select: { id: true, titulo: true, slug: true, fecha: true },
-      },
-    },
-  },
-  multimedia: { orderBy: { orden: "asc" as const } },
-} as const;
-
-const gridInclude = {
-  evento: {
-    select: { id: true, nombre: true, slug: true, recurrencia: true },
-  },
-  multimedia: {
-    orderBy: { orden: "asc" as const },
-    take: 1,
-  },
-} as const;
-
 export default async function EventosDestacados() {
-  const [config, heroRaw, todosEventos] = await Promise.all([
-    getConfig(),
-    prisma.edicion
-      .findFirst({
-        where: { estado: "PUBLICADA", destacada: true },
-        orderBy: { fecha: "desc" },
-        include: edicionInclude,
-      })
-      .then(async (destacada) => {
-        if (destacada) return destacada;
-        return prisma.edicion.findFirst({
-          where: { estado: "PUBLICADA" },
-          orderBy: { fecha: "desc" },
-          include: edicionInclude,
-        });
-      }),
-    prisma.evento.findMany({
-      where: { activo: true },
-      orderBy: { nombre: "asc" },
-      select: { id: true, nombre: true, slug: true, recurrencia: true },
-    }),
-  ]);
+  const config = await getConfig();
 
-  const gridRaw = await prisma.edicion.findMany({
-    where: {
-      estado: "PUBLICADA",
-      ...(heroRaw ? { id: { not: heroRaw.id } } : {}),
-    },
-    orderBy: { fecha: "desc" },
-    take: 3,
-    include: gridInclude,
-  });
+  const destacado = getEventoDestacado();
+  const grid = getEventosGrid();
 
-  if (!heroRaw && gridRaw.length === 0) return null;
+  if (!destacado && grid.length === 0) return null;
 
-  const heroEdicion = heroRaw ? serializeEdicion(heroRaw as Parameters<typeof serializeEdicion>[0]) : null;
+  const heroEdicion = destacado ? aCard(destacado) : null;
+  const gridEdiciones = grid.map(aCard);
 
-  const gridEdiciones = gridRaw.map((e) =>
-    serializeEdicion({
-      ...e,
-      evento: {
-        ...e.evento,
-        ediciones: [],
-      },
-    } as Parameters<typeof serializeEdicion>[0])
-  );
+  // Tira de miniaturas cuando el destacado es la única historia publicada:
+  // da profundidad con la galería real en vez de dejar el espacio del grid vacío.
+  const fotosHero =
+    destacado && gridEdiciones.length === 0
+      ? getMediaEvento(destacado).galeria
+      : [];
 
   return (
     <EventosWrapper
       heroEdicion={heroEdicion}
       gridEdiciones={gridEdiciones}
-      todosEventos={todosEventos as EventoMinimo[]}
+      fotosHero={fotosHero}
       titulo={config["eventos.titulo"] || "Eventos Garden"}
       subtitulo={
         config["eventos.subtitulo"] ||
