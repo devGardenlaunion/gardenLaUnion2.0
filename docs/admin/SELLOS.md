@@ -1,5 +1,19 @@
-# Guía de Contenido: Sección "Convivencia y Valores"
+# Guía de Contenido: Sección "Sellos"
 ## Web Pública — Garden College
+
+> **Actualización:** esta sección antes se llamaba "Convivencia y Valores" y convivía
+> con un bloque aparte de "Sellos Educativos" dentro de Quiénes Somos. Se fusionaron
+> en una sola sección llamada **Sellos**, porque decían lo mismo dos veces: el sello
+> de Formación Cristiana absorbió el pilar "Fe que transforma".
+>
+> Qué cambió para quien redacta:
+> - Los **bloques 1, 2 y 3** de esta guía siguen vigentes tal cual.
+> - El **bloque 3** ahora mezcla pilares de convivencia y sellos educativos en un
+>   mosaico de cards. La primera card del array es la destacada (se ve más ancha).
+> - El **bloque 4 (testimonio) ya no existe**: se quitó la cita del cierre.
+> - La página aparte `/convivencia` fue eliminada. Todo vive en la home.
+> - Claves en ConfigSitio: `sellos.titulo`, `sellos.descripcion`, `sellos.cta`,
+>   `sellos.cards`.
 
 **Destinatario:** Persona encargada de recopilar y redactar el contenido para esta sección.
 **Fecha:** Marzo 2026
@@ -10,7 +24,7 @@
 
 La web actual del colegio tiene **14 protocolos y reglamentos** publicados, pero **cero contenido visible** sobre lo que Garden College hace *en la práctica* en convivencia y valores. Eso es un error. Los apoderados no buscan leer protocolos — buscan saber que sus hijos estarán en un ambiente seguro.
 
-Garden College tiene un diferenciador real: la campaña "Un Colegio Sin Bullying" alcanzó cero denuncias. Eso no es común. **Hay que contarlo.**
+Garden College tiene un diferenciador real: la campaña "Un Colegio Sin Bullying" y el trabajo sostenido de convivencia. **Hay que contarlo — pero cualitativamente, sin publicar cifras de denuncias** (ver Bloque 2).
 
 Esta sección es la oportunidad de mostrar que el enfoque cristiano del colegio no es solo discurso — se traduce en resultados concretos en convivencia.
 
@@ -37,23 +51,34 @@ La sección se compone de **4 bloques**. Para cada uno, más abajo detallo qué 
 
 ---
 
-### Bloque 2: Logros concretos (datos duros)
-**Qué es:** 2 a 4 datos o cifras que demuestren resultados reales.
-**Formato:** Número grande + descripción corta. Se muestran como "tarjetas" visuales en la web.
+### Bloque 2: CTA de cierre
+
+> **Este bloque cambió.** Antes era una fila de cifras de impacto ("0 denuncias
+> de bullying en 2025", "20+ años"). **Las métricas de convivencia se retiraron
+> a propósito y no se deben reponer.**
+>
+> El motivo: son datos verificables sobre algo que el colegio gestiona pero no
+> controla del todo. Publicar "cero denuncias" convierte un buen año en una
+> promesa permanente — si el número cambia, la web queda desmintiéndose sola, y
+> además invita a discusiones que ningún colegio quiere tener en público.
+>
+> Si alguien pide volver a poner cifras de bullying, incidentes o denuncias:
+> mostrar este párrafo.
+
+**Qué es ahora:** una franja de cierre con un dato inofensivo, una frase y un botón.
 
 **Necesitamos que nos entreguen:**
 
-| Dato | Ejemplo | ¿Lo tienen? |
-|------|---------|-------------|
-| Resultado campaña anti-bullying 2025 | "0 denuncias formales de bullying en 2025" | ✅ (de la noticia publicada) |
-| Años consecutivos sin incidentes graves | "X años sin situaciones de convivencia grave" | Confirmar con Inspectoría |
-| Participación de apoderados en talleres | "X% de asistencia a talleres de convivencia" | Confirmar con CGPA |
-| Otro indicador relevante | "X familias participaron en el bingo familiar" | De las noticias |
+| Campo | Ejemplo | Nota |
+|-------|---------|------|
+| `cifra` | "20+" | Corta, de un vistazo. Trayectoria, niveles, sedes — nada sobre conducta |
+| `texto` | "Años formando comunidad en La Unión. Conoce cómo ser parte de Garden College." | Máximo 20 palabras |
+| `boton` | "Proceso de admisión" | Acción concreta |
+| `href` | `#admision` | Sección de la home o URL externa |
 
 **Importante:**
-- Solo datos verificables. Si no hay dato exacto, no inventar.
-- Si un dato no es favorable, simplemente no incluirlo. Seleccionar lo mejor.
-- Los datos se actualizan año a año desde el panel admin.
+- Solo datos verificables y que no dependan de la conducta de terceros.
+- Si un dato no es favorable, simplemente no incluirlo.
 
 ---
 
@@ -82,7 +107,10 @@ La sección se compone de **4 bloques**. Para cada uno, más abajo detallo qué 
 
 ---
 
-### Bloque 4: Testimonio o cita (opcional pero recomendado)
+### Bloque 4: Testimonio o cita — ELIMINADO
+
+> Ya no se usa: la sección cierra con el mosaico de cards. Se conserva acá por si
+> alguna vez se decide reponerlo en otro lugar del sitio.
 **Qué es:** Una frase corta de alguien de la comunidad — un apoderado, un profesor, el director — sobre la convivencia en el colegio.
 
 **Formato:** Cita textual + nombre + rol.
@@ -106,7 +134,7 @@ La sección se compone de **4 bloques**. Para cada uno, más abajo detallo qué 
 2. **No copiar del PEI textualmente.** El PEI es un documento formal. La web es para personas. Reescribir con tono humano.
 3. **Mencionar lo cristiano como fortaleza, no como barrera.** El PEI dice que el colegio "respeta todo credo religioso, sin discriminar las creencias individuales". Eso debe sentirse también en la web.
 4. **No mencionar protocolos ni reglamentos en esta sección.** Eso va en otra parte (documentos). Acá se habla de cultura, no de normativa.
-5. **No usar superlativos vacíos.** "El mejor colegio" no convence. "Cero denuncias de bullying en 2025" sí convence.
+5. **No usar superlativos vacíos.** "El mejor colegio" no convence. "Los cursos practican el diálogo desde pre-kínder" sí: es concreto y verificable sin comprometer una cifra.
 6. **Incluir fotos si es posible.** Actividades de convivencia, talleres CGPA, actos de servicio comunitario. Las fotos deben ser actuales (2024-2026).
 
 ---

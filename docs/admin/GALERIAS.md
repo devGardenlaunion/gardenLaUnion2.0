@@ -6,7 +6,7 @@
 
 ---
 
-## Los dos componentes
+## Los tres componentes
 
 ### GaleriaPolaroid
 **Uso:** conjunto pequeño de fotos en estilo moodboard/corkboard.
@@ -17,6 +17,36 @@
 **Uso:** galería grande con muchas fotos y/o videos, layout masonry.
 **Props:** `fotos: FotoColumnas[]`, `spacing`, `columns`, `showThumbnails`
 **Ruta:** `src/components/public/shared/GaleriaColumnas.tsx`
+
+### MicroGaleria
+**Uso:** tira compacta de miniaturas que enlaza a una galería mayor. Pensada
+para dar profundidad a una sección con poco contenido, no para mirar fotos.
+**Props:** `fotos: {src, caption?}[]`, `href`, `cantidad?` (default 6), `aleatorio?`, `cta?` (default "Ver reportaje"), `alt?`
+**Ruta:** `src/components/public/shared/MicroGaleria.tsx`
+
+**Diferencia clave:** es Server Component puro, **cero JS al cliente**. No abre
+lightbox — cada miniatura es un link. Por eso no se reemplaza por las otras dos:
+GaleriaColumnas arrastraría react-photo-album + lightbox para 6 miniaturas cuyo
+único trabajo es invitar a entrar, y GaleriaPolaroid tiene una estética marcada
+que ya se usa en Quiénes Somos.
+
+**Dónde se usa hoy:** sección Historias, cuando hay una sola historia publicada
+(`EventosWrapper` → `soloHero`). Muestra la galería del año del evento destacado.
+Al publicarse una segunda historia vuelve el grid de tarjetas y la tira
+desaparece sola — no hay que revertir nada.
+
+**Selección de las miniaturas:** con `aleatorio` se sortean del total; sin la
+prop, son las primeras `cantidad` en orden alfabético.
+
+La aleatoriedad corre en el servidor y la home es estática (se arma en el build),
+así que la selección se congela en el HTML generado y rota en cada deploy — no en
+cada visita. Es el máximo de azar posible sin renunciar al cache. Que sea Server
+Component es lo que evita un mismatch de hidratación.
+
+**Fotos vs. posters de video:** alimentar siempre con `getMediaPhotos()`, no con
+`getMediaImages()`. La carpeta del año mezcla las fotos con los thumbnails de
+los videos (misma base: `Sombrero.mp4` + `Sombrero.webp`), y un poster suelto en
+una tira de fotos se ve como un fotograma congelado sin contexto.
 
 ---
 

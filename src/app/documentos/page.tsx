@@ -4,13 +4,18 @@ import Navbar from "@/components/public/sections/Navbar";
 import DocumentViewer, { type Documento } from "@/components/public/shared/DocumentViewer";
 
 export const metadata: Metadata = {
-  title: "Documentos | Garden College",
+  title: "Documentos institucionales",
   description:
-    "Centro de documentación de Garden College. Accede al PEI, reglamentos de convivencia y evaluación, protocolos y planes institucionales.",
+    "PEI, reglamentos de convivencia y evaluación, protocolos y planes de Garden College, La Unión. Descarga directa en PDF.",
+  // El `?doc=` sólo elige qué PDF se abre: es la misma página. Sin canonical
+  // fijo, Google vería 19 URLs distintas con contenido idéntico.
+  alternates: { canonical: "/documentos" },
   openGraph: {
-    title: "Documentos | Garden College",
+    type: "website",
+    title: "Documentos institucionales | Garden College La Unión",
     description:
       "Planes, reglamentos y protocolos del colegio Garden College, La Unión.",
+    url: "/documentos",
   },
 };
 
@@ -152,12 +157,8 @@ const documentos: Documento[] = [
 
 const categorias = ["Institucional", "Reglamentos", "Protocolos", "Planes"];
 
-interface Props {
-  searchParams: Promise<{ doc?: string }>;
-}
-
-export default async function DocumentosPage({ searchParams }: Props) {
-  const [config, { doc }] = await Promise.all([getConfig(), searchParams]);
+export default async function DocumentosPage() {
+  const config = await getConfig();
 
   const nombre = config["institucional.nombre"] || "Garden College";
   return (
@@ -168,7 +169,7 @@ export default async function DocumentosPage({ searchParams }: Props) {
         telefonoMedia={config["contacto.sede_media.telefono"]}
         variant="solid"
       />
-      <DocumentViewer documentos={documentos} categorias={categorias} initialDocId={doc} />
+      <DocumentViewer documentos={documentos} categorias={categorias} />
     </>
   );
 }

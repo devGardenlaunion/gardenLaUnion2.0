@@ -7,7 +7,7 @@ Pensado para usarse dentro de grids oscuros donde se necesita destacar un link a
 
 | Prop        | Tipo       | Requerido | Descripción                                          |
 |-------------|------------|-----------|------------------------------------------------------|
-| `href`      | `string`   | ✓         | Destino del link                                     |
+| `href`      | `string`   |           | Destino del link. **Si se omite**, la card es puramente visual: se renderiza como `<div>`, sin flecha ni hover de link |
 | `title`     | `string`   | ✓         | Texto principal (CTA), aparece sobre la imagen       |
 | `label`     | `string`   |           | Texto secundario pequeño encima del título           |
 | `images`    | `string[]` | ✓         | Array de URLs/paths de imágenes (se usan las 3 primeras) |
@@ -18,21 +18,31 @@ Pensado para usarse dentro de grids oscuros donde se necesita destacar un link a
 ```tsx
 import CarouselLinkCard from "@/components/public/shared/CarouselLinkCard";
 
+// Con link
 <CarouselLinkCard
-  href="/convivencia"
-  title="Conoce nuestra historia"
-  label="Descubre cómo construimos convivencia"
+  href="/eventos/fomento-lector"
+  title="Semana del Fomento Lector"
+  label="Conoce el evento"
   images={[
-    "/media/carousel-cards/convivencia/foto-1.jpg",
-    "/media/carousel-cards/convivencia/foto-2.jpg",
-    "/media/carousel-cards/convivencia/foto-3.jpg",
+    "/media/carousel-cards/convivencia/foto-1.webp",
+    "/media/carousel-cards/convivencia/foto-2.webp",
+    "/media/carousel-cards/convivencia/foto-3.webp",
   ]}
+/>
+
+// Solo visual (sin href) — así la usa la sección Sellos
+<CarouselLinkCard
+  title="Nuestra comunidad"
+  label="Así se ve un día en Garden"
+  images={[...]}
 />
 ```
 
 ## Dónde vive en producción
 
-Convivencia.tsx → BLOQUE 3 "Cómo lo vivimos", 4ª tarjeta del grid 2×2.
+Sellos.tsx → BLOQUE 3 "Cómo lo vivimos", card visual del mosaico
+(`lg:col-span-2 lg:row-span-2`, ocupa la columna derecha en dos filas).
+Se usa **sin `href`**: la sección ya no enlaza a ninguna página aparte.
 
 ---
 
@@ -61,11 +71,14 @@ public/media/carousel-cards/
 ```
 
 **Requisitos de las imágenes:**
-- Formato: `jpg` o `webp` (preferir webp para performance)
-- Tamaño recomendado: 800×500 px mínimo (ratio 16:9 o similar apaisado)
-- Peso: < 200 KB por imagen (el componente usa `object-cover`, no necesita resolución enorme)
-- Se usan exactamente **3 imágenes** — el keyframe `carousel-fade` en `globals.css` está calibrado para ciclos de 3 (9s total, 3s por imagen con crossfade)
+- Formato: `webp` (preferir webp para performance)
+- Se usan **todas** las imágenes que reciba — el crossfade se ajusta solo a la cantidad.
+- El componente entrega con `next/image` (responsive + lazy), así que no hay que
+  pre-escalar a un tamaño exacto. Aun así, no subir originales gigantes: para el
+  repo, capar a ~1600px de ancho y webp calidad ~72 (`sharp`). Un original de
+  6000px pesa megas al vísimo y no aporta nada en una card de ~360px.
 
 **Animación:**
-El keyframe `carousel-fade` está en `src/app/globals.css`. Si en el futuro se necesita cambiar
-la velocidad, ajustar la duración `9s` tanto en el keyframe como en el `style` del componente.
+El keyframe se genera en el propio componente según la cantidad de imágenes
+(`keyframesPara(n)`), ya no vive en `globals.css`. Para cambiar la velocidad,
+ajustar `SEG_POR_IMAGEN` en `CarouselLinkCard.tsx`. Con una sola imagen no anima.

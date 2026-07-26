@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export interface Documento {
   id: string;
@@ -13,19 +13,27 @@ export interface Documento {
 interface DocumentViewerProps {
   documentos: Documento[];
   categorias: string[];
-  initialDocId?: string;
 }
 
 export default function DocumentViewer({
   documentos,
   categorias,
-  initialDocId,
 }: DocumentViewerProps) {
-  const [selectedDoc, setSelectedDoc] = useState<Documento>(
-    (initialDocId && documentos.find((d) => d.id === initialDocId)) || documentos[0]
-  );
+  const [selectedDoc, setSelectedDoc] = useState<Documento>(documentos[0]);
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  /**
+   * El `?doc=` se resuelve acá y no en el servidor a propósito: leerlo como
+   * searchParams volvía toda la página dinámica (SSR en cada visita) por un
+   * parámetro que sólo elige cuál PDF abrir. Así /documentos queda estática.
+   */
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("doc");
+    if (!id) return;
+    const doc = documentos.find((d) => d.id === id);
+    if (doc) setSelectedDoc(doc);
+  }, [documentos]);
 
   const filteredDocs =
     activeCategory === "Todos"

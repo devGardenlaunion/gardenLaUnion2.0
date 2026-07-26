@@ -1,44 +1,23 @@
-import { prisma } from "./prisma";
-import { cache } from "react";
+import { contenido } from "@/content/config";
 
-// React cache: deduplica llamadas en un mismo render
-export const getConfig = cache(async (grupo?: string) => {
-  const where = grupo ? { grupo } : {};
-  const configs = await prisma.configSitio.findMany({
-    where,
-    orderBy: { orden: "asc" },
-  });
+/**
+ * Contenido del sitio. Antes venía de la tabla ConfigSitio; ahora sale de
+ * src/content/config.ts — editar ese archivo y pushear publica el cambio.
+ *
+ * La firma se mantiene (Record<string, any>) para que los componentes no
+ * cambien: siguen leyendo config["institucional.nombre"] igual que antes.
+ * Ya no es async por necesidad, pero se deja así para no tocar los callers.
+ */
+export async function getConfig(grupo?: string): Promise<Record<string, any>> {
+  if (!grupo) return contenido as Record<string, any>;
 
-  // Convertir a mapa clave → valor (parseando JSON si corresponde)
-  const map: Record<string, any> = {};
-  for (const c of configs) {
-    if (c.tipo === "json") {
-      try {
-        map[c.clave] = JSON.parse(c.valor);
-      } catch {
-        map[c.clave] = c.valor;
-      }
-    } else {
-      map[c.clave] = c.valor;
-    }
-  }
-  return map;
-});
+  const prefijo = `${grupo}.`;
+  return Object.fromEntries(
+    Object.entries(contenido).filter(([clave]) => clave.startsWith(prefijo))
+  );
+}
 
-// Helper para obtener un valor específico
-export const getConfigValue = cache(async (clave: string) => {
-  const config = await prisma.configSitio.findUnique({
-    where: { clave },
-  });
-
-  if (!config) return null;
-
-  if (config.tipo === "json") {
-    try {
-      return JSON.parse(config.valor);
-    } catch {
-      return config.valor;
-    }
-  }
-  return config.valor;
-});
+/** Valor puntual, o null si la clave no existe. */
+export async function getConfigValue(clave: string): Promise<any> {
+  return (contenido as Record<string, any>)[clave] ?? null;
+}

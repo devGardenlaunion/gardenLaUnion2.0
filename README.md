@@ -1,145 +1,89 @@
-# Garden College — Web Pública + Panel Admin
+# Garden College — Web pública
 
-## Requisitos
+Sitio del colegio Garden College, La Unión, Región de Los Ríos, Chile.
 
-- Docker + Docker Compose v2
-- Node.js 20+ (solo para desarrollo local)
-- Git
+**Stack:** Next.js 16 (App Router) · TypeScript · TailwindCSS · Vercel
+**Producción:** https://gardenlaunion.cl
 
-## Setup Inicial
+---
 
-### 1. Clonar e instalar
+## Lo primero que hay que saber
+
+**No hay base de datos ni panel de administración.** El contenido son archivos
+del repositorio:
+
+- Textos → `src/content/config.ts`
+- Eventos → `src/content/eventos.ts`
+- Fotos y videos → `public/media/`
+- Documentos PDF → `public/documentos/`
+
+Se edita, se commitea, se pushea, y el deploy publica. Git ya da historial y
+rollback. Guías: [`docs/CONTENIDO.md`](docs/CONTENIDO.md) y
+[`docs/EVENTOS.md`](docs/EVENTOS.md).
+
+---
+
+## Desarrollo local
+
+Requiere **Node.js 20 o superior** (Next 16 no corre en 18).
 
 ```bash
 git clone <repo-url> garden-web
 cd garden-web
 
-# Crear archivo de variables
-cp .env.example .env
-# EDITAR .env con valores reales (ver sección "Variables de Entorno")
-```
-
-### 2. Desarrollo local (opción A: todo en Docker)
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-# App en http://localhost:3000
-# BD accesible en localhost:5432 (para pgAdmin/DBeaver)
-```
-
-### 3. Desarrollo local (opción B: solo BD en Docker)
-
-```bash
-# Levantar solo PostgreSQL
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up db -d
-
-# Instalar dependencias
+cp .env.example .env    # opcional: solo hace falta para el formulario de contacto
 npm install
-
-# Generar Prisma Client
-npx prisma generate
-
-# Ejecutar migraciones
-npx prisma migrate dev
-
-# Seed de datos iniciales
-npx prisma db seed
-
-# Iniciar dev server
-npm run dev
-# App en http://localhost:3000
+npm run dev             # http://localhost:3000
 ```
 
-### 4. Producción (Oracle Cloud / Hostinger)
+| Comando | Qué hace |
+|---------|----------|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción — **el único chequeo obligatorio antes de pushear** |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint |
 
-```bash
-# En el servidor:
-git clone <repo-url> garden-web
-cd garden-web
-cp .env.example .env
-# Editar .env con valores de producción
+Detalle del entorno local en [`docs/SETUP_DEV.md`](docs/SETUP_DEV.md).
 
-# Build y levantar
-docker compose up -d --build
+---
 
-# Verificar que todo esté corriendo
-docker compose ps
-docker compose logs -f app
+## Deploy
 
-# Seed inicial (solo la primera vez)
-docker compose exec app npx prisma db seed
-```
+`git push` a `main`. Vercel construye y publica.
 
-### 5. SSL (primera vez en producción)
+Guía completa —variables de entorno, dominio, y por qué el sitio tiene que ser
+100% estático— en [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md).
 
-```bash
-# Obtener certificado Let's Encrypt
-# CAMBIAR: gardencollege.cl por el dominio real
-docker compose run certbot certonly \
-  --webroot --webroot-path=/var/lib/letsencrypt \
-  -d gardencollege.cl -d www.gardencollege.cl \
-  --email tu@email.cl --agree-tos --no-eff-email
+> **Antes de tocar el renderizado:** las páginas leen `public/media/` con `fs`,
+> y en Vercel esa carpeta no viaja dentro de la función serverless. Cualquier
+> página que se vuelva ISR o SSR se publica sin fotos y sin errores visibles.
+> En la salida de `npm run build`, la única ruta `ƒ (Dynamic)` debe ser
+> `/api/contacto`.
 
-# Reiniciar nginx para cargar el certificado
-docker compose restart nginx
-```
+---
 
-## Variables de Entorno
-
-| Variable | Descripción | Cómo obtener |
-|----------|------------|-------------|
-| `DB_PASSWORD` | Password de PostgreSQL | `openssl rand -base64 24` |
-| `AUTH_SECRET` | Secret para NextAuth | `openssl rand -base64 32` |
-| `SITE_URL` | URL pública del sitio | `https://gardencollege.cl` |
-| `GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
-| `GOOGLE_CLIENT_SECRET` | OAuth 2.0 Client Secret | Mismo lugar |
-| `ALLOWED_EMAIL_DOMAIN` | Dominio permitido para login | `gardenlaunion.cl` |
-
-## Operaciones
-
-### Backup manual
-```bash
-docker compose exec db pg_dump -U garden garden_web | gzip > backup_$(date +%Y%m%d).sql.gz
-```
-
-### Restore
-```bash
-./scripts/restore.sh backup_20260415.sql.gz
-```
-
-### Actualizar la aplicación
-```bash
-git pull
-docker compose up -d --build
-# Las migraciones se ejecutan automáticamente al iniciar el container
-```
-
-### Migrar a otro servidor (contingencia)
-```bash
-# En el servidor actual:
-docker compose exec db pg_dump -U garden garden_web | gzip > backup_migracion.sql.gz
-docker compose down
-
-# Copiar al nuevo servidor:
-scp backup_migracion.sql.gz docker-compose.yml .env Dockerfile nginx/ scripts/ usuario@nuevo-servidor:~/garden-web/
-
-# En el nuevo servidor:
-cd ~/garden-web
-docker compose up -d --build
-# Esperar a que PostgreSQL esté healthy, luego:
-gunzip -c backup_migracion.sql.gz | docker compose exec -T db psql -U garden garden_web
-```
-
-Tiempo estimado de migración: **< 30 minutos** (sin contar DNS).
-
-## Estructura de archivos clave
+## Estructura
 
 ```
-CLAUDE.md           → Reglas para Claude Code (leer PRIMERO)
-docker-compose.yml  → Orquestación de producción
-Dockerfile          → Build multi-stage ARM64
-prisma/schema.prisma → Modelo de datos
-src/app/(public)/   → Onepage pública
-src/app/(admin)/    → Panel admin
-docs/               → Guías de contenido
+CLAUDE.md              → Reglas del proyecto (leer PRIMERO)
+src/content/           → EL CONTENIDO: textos y eventos
+src/app/(public)/      → Onepage pública
+src/app/eventos/       → Subpáginas de eventos
+src/app/documentos/    → Centro de documentación
+src/lib/seo.ts         → Canonical + datos estructurados
+public/media/          → Fotos y videos por sección
+docs/                  → Documentación
 ```
+
+---
+
+## Documentación
+
+Índice completo en [`docs/README.md`](docs/README.md). Los de uso frecuente:
+
+| Documento | Para qué |
+|-----------|----------|
+| [docs/CONTENIDO.md](docs/CONTENIDO.md) | Dónde se edita cada texto y foto |
+| [docs/EVENTOS.md](docs/EVENTOS.md) | Cómo agregar y mantener eventos |
+| [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) | Publicación y configuración de Vercel |
+| [docs/SEO.md](docs/SEO.md) | Metadatos, datos estructurados y pendientes de posicionamiento |

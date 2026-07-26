@@ -20,13 +20,13 @@
 |------|-----------|
 | Framework | Next.js 16.x (App Router, TypeScript strict) |
 | Estilos | TailwindCSS 3.4 + CSS custom properties |
-| ORM | Prisma 5.x con PostgreSQL |
-| Auth | NextAuth v4 (Google OAuth 2.0) |
+| Base de datos | **Ninguna.** El contenido son archivos en `src/content/` |
 | Imágenes | `next/image` + `sharp` para thumbnails |
 | Galería | `react-photo-album` + `yet-another-react-lightbox` |
 | Mapas | Leaflet + OpenStreetMap (NO Google Maps) |
 | Formularios | Zod para validación server-side |
-| Deploy | Docker en Oracle Cloud ARM64 (Ampere A1) |
+| SEO | JSON-LD (`School`), sitemap y robots generados en el build |
+| Deploy | **Vercel**, `git push` a `main`. Sitio 100% estático |
 
 **Fuentes cargadas con `next/font/google`:**
 - `Lora` → `var(--font-lora)` → clase Tailwind `font-display` (headings)
@@ -253,7 +253,7 @@ El page principal (`(public)/page.tsx`) es Server Component que:
 
 ---
 
-## 7. Modelo de Datos (Prisma)
+## 7. Modelo de Datos (Prisma) — HISTÓRICO, ya no existe
 
 ```prisma
 // Tablas relevantes para el front público:
@@ -403,13 +403,11 @@ public/
 
 | Ruta | Método | Auth | Descripción |
 |------|--------|------|-------------|
-| `/api/noticias` | GET | No | Lista noticias publicadas |
-| `/api/eventos` | GET | No | Lista eventos con ediciones publicadas |
-| `/api/eventos/[slug]` | GET | No | Edición específica por slug |
-| `/api/media/galeria` | GET | No | Lista imágenes de galería |
-| `/api/contacto` | POST | No | Enviar mensaje (rate limit: 5/hora/IP) |
-| `/api/health` | GET | No | Health check del sistema |
-| `/api/auth/[...nextauth]` | * | — | NextAuth (Google OAuth) |
+| `/api/contacto` | POST | No | Enviar mensaje del formulario (honeypot + verificación MX + rate limit best-effort) |
+
+**Es la única.** Las rutas de noticias, eventos, galería, health y auth se
+eliminaron: ninguna se usaba, y las que leían `public/` con `fs` habrían fallado
+en Vercel. Ver [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md).
 
 ---
 
@@ -426,11 +424,15 @@ public/
 
 4. **Contenido real disponible:** Video del hero, fotos institucionales, logos, escudo del colegio con León dorado.
 
-5. **Datos del PEI ya integrados en seed:** El contenido de misión, visión, sellos, niveles y convivencia es real, basado en el PEI del colegio.
+5. **Datos del PEI ya integrados:** misión, visión, sellos y niveles son reales,
+   basados en el PEI del colegio. Viven en `src/content/config.ts`.
 
 6. **SaaS-ready:** La arquitectura está diseñada para poder reutilizarse en otros colegios. Ningún componente tiene strings del colegio escritos directamente.
 
-7. **ISR activo:** La onepage se regenera cada 60 segundos. El panel admin invalida el cache al publicar.
+7. **Sitio 100% estático:** todo se prerenderiza en el build; no hay ISR ni SSR.
+   Es un requisito, no una preferencia: las páginas leen `public/media/` con
+   `fs`, y en Vercel esa carpeta no existe dentro de la función serverless. Ver
+   [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md).
 
 ---
 
@@ -450,4 +452,10 @@ Al generar un prompt para Claude Code basado en sugerencias UX, verificar:
 ---
 
 *Generado el 2026-04-18 por Claude Code para uso del asesor UX/UI.*
-*Fuente de verdad: código fuente en `/src/` + `CLAUDE.md` + `prisma/schema.prisma`*
+*Fuente de verdad: código fuente en `/src/` + `CLAUDE.md` + `src/content/`*
+
+> **Nota (migración a Vercel):** este informe se escribió cuando el proyecto
+> tenía PostgreSQL, Prisma y panel admin. La sección 7 "Modelo de Datos" describe
+> un esquema que **ya no existe** — se conserva como referencia de qué campos
+> tendría un panel futuro. Todo lo demás (paleta, componentes, props, secciones)
+> sigue vigente.

@@ -1,0 +1,5 @@
+# Carpeta preparada segun docs/admin/BLUEPRINT_EVENTOS.md
+# hero/     -> video o imagen permanente del evento
+# polaroid/ -> fotos del bloque polaroid
+# 2026/     -> galeria masonry del ano
+# Al cargar los archivos, publicar el evento en prisma/seed.ts (activo + estado).
