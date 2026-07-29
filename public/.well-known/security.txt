@@ -1,0 +1,8 @@
+# Canal para reportar vulnerabilidades de seguridad (RFC 9116).
+# Este sitio maneja sólo datos públicos del colegio. Si encontraste un problema
+# de seguridad, escríbenos antes de divulgarlo.
+
+Contact: mailto:contacto@gardenlaunion.cl
+Expires: 2027-07-29T00:00:00.000Z
+Preferred-Languages: es
+Canonical: https://gardenlaunion.cl/.well-known/security.txt
