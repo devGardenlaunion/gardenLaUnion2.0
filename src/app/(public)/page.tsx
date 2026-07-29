@@ -138,7 +138,11 @@ export default async function HomePage() {
           imagenes={imagenesAdmision}
         />
 
-        <Contacto sedes={sedes} redes={redesSociales} />
+        <Contacto
+          sedes={sedes}
+          redes={redesSociales}
+          categorias={config["contacto.categorias"] || []}
+        />
       </main>
 
       <Footer

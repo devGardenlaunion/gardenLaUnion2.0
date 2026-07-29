@@ -24,6 +24,22 @@ export const contenido = {
   "contacto.sede_media.lat": "-40.2928",
   "contacto.sede_media.lng": "-73.0811",
   "contacto.email": "contacto@gardenlaunion.cl",
+  // Categorías del formulario de contacto. El `id` viaja en el asunto y en la
+  // cabecera X-GC-Categoria del correo: es lo que permite filtrar en Gmail sin
+  // depender de ningún procesamiento posterior. **Cambiar un `id` rompe los
+  // filtros que el colegio tenga armados** — cambiar el `label` no.
+  //
+  // No poner acá categorías que prometan un destinatario ("cita con dirección",
+  // "hablar con el profesor jefe"): el formulario es público y todo cae en la
+  // misma casilla, así que ofrecer un receptor concreto es una promesa que el
+  // colegio no puede garantizar y que salta el conducto regular.
+  "contacto.categorias": [
+    { "id": "admision", "label": "Admisión y matrícula" },
+    { "id": "documentos", "label": "Certificados y documentos" },
+    { "id": "proveedores", "label": "Proveedores" },
+    { "id": "trabajo", "label": "Trabaja con nosotros" },
+    { "id": "otro", "label": "Otro" }
+  ],
   "eventos.titulo": "Historias Garden",
   "eventos.subtitulo": "Lo que somos, contado desde adentro",
   "eventos.badge": "Lo que vivimos",

@@ -27,6 +27,13 @@ Deploy: Vercel, con `git push` a `main`. Dominio: https://gardenlaunion.cl
 ### 2. Aprobación Humana de IA
 - Si en el futuro se integra generación de contenido por IA (Etapa 3), **TODO** contenido generado DEBE pasar por flujo de aprobación antes de publicarse.
 - Nunca implementar publicación automática de contenido generado por IA.
+- Esto **incluye el correo**: nada redactado por un modelo puede salir hacia un
+  apoderado sin que una persona lo haya visto. El acuse de recibo del formulario
+  usa un extracto recortado del propio mensaje, no un resumen generado.
+- Si algún día una IA preprocesa los mensajes de contacto: el campo `mensaje` es
+  texto de un desconocido y es un vector de inyección de prompt. Va delimitado y
+  tratado como dato, nunca concatenado con las instrucciones. Que clasifique y
+  sugiera; que no responda sola.
 
 ### 3. SaaS-Ready (Multi-tenant futuro)
 - **NUNCA** hardcodear datos específicos de Garden College en lógica de negocio o componentes.
@@ -294,7 +301,13 @@ El orden y contenido de cada sección se basa en el PEI del colegio y el anális
 ### 8. Contacto
 - Dos sedes con dirección y teléfono
 - Mapa (Leaflet con OpenStreetMap, NO Google Maps — evitar API key y costo)
-- Formulario: nombre, email, teléfono (opcional), asunto, mensaje
+- Formulario: nombre, email, teléfono (opcional), **motivo** (select), asunto, mensaje
+- El motivo sale de `contacto.categorias`; el server valida contra esa lista.
+  **No agregar categorías que prometan un destinatario** (ver `docs/CONTENIDO.md`).
+- Cada mensaje recibe un N° de solicitud (`GC-AAAAMMDD-XXXXXX`) que va en el
+  asunto, en la cabecera `X-GC-Id` y en el acuse al apoderado.
+- Acuse de recibo automático al remitente: corto, con extracto **extraído** del
+  mensaje (nunca redactado por IA), sin adjuntos y sin marca de prioridad.
 - Rate limit en el endpoint: max 5 mensajes por IP por hora
 
 ### 9. Footer
@@ -335,6 +348,7 @@ contacto.sede_basica.telefono
 contacto.sede_media.direccion
 contacto.sede_media.telefono
 contacto.email
+contacto.categorias (JSON array — {id, label}; el desplegable "Motivo" del formulario)
 redes.facebook
 redes.instagram
 redes.youtube

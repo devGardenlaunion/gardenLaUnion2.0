@@ -167,58 +167,88 @@ Lo único que hace falta son las credenciales del proveedor de envío.
 faltan, el build pasa igual y todo el resto funciona: sólo el envío devuelve 502.
 Por eso hay que probarlo a mano — no hay forma de que un build falle por esto.
 
-### Por qué Resend y no el Workspace del colegio
+### Proveedor: Google Workspace (`web@gardenlaunion.cl`)
 
-Se intentó primero con SMTP de Google Workspace. La política de la organización
-bloquea las contraseñas de aplicación, y **bajar esa política no era una opción
-razonable**: debilitaría la seguridad de todas las cuentas del colegio —incluidas
-las que manejan datos de estudiantes— por una funcionalidad periférica.
+El envío sale por el SMTP del Workspace del colegio, autenticado con una
+**contraseña de aplicación** de la casilla `web@gardenlaunion.cl`.
 
-Resend además resuelve mejor el problema real: mejor entregabilidad desde
-funciones serverless que Gmail, no expone ninguna credencial de Google, y la
-verificación del dominio (SPF/DKIM) mejora la reputación de `gardenlaunion.cl`
-para todo el correo que salga de ahí.
+Historial, porque la decisión cambió y conviene que quede escrito: al principio
+la política de la organización bloqueaba las contraseñas de aplicación y se
+montó **Resend** como alternativa. Cuando se habilitó la contraseña para esa
+casilla, se volvió a Workspace: es una pieza menos que mantener, sin cuenta de
+terceros ni verificación DNS propia. La config de Resend queda documentada más
+abajo como plan B, y sigue siendo la opción correcta si algún día hay que sacar
+la credencial de Google de Vercel.
+
+> ### La contraseña de aplicación NO es equivalente a una API key
+>
+> Da acceso **completo a la casilla** — envío y lectura por IMAP —, no sólo
+> envío. Por eso `web@gardenlaunion.cl` tiene que ser una cuenta **dedicada al
+> sitio**: sin correo real del colegio y sin nada que toque datos de estudiantes.
+>
+> Si esa casilla alguna vez pasa a usarse de verdad, hay que volver a Resend: su
+> API key es sólo-envío y se revoca sin tocar la cuenta de Google.
+>
+> Si la contraseña se filtra: *Cuenta de Google → Seguridad → Contraseñas de
+> aplicación → Revocar*, generar otra y actualizarla en Vercel.
 
 ### Configuración inicial
 
-1. Crear cuenta en <https://resend.com> (3.000 correos/mes gratis; el colegio
-   manda muchísimo menos).
-2. **Verificar el dominio**: *Domains* → *Add Domain* → `gardenlaunion.cl`.
-   Resend entrega unos registros DNS (SPF, DKIM y opcionalmente DMARC) que hay
-   que cargar en el registrador del dominio. Propagan en minutos a algunas horas.
-3. **Crear una API key**: *API Keys* → *Create*. Con permiso de envío alcanza —
-   no darle acceso total. Se muestra una sola vez.
+1. En la cuenta `web@gardenlaunion.cl`: verificación en 2 pasos activada, y
+   generar la contraseña en <https://myaccount.google.com/apppasswords>.
+   Se muestra una sola vez, en grupos de 4 (`abcd efgh ijkl mnop`).
+2. **Pegarla sin espacios** (`abcdefghijklmnop`, 16 caracteres). Google los
+   ignora, pero al copiar el valor a Vercel los espacios sí pueden viajar y
+   romper la autenticación.
+3. **SPF**: el dominio necesita `include:_spf.google.com` en su registro TXT.
+   Sin eso el correo sale, pero llega marcado como sospechoso.
+   **No puede haber dos registros TXT de SPF** en el dominio: si ya existe uno
+   (de Resend, del hosting anterior), se agrega el `include` al que está, no se
+   crea otro.
 4. Completar en `.env` (local) y en Vercel (producción):
 
    ```
-   SMTP_HOST=smtp.resend.com
+   SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
-   SMTP_USER=resend
-   SMTP_PASS=<la API key, empieza con re_>
+   SMTP_USER=web@gardenlaunion.cl
+   SMTP_PASS=<contraseña de aplicación, 16 caracteres sin espacios>
    CONTACTO_FROM=web@gardenlaunion.cl
    CONTACTO_FROM_NAME=Garden College Web
    CONTACTO_TO=<dónde llegan los avisos>
    ```
 
-> ### `SMTP_USER` NO es el remitente
->
-> Con Resend, `SMTP_USER` es **la palabra literal `resend`** — es el nombre de
-> usuario del servidor SMTP, no una dirección. La dirección del remitente sale
-> de `CONTACTO_FROM`, y por eso son variables separadas en `src/lib/mail.ts`.
->
-> Antes el código armaba el `From` con `SMTP_USER` (con Gmail coincidían). Si se
-> vuelve a mezclar, el correo sale con `From: resend` y se rechaza.
+`CONTACTO_FROM` **tiene que ser la misma casilla que `SMTP_USER`**: Gmail
+reescribe el `From` con la cuenta autenticada, así que poner otra dirección no
+cambia lo que ve el apoderado, sólo agrega un `Sender:` raro en la cabecera.
 
 `CONTACTO_TO` puede ser distinta de `contacto.email` en
 `src/content/config.ts`: la del contenido es la que **ve** el apoderado en la
 web; `CONTACTO_TO` es dónde caen los avisos internos.
 
-### Mientras el dominio no esté verificado
+Límite del Workspace: ~2.000 destinatarios por día. El formulario del colegio no
+se acerca ni de lejos.
 
-Resend sólo deja enviar desde `onboarding@resend.dev`, y **únicamente al correo
-con el que se creó la cuenta**. Sirve para comprobar que la API key funciona,
-pero no para una prueba real del formulario. Para eso hay que terminar la
-verificación DNS.
+### Plan B: Resend
+
+Si hay que sacar la credencial de Google de Vercel, o la entregabilidad desde las
+funciones serverless da problemas:
+
+1. Crear cuenta en <https://resend.com> (3.000 correos/mes gratis).
+2. *Domains* → *Add Domain* → `gardenlaunion.cl`, y cargar los registros DNS
+   (SPF, DKIM, DMARC) que entrega. Propagan en minutos a algunas horas.
+3. *API Keys* → *Create*, sólo con permiso de envío. Se muestra una sola vez.
+4. En `.env` / Vercel: `SMTP_HOST=smtp.resend.com`, `SMTP_PORT=587`,
+   `SMTP_USER=resend`, `SMTP_PASS=<la API key, empieza con re_>`. El resto de
+   las variables no cambia.
+
+> **Con Resend, `SMTP_USER` NO es el remitente**: es **la palabra literal
+> `resend`**, el nombre de usuario del servidor SMTP. La dirección del remitente
+> sale de `CONTACTO_FROM`, y por eso son variables separadas en `src/lib/mail.ts`.
+> Si se vuelven a mezclar, el correo sale con `From: resend` y se rechaza.
+>
+> Mientras el dominio no esté verificado, Resend sólo deja enviar desde
+> `onboarding@resend.dev` y **únicamente al correo con el que se creó la cuenta**:
+> sirve para probar la API key, no para una prueba real del formulario.
 
 ### Verificar
 
@@ -228,8 +258,9 @@ node scripts/probar-smtp.js
 
 Envía un correo real a `CONTACTO_TO` y separa dos problemas que desde el
 navegador se ven idénticos: credenciales mal puestas vs. bug en el formulario.
-Detecta los errores típicos (API key inválida, dominio sin verificar, puerto
-bloqueado) y los explica en la salida.
+Detecta los errores típicos (contraseña que no es de aplicación, espacios sin
+sacar, API key inválida, dominio sin verificar, puerto bloqueado) y los explica
+en la salida.
 
 Después, probar el formulario en el navegador de punta a punta. Ojo con el
 antispam propio: **un envío en menos de 3 segundos se descarta como bot** y
@@ -238,16 +269,60 @@ qué evitar). Al probar, llenar el formulario con calma.
 
 ### Cómo llega el correo
 
-Sale desde `CONTACTO_FROM`, pero el `Reply-To` es el email del apoderado: al
-apretar "Responder" se le contesta directo a la persona. El cuerpo incluye un
-bloque de metadata (IP, ubicación aproximada, navegador, referer) por si alguna
-vez hay que reportar un abuso.
+Cada envío genera **dos** correos:
+
+**1. Aviso al colegio** (`CONTACTO_TO`). El `Reply-To` es el email del apoderado:
+al apretar "Responder" se le contesta directo a la persona. El asunto va con la
+categoría y la sede al frente — `[admision][media] Consulta por…` — y el cuerpo
+incluye un bloque de metadata (IP, ubicación aproximada, navegador, referer) por
+si alguna vez hay que reportar un abuso.
+
+**2. Acuse de recibo al apoderado.** Confirma la recepción y le deja el N° de
+solicitud. Es corto a propósito: lleva un **extracto recortado** del mensaje
+(200 caracteres, cortado en límite de palabra), no el mensaje completo ni un
+resumen redactado. Si falla, no rompe nada: el aviso al colegio ya salió.
+
+#### Por qué el acuse es así y no de otra forma
+
+| Decisión | Motivo |
+|---|---|
+| Extracto, no mensaje completo, y sin convertir URLs en enlaces | El formulario es público: cualquiera puede poner el correo de un tercero y texto arbitrario, y el acuse se lo entregaría desde un dominio con buena reputación. Mandando poco y sin enlaces, deja de servir para hacerle llegar un mensaje a alguien. |
+| Extracto **extraído**, nunca generado por IA | Sale automáticamente, sin que nadie lo lea. Un resumen redactado por un modelo es contenido publicado sin aprobación humana (regla no negociable #2) y encima expuesto a que el propio mensaje traiga instrucciones. |
+| `Reply-To` a `CONTACTO_TO` | Si el apoderado responde el acuse —lo va a hacer— tiene que caer donde alguien lee, no en la casilla técnica que autentica el SMTP. |
+| `Auto-Submitted: auto-generated` (RFC 3834) | Evita que dispare la respuesta automática del otro lado y se arme un ciclo. |
+| Sin `Importance: high` ni `X-Priority` | **Gmail los ignora**: su marcador "Importante" lo decide el receptor, no el emisor. En correo automático sólo ayuda a caer en Promociones o spam. Para destacar, la vía real es un filtro del lado del colegio sobre `X-GC-Categoria`. |
+| No se manda si el remitente es del propio dominio | Iría a una casilla del colegio y puede realimentarse. El mensaje se procesa igual; sólo se omite el acuse. |
+
+#### Cabeceras para filtrar y para el triage
+
+El aviso interno lleva estas cabeceras, que hacen el correo filtrable de forma
+determinista **funcione o no** cualquier procesamiento automático que se monte
+después:
+
+| Cabecera | Contenido |
+|---|---|
+| `X-GC-Id` | N° de solicitud, `GC-AAAAMMDD-XXXXXX` |
+| `X-GC-Categoria` | id de `contacto.categorias` (`admision`, `documentos`, …) |
+| `X-GC-Sede` | `basica` \| `media` |
+| `X-GC-Origen` | `formulario-web` |
+
+Además, el texto plano cierra con un bloque delimitado entre `--- GC-JSON ---` y
+`--- FIN GC-JSON ---` con todos los campos ya estructurados. Quien procese el
+correo lee campos en vez de reparsear prosa.
+
+> **Si se monta triage con IA:** el campo `mensaje` es texto de un desconocido y
+> es un vector de inyección de prompt. Va tratado como dato delimitado, nunca
+> concatenado con las instrucciones, y el modelo clasifica y sugiere — no
+> responde solo. Y ojo con la **Ley 19.628**: mandar el contenido a un proveedor
+> externo es una transferencia de datos personales a un tercero, y el aviso de
+> privacidad actual del formulario no la cubre. Eso hay que revisarlo con
+> abogado antes, no después.
 
 ### Cambiar de proveedor
 
-`src/lib/mail.ts` concentra todo el envío. Cualquier proveedor SMTP (Brevo,
-Mailgun, Postmark, o el Workspace si algún día se destraba la política) se
-configura con las mismas variables, **sin tocar una línea de código**. Y si
+`src/lib/mail.ts` concentra todo el envío. Cualquier proveedor SMTP (Resend,
+Brevo, Mailgun, Postmark) se configura con las mismas variables, **sin tocar una
+línea de código**. Y si
 algún día se monta n8n, se reemplaza el cuerpo de `notificarContacto()` por un
 `fetch` al webhook y ni el endpoint ni el formulario se enteran.
 

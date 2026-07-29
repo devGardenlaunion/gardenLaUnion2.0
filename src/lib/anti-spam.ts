@@ -10,9 +10,30 @@ import { resolveMx } from "dns/promises";
  * Falla "permisiva": si el DNS no responde a tiempo, se acepta el email en vez
  * de rechazar a un apoderado legítimo por un problema de red nuestro.
  */
+/**
+ * Forma plausible de un dominio de correo, ANTES de gastar una consulta DNS.
+ *
+ * Un email ya pasó el validador de zod, pero el dominio sigue siendo texto
+ * arbitrario que va directo a `resolveMx()`. Sin este filtro, cada request
+ * dispara una consulta DNS de lo que sea — un atacante puede apuntar a un
+ * dominio con un servidor DNS lento y sostener la función serverless hasta el
+ * timeout, request tras request (amplificación / gasto). Rechazar acá lo que ni
+ * siquiera parece un dominio evita la consulta por completo.
+ */
+function dominioTieneForma(dominio: string): boolean {
+  if (dominio.length > 253) return false;
+  // Al menos dos etiquetas (algo.tld), sólo alfanumérico y guiones, TLD ≥2.
+  return /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(
+    dominio
+  );
+}
+
 export async function dominioRecibeCorreo(email: string): Promise<boolean> {
   const dominio = email.split("@")[1]?.toLowerCase();
   if (!dominio) return false;
+
+  // Sin forma de dominio → no vale la consulta DNS. Es un typo o un ataque.
+  if (!dominioTieneForma(dominio)) return false;
 
   try {
     const registros = await Promise.race([
