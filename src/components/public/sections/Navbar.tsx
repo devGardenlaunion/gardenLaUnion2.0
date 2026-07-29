@@ -154,13 +154,14 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
             {/* Diámetro > alto del nav (h-16=64 / lg:h-20=80): el círculo rebosa
                 y "deforma" la barra. Dos estados con animación de acomodo:
                   · arriba (!isLight): centrado, rebosando por arriba y por abajo.
-                  · scrolleado (isLight): baja 4px (lo que sobra por arriba al
-                    centrarse) para que el TOP del círculo quede al ras del nav y
-                    no se corte la cabeza; el excedente cuelga hacia abajo.
+                  · scrolleado (isLight): baja 7px = 4px (lo que sobra por arriba
+                    al centrarse) + 3px del aro (ring-[3px] se dibuja por FUERA
+                    del contenedor, si no el aro se corta arriba). Así el borde
+                    del aro queda al ras del nav; el excedente cuelga hacia abajo.
                 translate-y es visual: no agranda la fila ni mueve los links. */}
             <div
               className={`relative w-[4.5rem] h-[4.5rem] lg:w-[5.5rem] lg:h-[5.5rem] shrink-0 rounded-full ring-[3px] ring-gc-gold shadow-md transition-transform duration-300 ease-out ${
-                isLight ? "translate-y-1" : "translate-y-0"
+                isLight ? "translate-y-[7px]" : "translate-y-0"
               }`}
             >
               <Image
