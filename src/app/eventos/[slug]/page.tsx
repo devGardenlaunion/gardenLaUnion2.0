@@ -295,7 +295,7 @@ export default async function EventoPage({ params }: Props) {
                   ))}
                 </div>
                 {fotosPolaroid.length > 0 && (
-                  <div className="lg:sticky lg:top-24 pl-4">
+                  <div className="relative z-20 lg:sticky lg:top-24 pl-4">
                     <GaleriaPolaroid fotos={fotosPolaroid} lightboxMode="inline" desorden={0.5} />
                   </div>
                 )}
