@@ -57,8 +57,14 @@ function Polaroid({
     setLoaded(false);
   }, [foto.src]);
 
-  const imgClass  = size === "lg" ? "w-72 sm:w-96" : "w-28 sm:w-44";
-  const loadingMinH = size === "lg" ? "180px" : "80px";
+  const isLg = size === "lg";
+  // El tamaño lo pone la IMAGEN vía max-w/max-h (no un ancho fijo), así una foto
+  // vertical se limita por ALTO y no se pasa del viewport ni del tablero:
+  //   · chica (montón): tope de alto para que los thumbnails altos no se salgan.
+  //   · ampliada (lg):  tope de alto al viewport (60vh) para verla completa.
+  // Para apaisadas manda el ancho, igual que antes (no cambia QuienesSomos).
+  const imgClass  = "";
+  const loadingMinH = isLg ? "220px" : "80px";
 
   return (
     <div
@@ -72,7 +78,7 @@ function Polaroid({
     >
       <div
         className={`${imgClass} bg-gc-gray-100 relative overflow-hidden`}
-        style={!loaded ? { minHeight: loadingMinH } : undefined}
+        style={!loaded ? { minHeight: loadingMinH, minWidth: isLg ? 200 : 112 } : undefined}
       >
         {/* Shimmer skeleton mientras carga */}
         {!loaded && (
@@ -89,8 +95,12 @@ function Polaroid({
           alt={foto.caption}
           width={0}
           height={0}
-          sizes={size === "lg" ? "(max-width: 640px) 288px, 384px" : "176px"}
-          className={`w-full h-auto block transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+          sizes={isLg ? "(max-width: 640px) 86vw, 384px" : "176px"}
+          className={`block transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${
+            isLg
+              ? "h-auto w-auto max-h-[60vh] max-w-[86vw] sm:max-w-[384px]"
+              : "h-auto w-auto max-w-[112px] sm:max-w-[176px] max-h-[160px] sm:max-h-[240px]"
+          }`}
           style={{ display: "block" }}
           onLoad={() => setLoaded(true)}
         />
