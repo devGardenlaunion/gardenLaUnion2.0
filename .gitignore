@@ -15,11 +15,11 @@ next-env.d.ts
 # production
 build/
 
-# env files
+# env files — todo lo que empiece con .env queda fuera, salvo el template.
+# La lista explícita de antes dejaba pasar backups tipo .env.bak con secrets.
 .env
-.env.local
-.env.production
-.env.development.local
+.env.*
+!.env.example
 
 # debug
 npm-debug.log*
