@@ -20,6 +20,9 @@ interface Redes {
 interface ContactoProps {
   sedes: Sede[];
   redes: Redes;
+  /** contacto.categorias del contenido. Llega por props para no arrastrar todo
+      src/content/config.ts al bundle del cliente. */
+  categorias: { id: string; label: string }[];
 }
 
 const sedesConfig = {
@@ -65,7 +68,7 @@ const IcoNavegar = () => (
   </svg>
 );
 
-export default function Contacto({ sedes, redes }: ContactoProps) {
+export default function Contacto({ sedes, redes, categorias }: ContactoProps) {
   const [sedeActiva, setSedeActiva] = useState<"basica" | "media">("basica");
   const [isChanging, setIsChanging] = useState(false);
 
@@ -241,7 +244,7 @@ export default function Contacto({ sedes, redes }: ContactoProps) {
                 {sedesConfig[sedeActiva].label}
               </span>
             </p>
-            <ContactForm sede={sedeActiva} />
+            <ContactForm sede={sedeActiva} categorias={categorias} />
           </div>
 
         </div>

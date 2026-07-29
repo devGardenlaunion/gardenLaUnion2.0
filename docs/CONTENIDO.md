@@ -44,9 +44,22 @@ Algunas claves guardan estructuras, no texto suelto:
 | `sellos.cards` | Array de `{titulo, descripcion, icono}`. **El orden define el mosaico**: la primera card es la destacada (ancha). |
 | `sellos.cta` | `{cifra, texto, boton, href}` — la franja de cierre de Sellos. |
 | `niveles.info` / `niveles.extras` | Arrays de niveles educativos. |
+| `contacto.categorias` | Array de `{id, label}` — el desplegable "Motivo" del formulario de contacto. |
 
 Iconos disponibles para `sellos.cards`: `book-open`, `heart-pulse`, `globe`,
 `shield-check`, `users`, `sparkles`.
+
+#### Cuidado con `contacto.categorias`
+
+- **El `id` es una clave estable, no un texto.** Viaja en el asunto del correo
+  (`[admision][media] …`) y en la cabecera `X-GC-Categoria`. Cambiarlo rompe los
+  filtros que el colegio tenga armados en Gmail; cambiar el `label` no rompe nada.
+- El server valida contra esta lista (`src/lib/categorias.ts`): un `id` que no
+  esté acá se rechaza con 400, aunque alguien lo mande a mano.
+- **No agregar categorías que prometan un destinatario** ("cita con dirección",
+  "hablar con el profesor jefe"). El formulario es público y todo cae en la misma
+  casilla: ofrecer un receptor concreto es una promesa que el colegio no controla,
+  y además invita a saltarse el conducto regular. Se sacó una por este motivo.
 
 ---
 
