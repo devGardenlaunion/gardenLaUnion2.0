@@ -78,7 +78,7 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
     >
       {/* Barra superior — solo desktop */}
       {!isLight && (
-        <div className="hidden lg:block bg-gc-green-800 text-white/80 text-sm">
+        <div className="hidden lg:block bg-gc-red text-white/85 text-sm">
           <div className="container-gc flex justify-between items-center py-1.5">
             <div className="flex items-center gap-4 font-body">
                 {telefonoBasica && (
@@ -146,14 +146,38 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo + Nombre */}
           <a href={logoHref} className="flex items-center gap-3 group">
-            <div className="w-14 h-14 lg:w-[4.5rem] lg:h-[4.5rem] rounded-full overflow-hidden bg-white shadow-md p-0.5 shrink-0 -my-2">
+            {/* Logo en loop: león institucional ↔ círculo GC del uniforme nuevo
+                (crossfade). Contenedor transparente, sin fondo blanco ni padding:
+                el aro dorado del GC y el badge del león se sostienen solos sobre
+                el navbar oscuro, sin ningún borde blanco. El león lleva el alt
+                real; el GC es decorativo en el ciclo. Para con reduced-motion. */}
+            {/* Diámetro > alto del nav (h-16=64 / lg:h-20=80): el círculo rebosa
+                y "deforma" la barra. Dos estados con animación de acomodo:
+                  · arriba (!isLight): centrado, rebosando por arriba y por abajo.
+                  · scrolleado (isLight): baja 4px (lo que sobra por arriba al
+                    centrarse) para que el TOP del círculo quede al ras del nav y
+                    no se corte la cabeza; el excedente cuelga hacia abajo.
+                translate-y es visual: no agranda la fila ni mueve los links. */}
+            <div
+              className={`relative w-[4.5rem] h-[4.5rem] lg:w-[5.5rem] lg:h-[5.5rem] shrink-0 rounded-full ring-[3px] ring-gc-gold shadow-md transition-transform duration-300 ease-out ${
+                isLight ? "translate-y-1" : "translate-y-0"
+              }`}
+            >
               <Image
-                src="/media/Logo/cropped-cropped-logo.png"
-                alt="Logo Garden College"
+                src="/media/Logo/leon-circulo.webp"
+                alt="Garden College"
                 width={72}
                 height={72}
                 priority
-                className="w-full h-full object-contain"
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+              <Image
+                src="/media/Logo/gc-identidad.webp"
+                alt=""
+                aria-hidden="true"
+                width={72}
+                height={72}
+                className="logo-swap absolute inset-0 w-full h-full object-contain"
               />
             </div>
             <div>

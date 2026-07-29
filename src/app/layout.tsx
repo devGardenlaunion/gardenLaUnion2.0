@@ -67,9 +67,14 @@ export const metadata: Metadata = {
     images: [OG_IMAGE.url],
   },
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-    apple: "/media/Logo/cropped-cropped-logo.png",
+    // Rebrand oficializado en esta rama: la identidad ante Google es el isotipo
+    // GC en los cuatro touchpoints (favicon, structured data, apple, OG).
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png", sizes: "96x96" },
+    ],
+    shortcut: "/favicon.png",
+    apple: "/media/Logo/gc-identidad.png",
   },
   robots: {
     index: true,
@@ -88,7 +93,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#143832",
+  themeColor: "#0A1420",
   width: "device-width",
   initialScale: 1,
 };

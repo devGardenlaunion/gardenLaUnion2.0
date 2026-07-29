@@ -128,6 +128,43 @@ node scripts/generar-og-image.js
 
 ---
 
+## Consistencia de marca (crítico para el posicionamiento)
+
+Google no muestra el logo del `<header>` en los resultados: arma la identidad de
+la marca con **cuatro touchpoints separados**, y si no coinciden entre sí, se
+diluye el reconocimiento de marca (que sí influye en CTR y en cómo Google
+construye la *entidad* del colegio en su grafo de conocimiento).
+
+| Touchpoint | Dónde se ve | Archivo |
+|---|---|---|
+| **Favicon** | Junto al nombre en los resultados (móvil) | `public/favicon.svg` |
+| **`logo` structured data** | Knowledge panel / rich results | `src/lib/seo.ts` → `School.logo` |
+| **Apple touch icon** | Marcador en iOS | `src/app/layout.tsx` → `icons.apple` |
+| **OG image** | Preview al compartir (WhatsApp, redes) | `public/og-image.jpg` |
+
+**Regla:** los cuatro deben mostrar el MISMO isotipo que el logo visible del
+sitio. Cuando se cambia la identidad, se actualizan los cuatro juntos — si no,
+Google muestra una marca y el sitio otra.
+
+> Favicon: para máxima compatibilidad conviene un PNG múltiplo de 48 (el tamaño
+> que Google reescala). El favicon debe ser **cuadrado y legible a 16px**: nada
+> de texto largo ni detalle fino que se pierda.
+
+**Estado actual (rama `feat/uniformes` — rebrand oficializado):** los cuatro
+touchpoints muestran el **isotipo GC** (navy + monograma dorado), igual que la
+UI del sitio:
+
+- **Favicon:** `favicon.svg` (+ `favicon.png` 96×96) — GC centrado, legible a 16px.
+- **Structured data `logo`:** `gc-identidad.png`.
+- **Apple touch icon:** `gc-identidad.png`.
+- **OG image:** `og-image.jpg` regenerada con el isotipo + gradiente navy.
+
+El león queda sólo como capa secundaria del loop del navbar (con `alt=""`, no es
+señal de marca para Google). El isotipo GC lee limpio a 16px — a diferencia del
+badge del león, que como escudo detallado se volvía una mancha a ese tamaño.
+
+---
+
 ## Texto alternativo de las imágenes
 
 El `alt` se derivaba del nombre del archivo, así que el sitio publicaba cosas

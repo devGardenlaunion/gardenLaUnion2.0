@@ -6,27 +6,28 @@
    VARIABLES CSS — PALETA GARDEN COLLEGE
    ============================================= */
 :root {
-  /* Verde Jade — protagonista */
-  --gc-green-50:    #EBF5F3;
-  --gc-green-100:   #B8DDD5;
-  --gc-green-light: #5EAA9A;
-  --gc-green:       #3D8578;
-  --gc-green-dark:  #2D6A5F;
-  --gc-green-800:   #1F4F46;
-  --gc-green-900:   #143832;
+  /* PROTOTIPO uniforme nuevo (rama feat/uniformes): "gc-green" conserva el
+     nombre pero ahora es el NAVY del uniforme. Reversible. Ver docs/BLUE_TEAM… */
+  --gc-green-50:    #EAEEF7;
+  --gc-green-100:   #CDD9EF;
+  --gc-green-light: #5A79BE;
+  --gc-green:       #2E4E8C;
+  --gc-green-dark:  #1F386A;
+  --gc-green-800:   #1A2E52;
+  --gc-green-900:   #0F1D38;
   /* Navy — base */
   --gc-navy-50:    #E8ECF2;
   --gc-navy-light: #2D4470;
   --gc-navy:       #1B2A4A;
-  --gc-navy-dark:  #111B33;
-  /* Dorado — acento + CTA */
-  --gc-gold-50:    #FAF6EB;
-  --gc-gold-light: #D4B84E;
-  --gc-gold:       #B8943B;
-  --gc-gold-dark:  #7A6A2E;
-  /* Rojo — solo errores */
-  --gc-red:        #C62828;
-  --gc-red-light:  #E53935;
+  --gc-navy-dark:  #0F1B2E;
+  /* Ámbar — acento + monograma GC (afinado al uniforme) */
+  --gc-gold-50:    #FAF4E4;
+  --gc-gold-light: #E3B23F;
+  --gc-gold:       #C79018;
+  --gc-gold-dark:  #8F6910;
+  /* Carmesí — acento real de marca (bomber, ribetes) */
+  --gc-red:        #B01722;
+  --gc-red-light:  #D2202C;
   /* Neutros */
   --gc-white:      #FAFAF8;
   --gc-warm:       #FAFAF8;
@@ -75,13 +76,17 @@
 
   /* Botones */
   .btn-primary {
+    /* Prototipo uniforme: acción principal en CARMESÍ (el "10%" de 60-30-10,
+       presente en toda pantalla). El oro pasa a joya (GC, divisores), como la
+       bomber: tela navy, acentos rojos, letras doradas. */
     @apply inline-flex items-center justify-center px-6 py-3
-           bg-gc-gold text-white font-body font-semibold
-           rounded-xl hover:bg-gc-gold-dark hover:text-white transition-all duration-200
+           bg-gc-red text-white font-body font-semibold
+           rounded-xl hover:bg-gc-red-light hover:text-white transition-all duration-200
            shadow-sm hover:shadow-md active:scale-[0.98];
   }
 
   .btn-secondary {
+    /* Secundario en navy (outline): jerarquía bajo el carmesí primario. */
     @apply inline-flex items-center justify-center px-6 py-3
            border-2 border-gc-green-800 text-gc-green-800 font-body font-semibold
            rounded-xl hover:bg-gc-green-800 hover:text-white transition-all duration-200;
@@ -181,3 +186,20 @@
    ============================================= */
 /* El crossfade del carrusel (CarouselLinkCard) ahora genera su keyframe según
    la cantidad de imágenes; ya no hay un keyframe fijo acá. */
+
+/* Logo del navbar: alterna león ↔ círculo GC (prototipo uniforme). El GC es la
+   capa superior; su opacidad hace el crossfade sobre el león. Ciclo 8s:
+   ~león 3s → fundido → ~GC 3s → fundido. */
+@keyframes logo-swap {
+  0%, 40%  { opacity: 0; }
+  50%, 90% { opacity: 1; }
+  100%     { opacity: 0; }
+}
+.logo-swap {
+  opacity: 0;
+  animation: logo-swap 8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Sin animación: se queda el león, el GC no aparece. */
+  .logo-swap { animation: none; opacity: 0; }
+}

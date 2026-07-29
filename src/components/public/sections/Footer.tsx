@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface FooterProps {
   nombre: string;
   corporacion: string;
@@ -29,8 +31,14 @@ export default function Footer({ nombre, corporacion, redes }: FooterProps) {
           {/* Logo + info */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gc-green flex items-center justify-center font-display font-bold text-gc-gold">
-                GC
+              <div className="w-11 h-11 rounded-full ring-2 ring-gc-gold shrink-0">
+                <Image
+                  src="/media/Logo/gc-identidad.webp"
+                  alt="Garden College"
+                  width={44}
+                  height={44}
+                  className="w-full h-full object-contain"
+                />
               </div>
               <span className="font-display font-bold text-white text-lg">
                 {nombre}

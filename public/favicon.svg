@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <circle cx="16" cy="16" r="16" fill="#3D8578"/>
-  <text x="16" y="21" font-family="Georgia, serif" font-size="13" font-weight="700" text-anchor="middle" fill="#B8943B">GC</text>
+  <!-- Favicon = isotipo GC de la marca, simplificado (GC centrada) para leerse
+       a 16px, que es como Google lo muestra junto al nombre en los resultados.
+       El staggered del isotipo grande se pierde a ese tamaño; acá va centrado. -->
+  <circle cx="16" cy="16" r="16" fill="#0C1D33"/>
+  <text x="16" y="22.5" font-family="Georgia, 'Times New Roman', serif"
+        font-size="18" font-weight="700" text-anchor="middle" fill="#CBA03A">GC</text>
 </svg>

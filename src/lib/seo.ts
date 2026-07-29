@@ -111,7 +111,7 @@ export function jsonLdSitio() {
         description: c["institucional.resena"],
         slogan: c["institucional.slogan"],
         url: SITE_URL,
-        logo: absUrl("/media/Logo/cropped-cropped-logo.png"),
+        logo: absUrl("/media/Logo/gc-identidad.png"),
         image: absUrl(OG_IMAGE.url),
         email: c["contacto.email"],
         telephone: aE164(c["contacto.sede_basica.telefono"] ?? ""),

@@ -9,34 +9,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // VERDE JADE — color protagonista (uniforme, tartán)
+        // PROTOTIPO uniforme nuevo (rama feat/uniformes): la familia "gc-green"
+        // conserva su NOMBRE pero ahora contiene el NAVY del uniforme, para
+        // flipear los 19 componentes sin editarlos. Si se descarta, se revierten
+        // estos valores. Escala de luminosidad preservada (50 claro → 900 oscuro).
         "gc-green": {
-          "50":      "#EBF5F3",
-          "100":     "#B8DDD5",
-          "light":   "#5EAA9A",
-          DEFAULT:   "#3D8578",
-          "dark":    "#2D6A5F",
-          "800":     "#1F4F46",
-          "900":     "#143832",
+          "50":      "#EAEEF7",
+          "100":     "#CDD9EF",
+          "light":   "#5A79BE",
+          DEFAULT:   "#2E4E8C",
+          "dark":    "#1F386A",
+          "800":     "#1A2E52",
+          "900":     "#0F1D38",
         },
-        // NAVY — base oscura (fondo tartán, hero, footer)
+        // NAVY — base oscura (hero, footer). Se profundiza el dark al navy textil.
         "gc-navy": {
           "50":    "#E8ECF2",
           "light": "#2D4470",
           DEFAULT: "#1B2A4A",
-          "dark":  "#111B33",
+          "dark":  "#0F1B2E",
         },
-        // DORADO — acento divino + CTA principal
+        // ÁMBAR — acento + monograma GC (afinado al dorado del uniforme)
         "gc-gold": {
-          "50":    "#FAF6EB",
-          "light": "#D4B84E",
-          DEFAULT: "#B8943B",
-          "dark":  "#7A6A2E",
+          "50":    "#FAF4E4",
+          "light": "#E3B23F",
+          DEFAULT: "#C79018",
+          "dark":  "#8F6910",
         },
-        // ROJO — solo errores y alertas
+        // CARMESÍ — ahora acento REAL de marca (bomber, ribetes), no solo error
         "gc-red": {
-          DEFAULT: "#C62828",
-          "light": "#E53935",
+          DEFAULT: "#B01722",
+          "light": "#D2202C",
         },
         // Neutros
         "gc-white":     "#FAFAF8",
