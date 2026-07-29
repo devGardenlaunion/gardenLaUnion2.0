@@ -19,13 +19,21 @@
  * Si algún día se agrega un recurso externo (Analytics, un embed, un CDN), hay
  * que sumar su origen a la directiva que corresponda o el navegador lo bloquea.
  */
+// React en modo DEV usa eval() para Fast Refresh y los overlays de error; la CSP
+// estricta lo bloquea y rompe el hot-reload. En producción React NO usa eval, así
+// que 'unsafe-eval' se agrega SOLO en desarrollo. Producción queda intacta.
+const scriptSrc =
+  process.env.NODE_ENV === 'development'
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+    : "script-src 'self' 'unsafe-inline'";
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'self'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
