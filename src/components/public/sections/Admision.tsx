@@ -30,10 +30,10 @@ export default function Admision({ info, linkSae, imagenes = [] }: AdmisionProps
                     images={imagenes}
                     fit="contain"
                     alt="Estudiantes de Garden College, La Unión — proceso de admisión"
-                    className="h-[380px] w-full"
+                    className="aspect-[4/5] w-full md:aspect-auto md:h-[380px]"
                   />
                 ) : (
-                  <div className="relative h-[380px] w-full rounded-xl overflow-hidden bg-gc-green flex items-center justify-center">
+                  <div className="relative aspect-[4/5] w-full md:aspect-auto md:h-[380px] rounded-xl overflow-hidden bg-gc-green flex items-center justify-center">
                     <div className="absolute inset-0 bg-gradient-to-t from-gc-green-900/40 to-transparent" />
                     <Image
                       src="/media/Logo/cropped-cropped-logo.png"

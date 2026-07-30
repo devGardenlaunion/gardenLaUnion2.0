@@ -188,7 +188,10 @@ export default function Sellos({
                     label="Así se ve un día en Garden"
                     images={imagenesCarrusel}
                     alt="Un día en Garden College, La Unión — actividades de la comunidad escolar"
-                    className="lg:col-span-2 lg:row-span-2"
+                    /* Ciclo 2 (expresiva): marco de altura fija en móvil (4:3,
+                       object-cover) para que no salte el scroll; en desktop
+                       manda el grid (col-span-2 row-span-2), sin cambios. */
+                    className="aspect-[4/3] lg:aspect-auto lg:col-span-2 lg:row-span-2"
                   />
 
                   {resto.map((card, i) => (

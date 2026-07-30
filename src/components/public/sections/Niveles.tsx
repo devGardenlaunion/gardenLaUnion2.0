@@ -44,7 +44,9 @@ export default function Niveles({ niveles, extras }: NivelesProps) {
             return (
               <div key={nivel.nombre} className={`card overflow-hidden ${nivelBorders[i % nivelBorders.length]}`}>
                 {imgSrc && (
-                  <div className="relative aspect-[2/1]">
+                  // Ciclo 2 (funcional): 3:2 en móvil (cadencia de scroll pareja),
+                  // 2:1 en desktop (aprobado, sin cambios).
+                  <div className="relative aspect-[3/2] md:aspect-[2/1]">
                     <Image
                       src={imgSrc}
                       // Con el nivel solo ("Prebásica") la imagen no dice de
