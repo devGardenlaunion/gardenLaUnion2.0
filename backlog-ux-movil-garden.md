@@ -113,6 +113,20 @@ export const metadata: Metadata = {
 - [ ] LCP móvil con Slow 4G **< 2.5 s**.
 - [ ] Ningún archivo servido desde `public/media/` con extensión `.JPG` o `.jpeg` en secciones visibles.
 
+### Estado Ciclo 1 (commit `143156e`, verificado Lighthouse móvil local vía Brave)
+
+- [x] `/_next/image` con `w>640` en 390px: **0** (todo a 375/128).
+- [x] Peso imágenes: **215 KB** (≤ 1.2 MB).
+- [x] Requests de imagen: **14** (≤ 25).
+- [x] `sizes=` = nº `<Image>`: **11 = 11**.
+- [x] Exactamente 1 `priority`: el hero (`fetchPriority="high"`); se quitó del logo del Navbar.
+- [x] Sin `.jpeg/.JPG` en secciones visibles: 7 convertidos a WebP.
+- [~] LCP < 2.5 s: **pendiente** — el LCP lo domina el video del hero (2.8 MB) → se resuelve en **Ciclo 3**, no con el presupuesto de imágenes. Medición local no fiable por CPU compartida (baseline prod: 3.1 s).
+
+**Sub-tarea "marquee 9×4" → N/A.** No existe en el código actual: la galería
+(`MAX_FOTOS = 9`, `GaleriaColumnas`) renderiza el set **una vez**, sin clonado.
+La observación del plan era de una versión anterior. Documentado por regla 5.
+
 ---
 
 ## CICLO 2 — Normalización de aspect ratio en secciones funcionales
