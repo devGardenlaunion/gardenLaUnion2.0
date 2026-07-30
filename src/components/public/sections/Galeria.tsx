@@ -25,7 +25,9 @@ async function getFotosGaleria(): Promise<FotoColumnas[]> {
     .filter((f) => IMAGE_EXTS.has(path.extname(f).toLowerCase()))
     .sort();
 
-  const MAX_FOTOS = 9;
+  // 10: en móvil (grid 2-col) da 5 filas limpias; en desktop el masonry de 3
+  // columnas se balancea por altura, así que absorbe la 10ª sin desordenar.
+  const MAX_FOTOS = 10;
 
   return Promise.all(
     archivos.slice(0, MAX_FOTOS).map(async (archivo, i) => {
