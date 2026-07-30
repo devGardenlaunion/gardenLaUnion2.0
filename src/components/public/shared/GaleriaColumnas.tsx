@@ -481,8 +481,47 @@ export default function GaleriaColumnas({
 
   return (
     <div className={className}>
+      {/* Ciclo 2 (funcional): en MÓVIL grilla 4:5 uniforme (misma altura por
+          card, sin salto de scroll). Desktop mantiene el masonry. Toggle por CSS:
+          las imágenes del set oculto (display:none + lazy) no se descargan, así
+          no se duplica el presupuesto de bytes. */}
+      <div className="grid grid-cols-2 gap-2 md:hidden">
+        {albumPhotos.map((f, i) => {
+          const noPoster = noPosterVideoSrcs.has(f.src);
+          const esVideo = noPoster || videoByPoster.has(f.src);
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setLbIndex(i)}
+              aria-label={f.alt || (esVideo ? "Ver video" : "Ver foto")}
+              className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-[#0f172a]"
+            >
+              {!noPoster && (
+                <Image
+                  src={f.src}
+                  alt={f.alt ?? ""}
+                  fill
+                  sizes="50vw"
+                  className="object-cover"
+                  loading="lazy"
+                  onLoad={handleImageLoad}
+                />
+              )}
+              {esVideo && (
+                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="w-11 h-11 bg-black/55 rounded-full flex items-center justify-center border-2 border-white/75">
+                    <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                  </span>
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* justify-start: evita gaps desiguales en columnas de distinta altura */}
-      <div className="[&_.react-photo-album--track]:!justify-start">
+      <div className="hidden md:block [&_.react-photo-album--track]:!justify-start">
         <SSR breakpoints={[375, 640, 1200]}>
           <ColumnsPhotoAlbum
             photos={albumPhotos}
