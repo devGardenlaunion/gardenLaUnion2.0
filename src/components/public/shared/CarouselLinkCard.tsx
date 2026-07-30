@@ -136,7 +136,11 @@ export default function CarouselLinkCard({
               alt={i === 0 ? alt : ""}
               aria-hidden={i !== 0 || !alt}
               fill
-              sizes="(max-width: 1024px) 60vw, 360px"
+              /* En object-cover, una foto apaisada en una card alta se muestra
+                 mucho más ancha que la card (se recorta): hay que servir esa
+                 resolución o Next la sirve chica y se ve pixelada. Antes 360px
+                 estiraba ~2.5x las fotos apaisadas de Sellos. */
+              sizes="(max-width: 1024px) 95vw, 1024px"
               className={contain ? "object-contain" : "object-cover"}
             />
           </div>
