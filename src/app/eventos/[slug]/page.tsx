@@ -147,9 +147,15 @@ export default async function EventoPage({ params }: Props) {
       ? fotosPolaroidBase
       : fotosGrande.slice(0, 4).map((f) => ({ src: f.src, caption: f.alt }));
 
-  // Hero: video permanente del evento > imagen BD > imagen carpeta año
-  const heroVideo = getMediaVideos(`${eventBase}/hero`)[0] ?? null;
-  const heroSrc = heroVideo
+  // Hero: video permanente del evento > imagen BD > imagen carpeta año.
+  // Convención: el archivo con "mobile" en el nombre es el clip vertical/cuadrado
+  // de móvil; el resto es el apaisado de desktop. Si no hay uno dedicado de
+  // móvil, cae al de desktop (object-cover recorta).
+  const heroVideosEvento = getMediaVideos(`${eventBase}/hero`);
+  const heroVideo = heroVideosEvento.find((v) => !/mobile/i.test(v)) ?? null;
+  const heroVideoMobile =
+    heroVideosEvento.find((v) => /mobile/i.test(v)) ?? heroVideo;
+  const heroSrc = (heroVideo || heroVideoMobile)
     ? null
     : (getMediaImages(`${mediaBase}/hero`)[0]?.src ??
        getMediaImages(`${eventBase}/hero`)[0]?.src ??
@@ -224,18 +230,25 @@ export default async function EventoPage({ params }: Props) {
       <main className="pt-20 bg-gc-warm min-h-screen">
         {/* Hero del evento */}
         <div className="relative min-h-[50vh] flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800 overflow-hidden">
-          {heroVideo ? (
+          {heroVideo && (
             <AutoplayVideo
               src={heroVideo}
               className="absolute inset-0 w-full h-full object-cover hidden landscape:block md:block"
             />
-          ) : heroSrc ? (
+          )}
+          {heroVideoMobile && (
+            <AutoplayVideo
+              src={heroVideoMobile}
+              className="absolute inset-0 w-full h-full object-cover block landscape:hidden md:hidden"
+            />
+          )}
+          {!heroVideo && !heroVideoMobile && heroSrc && (
             <img
               src={heroSrc}
               alt={evento.nombre}
               className="absolute inset-0 w-full h-full object-cover"
             />
-          ) : null}
+          )}
           {/* Tint uniforme sobre el video */}
           <div className="absolute inset-0 bg-gc-green-900/50" />
           {/* Gradiente inferior — oscurece la zona del texto */}
