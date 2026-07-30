@@ -140,7 +140,7 @@ export default function Hero({
           preserveAspectRatio="none"
         >
           <path
-            d="M0 120V60C240 20 480 0 720 20C960 40 1200 80 1440 60V120H0Z"
+            d="M0 120V60C240 20 480 0 720 20C960 40 1200 68 1440 60V120H0Z"
             fill="var(--gc-warm, #FAFAF8)"
           />
         </svg>
