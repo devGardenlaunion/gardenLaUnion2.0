@@ -58,12 +58,12 @@ function Polaroid({
   }, [foto.src]);
 
   const isLg = size === "lg";
-  // El tamaño lo pone la IMAGEN vía max-w/max-h (no un ancho fijo), así una foto
-  // vertical se limita por ALTO y no se pasa del viewport ni del tablero:
-  //   · chica (montón): tope de alto para que los thumbnails altos no se salgan.
-  //   · ampliada (lg):  tope de alto al viewport (60vh) para verla completa.
-  // Para apaisadas manda el ancho, igual que antes (no cambia QuienesSomos).
-  const imgClass  = "";
+  // · chica (montón): Ciclo 2 → en MÓVIL marco de altura fija (w-28, aspect 4:5)
+  //   + object-cover, para que todos los polaroids midan igual y el scroll no
+  //   salte. En desktop (sm:) vuelve al look expresivo variado (max-w/max-h),
+  //   sin cambios. El ratio real de cada foto se ve al ampliarla (lg).
+  // · ampliada (lg): tope de alto al viewport (60vh) para verla completa.
+  const imgClass  = isLg ? "" : "w-28 aspect-[4/5] sm:w-auto sm:aspect-auto";
   const loadingMinH = isLg ? "220px" : "80px";
 
   return (
@@ -95,11 +95,11 @@ function Polaroid({
           alt={foto.caption}
           width={0}
           height={0}
-          sizes={isLg ? "(max-width: 640px) 86vw, 384px" : "176px"}
+          sizes={isLg ? "(max-width: 640px) 86vw, 384px" : "(max-width: 640px) 112px, 176px"}
           className={`block transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${
             isLg
               ? "h-auto w-auto max-h-[60vh] max-w-[86vw] sm:max-w-[384px]"
-              : "h-auto w-auto max-w-[112px] sm:max-w-[176px] max-h-[160px] sm:max-h-[240px]"
+              : "w-full h-full object-cover sm:h-auto sm:w-auto sm:max-w-[176px] sm:max-h-[240px]"
           }`}
           style={{ display: "block" }}
           onLoad={() => setLoaded(true)}
