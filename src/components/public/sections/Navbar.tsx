@@ -184,14 +184,27 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo + Nombre */}
           <a href={logoHref} className="flex items-center gap-3 group">
-            <div className="w-14 h-14 lg:w-[4.5rem] lg:h-[4.5rem] rounded-full overflow-hidden bg-white shadow-md p-0.5 shrink-0 -my-2">
+            {/* Comportamiento/tamaño traídos de la rama del uniforme (solo eso;
+                el isotipo y la paleta se importan cuando llegue el rebrand).
+                Diámetro > alto del nav (h-16=64 / lg:h-20=80): el logo REBOSA la
+                barra. Dos estados con animación de acomodo:
+                  · arriba (!isLight): centrado, rebosando por arriba y abajo.
+                  · scrolleado (isLight): baja 7px = 4px (excedente superior al
+                    centrarse) + 3px del aro (ring se dibuja por fuera). Así el
+                    borde del aro queda al ras del nav y el resto cuelga abajo.
+                translate-y es visual: no agranda la fila ni mueve los links. */}
+            <div
+              className={`relative w-[4.5rem] h-[4.5rem] lg:w-[5.5rem] lg:h-[5.5rem] shrink-0 rounded-full overflow-hidden bg-white p-0.5 ring-[3px] ring-gc-gold shadow-md transition-transform duration-300 ease-out ${
+                isLight ? "translate-y-[7px]" : "translate-y-0"
+              }`}
+            >
               <Image
                 src="/media/Logo/cropped-cropped-logo.png"
                 alt="Logo Garden College"
-                width={72}
-                height={72}
+                width={88}
+                height={88}
                 loading="eager"
-                sizes="72px"
+                sizes="88px"
                 className="w-full h-full object-contain"
               />
             </div>
