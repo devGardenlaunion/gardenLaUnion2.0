@@ -21,13 +21,22 @@ const c = contenido as unknown as Record<string, any>;
  * Dominio canónico del sitio, sin barra final.
  *
  * Orden de resolución:
- *   1. SITE_URL   → definida a mano en Vercel. Es la que manda en producción.
- *   2. VERCEL_URL → la que Vercel inyecta sola en los deploys de preview, para
- *                   que un preview no emita canonicals apuntando a producción.
- *   3. localhost  → desarrollo.
+ *   1. SITE_URL / NEXT_PUBLIC_SITE_URL → definida a mano en Vercel. Manda en
+ *      producción; es el override garantizado.
+ *   2. VERCEL_PROJECT_PRODUCTION_URL → dominio de producción ESTABLE que Vercel
+ *      inyecta en el build (no cambia entre deploys). Es lo que corresponde para
+ *      canonical y og:image, así producción nunca emite localhost aunque nadie
+ *      haya seteado SITE_URL. Requiere que "Automatically expose System
+ *      Environment Variables" esté activo (default en Vercel).
+ *   3. VERCEL_URL → URL específica del deploy; respaldo para previews, para que
+ *      un preview se referencie a sí mismo y no a producción.
+ *   4. localhost → sólo desarrollo.
  */
 export const SITE_URL = (
   process.env.SITE_URL ||
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL &&
+    `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`) ||
   (process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`) ||
   "http://localhost:3000"
 ).replace(/\/$/, "");
