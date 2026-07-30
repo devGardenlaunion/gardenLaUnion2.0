@@ -233,9 +233,6 @@ export default function GaleriaColumnas({
   const [toastVisible, setToastVisible] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [iosHintShow, setIosHintShow] = useState(false);
-  const [iosHintVisible, setIosHintVisible] = useState(false);
   const [rotateHintShow, setRotateHintShow] = useState(false);
   const [rotateHintVisible, setRotateHintVisible] = useState(false);
   const [windowStart, setWindowStart] = useState(0);
@@ -246,10 +243,6 @@ export default function GaleriaColumnas({
   // Detección de dispositivo — una sola vez al montar
   useEffect(() => {
     setMounted(true);
-    const ios =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    setIsIOS(ios);
     // maxTouchPoints > 0 es más confiable que innerWidth (no varía al rotar)
     setIsMobile(navigator.maxTouchPoints > 0);
   }, []);
@@ -295,39 +288,48 @@ export default function GaleriaColumnas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fullscreen automático al abrir el lightbox — solo en móvil no-iOS
+  // Al abrir el lightbox en móvil: la galería está DISEÑADA para horizontal, así
+  // que fuerza el arranque en apaisado (fullscreen + lock landscape) — pero NO
+  // deja el lock puesto: a los ~2s lo libera para que el usuario pueda rotar a
+  // portrait y ver pics verticales cómodo ("muevo la pantalla").
+  //
+  // Se intenta en cualquier navegador; donde no hay fullscreen+lock (Safari/iOS
+  // y algún otro) cae al hint de "girá el dispositivo". Así, un iOS que sí
+  // soporte el lock lo usa, y Safari —que no— muestra el hint.
   useEffect(() => {
-    if (lbIndex >= 0) {
-      if (isMobile && !isIOS) {
-        const fsPromise = document.documentElement.requestFullscreen?.();
-        if (fsPromise instanceof Promise) {
-          fsPromise
-            .then(() => (screen.orientation as any)?.lock?.("landscape").catch(() => {}))
-            .catch(() => {
-              setRotateHintShow(true);
-              setTimeout(() => setRotateHintVisible(true), 50);
-              setTimeout(() => setRotateHintVisible(false), 2800);
-              setTimeout(() => setRotateHintShow(false), 3600);
-            });
-        } else {
-          setRotateHintShow(true);
-          const t1 = setTimeout(() => setRotateHintVisible(true), 50);
-          const t2 = setTimeout(() => setRotateHintVisible(false), 2800);
-          const t3 = setTimeout(() => setRotateHintShow(false), 3600);
-          return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-        }
-      } else if (isIOS && isMobile) {
-        setIosHintShow(true);
-        const t1 = setTimeout(() => setIosHintVisible(true), 50);
-        const t2 = setTimeout(() => setIosHintVisible(false), 2800);
-        const t3 = setTimeout(() => setIosHintShow(false), 3600);
-        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-      }
-    } else {
+    if (lbIndex < 0) {
       (screen.orientation as any)?.unlock?.();
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      return;
     }
-  }, [lbIndex, isMobile, isIOS]);
+    if (!isMobile) return;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const mostrarHintRotar = () => {
+      setRotateHintShow(true);
+      timers.push(setTimeout(() => setRotateHintVisible(true), 50));
+      timers.push(setTimeout(() => setRotateHintVisible(false), 2800));
+      timers.push(setTimeout(() => setRotateHintShow(false), 3600));
+    };
+
+    const orientation = screen.orientation as any;
+    const puedeBloquear = typeof orientation?.lock === "function";
+    const fsPromise = document.documentElement.requestFullscreen?.();
+
+    if (puedeBloquear && fsPromise instanceof Promise) {
+      fsPromise
+        .then(() => orientation.lock("landscape"))
+        .then(() => {
+          // Arranca apaisado pero no lo deja locked → liberar tras el arranque.
+          timers.push(setTimeout(() => orientation.unlock?.(), 2000));
+        })
+        .catch(mostrarHintRotar);
+    } else {
+      mostrarHintRotar();
+    }
+
+    return () => timers.forEach(clearTimeout);
+  }, [lbIndex, isMobile]);
 
   // Incluye todos los items: imágenes y videos (con o sin poster)
   // resolvedFotos reemplaza a fotos con dimensiones reales una vez que el sondeo termina
@@ -669,18 +671,8 @@ export default function GaleriaColumnas({
         </div>
       )}
 
-      {/* Aviso iOS: pantalla completa no disponible en Safari */}
-      {iosHintShow && (
-        <div
-          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[10001] px-4 py-2 bg-black/75 text-white/90 text-xs rounded-full backdrop-blur-sm whitespace-nowrap pointer-events-none transition-opacity duration-700 ${
-            iosHintVisible ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          Pantalla completa no disponible en iOS — limitación del navegador
-        </div>
-      )}
-
-      {/* Aviso de rotación: browser no soporta fullscreen (Opera, etc.) */}
+      {/* Aviso de rotación: donde no se puede forzar apaisado (Safari/iOS, etc.)
+          se le pide al usuario que gire el dispositivo. */}
       {rotateHintShow && (
         <div
           className={`fixed top-5 left-1/2 -translate-x-1/2 z-[10001] flex items-center gap-2 px-4 py-2 bg-black/75 text-white/90 text-xs rounded-full backdrop-blur-sm whitespace-nowrap pointer-events-none transition-opacity duration-700 ${
