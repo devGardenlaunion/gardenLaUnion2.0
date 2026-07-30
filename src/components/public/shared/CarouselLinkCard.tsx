@@ -106,7 +106,7 @@ export default function CarouselLinkCard({
           // (contain), para no recortar nada sin dejar barras vacías.
           <div
             key={src}
-            className="absolute inset-0"
+            className={`absolute inset-0 cf-slide${i === 0 ? " cf-slide-first" : ""}`}
             style={
               animar
                 ? {

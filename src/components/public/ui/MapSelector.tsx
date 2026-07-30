@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface MapSelectorProps {
   direccion: string;
@@ -11,6 +11,8 @@ interface MapSelectorProps {
 export default function MapSelector({ direccion, queryEncoded, className }: MapSelectorProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const openerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -19,13 +21,43 @@ export default function MapSelector({ direccion, queryEncoded, className }: MapS
     return () => window.removeEventListener("resize", handler);
   }, []);
 
+  // Foco del modal (criterio Ciclo 5): al abrir, el foco entra al diálogo; Tab
+  // queda atrapado dentro; Escape cierra; al cerrar, el foco vuelve al botón
+  // que lo abrió.
   useEffect(() => {
     if (!sheetOpen) return;
+    const dialog = dialogRef.current;
+    const focusables = dialog
+      ? Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'button, [href], input, [tabindex]:not([tabindex="-1"])'
+          )
+        )
+      : [];
+    focusables[0]?.focus();
+
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSheetOpen(false);
+      if (e.key === "Escape") {
+        setSheetOpen(false);
+        return;
+      }
+      if (e.key === "Tab" && focusables.length > 0) {
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      openerRef.current?.focus();
+    };
   }, [sheetOpen]);
 
   const wazeUrl = `https://waze.com/ul?q=${queryEncoded}&navigate=yes`;
@@ -42,6 +74,7 @@ export default function MapSelector({ direccion, queryEncoded, className }: MapS
   return (
     <div className={className}>
       <button
+        ref={openerRef}
         onClick={handleMainClick}
         className="w-full py-3 rounded-xl border border-gc-green bg-white text-gc-green-800 font-body font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gc-green-50 transition-colors duration-200 min-h-[44px]"
       >
@@ -62,7 +95,9 @@ export default function MapSelector({ direccion, queryEncoded, className }: MapS
         aria-hidden="true"
       />
 
-      {/* Modal — siempre en DOM, invisible y no interactivo cuando cerrado */}
+      {/* Modal — siempre en DOM. `inert` cuando está cerrado lo saca del tab
+          order y del árbol de accesibilidad (opacity:0 por sí solo deja los
+          botones tabulables). */}
       <div
         className="fixed inset-0 z-50 flex items-center justify-center p-6"
         style={{
@@ -72,8 +107,10 @@ export default function MapSelector({ direccion, queryEncoded, className }: MapS
           pointerEvents: sheetOpen ? "auto" : "none",
         }}
         onClick={() => setSheetOpen(false)}
+        inert={!sheetOpen}
       >
         <div
+          ref={dialogRef}
           className="bg-white rounded-2xl p-6 pt-5 w-full max-w-sm shadow-xl"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
@@ -83,7 +120,7 @@ export default function MapSelector({ direccion, queryEncoded, className }: MapS
           {/* Header con título y botón X */}
           <div className="flex items-start justify-between mb-1">
             <p className="font-display text-gc-green-800 text-base font-semibold flex-1 pr-3">
-              ¿Con qué app querés navegar?
+              ¿Con qué app quieres navegar?
             </p>
             <button
               onClick={() => setSheetOpen(false)}
