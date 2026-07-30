@@ -49,16 +49,21 @@ export default function Hero({
           reproducirse. ~2-3MB, es un costo aceptado a propósito para el fondo. */}
       <HeroVideoVertical sources={videoSourcesVert} poster={imagenMobile} />
 
-      {/* Scrim radial: verde de marca sobre el centro (donde va el texto y el
-          video), transparente en los bordes para que las barras del letterbox
-          queden NEGRAS y no verdes. */}
+      {/* Scrim DESKTOP: radial — verde sobre el centro (texto + video cine),
+          transparente en los bordes para que las barras del letterbox queden
+          NEGRAS. Solo desktop/landscape. */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 hidden landscape:block md:block"
         style={{
           background:
             "radial-gradient(ellipse 78% 58% at center, rgba(20,56,50,0.78), rgba(20,56,50,0.30) 62%, transparent 85%)",
         }}
       />
+
+      {/* Scrim MÓVIL: cobertura uniforme. En portrait el hero llena la pantalla
+          (sin barras), así que un radial dejaría un manchón al centro; acá va un
+          degradado parejo para legibilidad del texto. */}
+      <div className="absolute inset-0 block landscape:hidden md:hidden bg-gradient-to-br from-gc-green-900/90 via-gc-green-800/85 to-gc-green-800/80" />
 
       {/* Patrón decorativo sutil */}
       <div
