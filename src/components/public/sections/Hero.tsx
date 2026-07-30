@@ -129,8 +129,11 @@ export default function Hero({
         </div>
       </div>
 
-      {/* Onda inferior */}
-      <div className="absolute bottom-0 left-0 right-0">
+      {/* Onda inferior — SOLO móvil portrait. En desktop/landscape el video es
+          cine con object-contain y la onda tapaba el borde inferior del video
+          (recorte de ~0.5cm en la última escena). En móvil el video vertical
+          llena la pantalla, así que la onda sí hace de transición. */}
+      <div className="absolute bottom-0 left-0 right-0 block landscape:hidden md:hidden">
         <svg
           viewBox="0 0 1440 120"
           fill="none"
