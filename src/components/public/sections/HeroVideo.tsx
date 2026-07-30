@@ -15,6 +15,13 @@ export default function HeroVideo({ sources, poster }: HeroVideoProps) {
     const video = videoRef.current;
     if (!video) return;
 
+    // Respeta reduced-motion: no reproduce (queda el poster). Y como no hay
+    // autoPlay + preload="none", tampoco descarga el video.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // El observer sólo dispara play cuando el video es VISIBLE. En móvil portrait
+    // el <video> está display:none (se muestra la imagen del hero), así que nunca
+    // entra en viewport → nunca se descarga. Ese era el 2.8MB que cargaba de más.
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -47,7 +54,6 @@ export default function HeroVideo({ sources, poster }: HeroVideoProps) {
   return (
     <video
       ref={videoRef}
-      autoPlay
       loop
       muted
       playsInline
