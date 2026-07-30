@@ -152,7 +152,8 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
                 alt="Logo Garden College"
                 width={72}
                 height={72}
-                priority
+                loading="eager"
+                sizes="72px"
                 className="w-full h-full object-contain"
               />
             </div>

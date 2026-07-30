@@ -40,6 +40,7 @@ export default function Admision({ info, linkSae, imagenes = [] }: AdmisionProps
                       alt="Garden College"
                       width={120}
                       height={120}
+                      sizes="120px"
                       className="relative z-10 opacity-40"
                     />
                   </div>
