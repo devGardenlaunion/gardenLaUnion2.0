@@ -317,6 +317,44 @@ desktop sin cambios.
 - [ ] Score de Accesibilidad en Lighthouse móvil **≥ 95**.
 - [ ] El modal de navegación cierra con Escape y devuelve el foco al botón que lo abrió.
 
+### Estado Ciclo 5 (commit `592ec74`, Lighthouse móvil local vía Brave)
+
+- [x] `0` imágenes con `alt` ausente: todo `<Image>`/`<img>` lleva `alt`
+  (decorativas con `alt=""` explícito). Los carruseles usan el patrón "1ª foto
+  con alt descriptivo, resto `alt=""`" (N descripciones seguidas de lo que se
+  ve como una sola imagen sería ruido para el lector).
+- [x] Ningún alt (no vacío) repetido >2×: la galería de la home numeraba 9
+  fotos con el mismo texto por defecto (son volcados de cámara) → se numera el
+  fallback (`… (1)`, `… (2)`). Los `alt=""` decorativos repetidos sí están
+  permitidos.
+- [x] Reduced-motion → nada se mueve sin interacción: regla global en
+  `globals.css` congela `animate-pulse`/`animate-spin` y el crossfade de
+  `CarouselLinkCard` (fijado en la 1ª imagen), transiciones y scroll
+  instantáneos. Los videos (hero, hero vertical, AutoplayVideo) ya respetaban
+  reduced-motion. Verificación de 10s en pantalla la hace el owner en device.
+- [x] Carruseles operables con swipe y teclado: la galería abre lightbox
+  (`yet-another-react-lightbox`, teclado + swipe nativos); en móvil el grid
+  2-col abre ese lightbox al tocar. `CarouselLinkCard` es decorativo
+  (auto-crossfade tras un link, no galería de contenido) → no requiere
+  navegación manual; bajo reduced-motion queda su 1ª imagen representativa.
+- [x] `grep querés|podés|tenés|vos` sin voseo real: se corrigió
+  `"querés" → "quieres"` en el modal de navegación. (Los matches de `vos ` que
+  quedan son la palabra "archi**vos**" en comentarios de código, no voseo.)
+- [x] Accesibilidad Lighthouse móvil ≥95: **96** (subió de 95 al arreglar
+  heading-order: `InfoCard` dark h4→h3). Único audit que resta:
+  **color-contrast** — nodos de marca con opacidad (`green-800/70` = 4.02,
+  `gold` cifras = 2.73, `green-800/50` = 2.5). Oscurecerlos toca la paleta del
+  rebrand y cambia desktop (regla 4) → **decisión de diseño del owner**, no se
+  toca unilateralmente. El criterio ≥95 igual se cumple.
+- [x] Modal cierra con Escape y devuelve el foco al opener: implementado en
+  `MapSelector` (foco entra al abrir, Tab atrapado, Escape cierra, foco vuelve
+  al botón; `inert` cuando está cerrado para sacarlo del tab order).
+
+**Follow-up documentado (regla 5):** las galerías de las subpáginas de evento
+(`/eventos/*`) usan `altEvento` como contexto y podrían repetir alt si tienen
+muchos volcados de cámara. Están fuera del DoD de la home (390×844); se numeran
+igual que la home si se decide extender el criterio a las subpáginas.
+
 ---
 
 ## Definition of Done global
