@@ -129,8 +129,9 @@ export default function Hero({
         </div>
       </div>
 
-      {/* Onda inferior — transición hacia la sección siguiente. */}
-      <div className="absolute bottom-0 left-0 right-0">
+      {/* Onda inferior — transición hacia la sección siguiente. La franja crema
+          de 5mm bajo la onda la sube ~5mm sin dejar hueco negro en el borde. */}
+      <div className="absolute bottom-0 left-0 right-0 flex flex-col">
         <svg
           viewBox="0 0 1440 120"
           fill="none"
@@ -143,6 +144,7 @@ export default function Hero({
             fill="var(--gc-warm, #FAFAF8)"
           />
         </svg>
+        <div className="h-[5mm]" style={{ background: "var(--gc-warm, #FAFAF8)" }} />
       </div>
     </section>
   );
