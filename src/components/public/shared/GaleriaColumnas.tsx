@@ -334,17 +334,18 @@ export default function GaleriaColumnas({
   // Incluye todos los items: imágenes y videos (con o sin poster)
   // resolvedFotos reemplaza a fotos con dimensiones reales una vez que el sondeo termina.
   //
-  // Orden por RATIO (ancho/alto): la galería se ve en apaisado, así que se
-  // agrupan las piezas por orientación —primero las horizontales, después las
-  // verticales— para que al recorrer el lightbox el usuario no tenga que girar
-  // el teléfono a cada rato: gira UNA vez al llegar a las verticales. Incluye
-  // los videos: su ratio sale de las dimensiones reales sondeadas (equivalen al
-  // del cover). El orden original queda como desempate (V8 ordena estable), así
-  // que dentro de cada orientación se respeta la secuencia de archivos.
+  // Orden por RATIO (ancho/alto) — SOLO MÓVIL. En móvil la galería se ve en
+  // apaisado y el usuario gira el teléfono, así que se agrupan las piezas por
+  // orientación (horizontales primero, verticales al final) para girar UNA vez
+  // al llegar a las verticales en vez de a cada rato. Incluye los videos: su
+  // ratio sale de las dimensiones reales sondeadas (equivalen al del cover). El
+  // orden original queda como desempate (sort estable).
+  // En DESKTOP no hay teléfono que girar → se deja el orden como venía.
   const displayFotos = useMemo(() => {
+    if (!isMobile) return resolvedFotos;
     const ratio = (f: FotoColumnas) => (f.width || 1) / (f.height || 1);
     return [...resolvedFotos].sort((a, b) => ratio(b) - ratio(a));
-  }, [resolvedFotos]);
+  }, [resolvedFotos, isMobile]);
 
   // Ventana deslizante: mantiene el thumb activo siempre dentro del rango visible
   useEffect(() => {
