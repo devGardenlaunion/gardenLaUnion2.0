@@ -297,22 +297,49 @@ export default async function EventoPage({ params }: Props) {
               </div>
             )}
 
-            {/* Texto cuerpo + galería polaroid — 2 columnas */}
+            {/* Texto cuerpo + galería polaroid.
+                Desktop: 2 columnas (texto | polaroid sticky) para leer con
+                descanso al lado. Móvil: una columna, pero la polaroid va
+                ENTREMEDIO del texto (no al final) para cortar el textwall.
+                Se logra con un solo DOM: mitad1 → polaroid → mitad2, y en
+                desktop el grid recoloca ambas mitades en la columna izquierda
+                y la polaroid en la derecha abarcando las dos filas. */}
             {(cuerpoParrafos.length > 0 || fotosPolaroid.length > 0) && (
-              <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-start mb-14">
-                <div className="space-y-5">
+              fotosPolaroid.length > 0 ? (
+                <div className="lg:grid lg:grid-cols-2 lg:gap-x-14 lg:gap-y-5 lg:items-start mb-14">
+                  <div className="space-y-5 lg:col-start-1 lg:row-start-1">
+                    {cuerpoParrafos
+                      .slice(0, Math.ceil(cuerpoParrafos.length / 2))
+                      .map((p, i) => (
+                        <p key={i} className="text-gc-green-800/80 font-body leading-relaxed">
+                          {p}
+                        </p>
+                      ))}
+                  </div>
+                  <div className="relative z-20 my-8 lg:my-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 lg:pl-4">
+                    <GaleriaPolaroid fotos={fotosPolaroid} lightboxMode="inline" desorden={0.5} />
+                  </div>
+                  {cuerpoParrafos.length > 1 && (
+                    <div className="space-y-5 lg:col-start-1 lg:row-start-2">
+                      {cuerpoParrafos
+                        .slice(Math.ceil(cuerpoParrafos.length / 2))
+                        .map((p, i) => (
+                          <p key={i} className="text-gc-green-800/80 font-body leading-relaxed">
+                            {p}
+                          </p>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-5 mb-14">
                   {cuerpoParrafos.map((p, i) => (
                     <p key={i} className="text-gc-green-800/80 font-body leading-relaxed">
                       {p}
                     </p>
                   ))}
                 </div>
-                {fotosPolaroid.length > 0 && (
-                  <div className="relative z-20 lg:sticky lg:top-24 pl-4">
-                    <GaleriaPolaroid fotos={fotosPolaroid} lightboxMode="inline" desorden={0.5} />
-                  </div>
-                )}
-              </div>
+              )
             )}
 
             {/* Galería — fotos y videos con márgenes normales de página */}
