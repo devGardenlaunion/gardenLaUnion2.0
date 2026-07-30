@@ -23,7 +23,7 @@ export default function Hero({
   return (
     <section
       id="inicio"
-      className="relative min-h-[85vh] lg:min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative min-h-[85vh] lg:min-h-screen flex items-center justify-center overflow-hidden bg-black"
     >
       {/* Background — video (desktop + landscape) */}
       <HeroVideo sources={videoSources} poster={videoPoster} />
@@ -49,7 +49,16 @@ export default function Hero({
           reproducirse. ~2-3MB, es un costo aceptado a propósito para el fondo. */}
       <HeroVideoVertical sources={videoSourcesVert} poster={videoPoster} />
 
-      <div className="absolute inset-0 bg-gradient-to-br from-gc-green-900/90 via-gc-green-800/85 to-gc-green-800/80" />
+      {/* Scrim radial: verde de marca sobre el centro (donde va el texto y el
+          video), transparente en los bordes para que las barras del letterbox
+          queden NEGRAS y no verdes. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 78% 58% at center, rgba(20,56,50,0.78), rgba(20,56,50,0.30) 62%, transparent 85%)",
+        }}
+      />
 
       {/* Patrón decorativo sutil */}
       <div
