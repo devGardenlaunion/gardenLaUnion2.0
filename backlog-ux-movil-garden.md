@@ -157,6 +157,28 @@ Implementar con `aspect-ratio` en CSS más `object-fit: cover` y `object-positio
 
 **Fuera de alcance:** cambiar qué fotos se usan o su orden.
 
+### Estado Ciclo 2 (commits `363c887` + `e59eeb8`, mobile-only)
+
+Tratamiento aplicado por sección, todo detrás de `md:`/`lg:` (desktop intacto):
+- Niveles (funcional): `aspect-[3/2]` móvil · Admisión (funcional): `aspect-[4/5]`
+  móvil · Galería (funcional): grilla 2-col `aspect-[4/5]` móvil, masonry en desktop.
+- Polaroid (expresiva): marco `w-28 aspect-[4/5]` + object-cover en móvil, varied
+  en desktop · Sellos/carrusel (expresiva): marco `aspect-[4/3]` móvil.
+
+- [x] Alturas idénticas por sección funcional (0px): garantizado por CSS
+  (mismo `aspect-ratio` + grid de columnas iguales). No depende de medición.
+- [x] CLS home móvil < 0.1: **0** (Lighthouse Brave; los contenedores con
+  aspect reservan el espacio).
+- [x] Lightbox en ratio original, sin recorte: sin cambios (solo se tocaron los
+  thumbnails/grillas, no el lightbox).
+- [x] Desktop 1440px idéntico: todos los cambios son `md:`/`lg:`; el masonry, el
+  scatter de polaroids y el grid de Sellos quedan igual en desktop.
+- [~] Ninguna imagen recortada corta un rostro: **lo verifica el owner en el
+  celular** (deploy en Vercel) — reparto acordado. Si alguna corta cara, se
+  ajusta `object-position` de esa foto puntual.
+
+Presupuesto del Ciclo 1 mantenido: `/_next/image` w>640 = 0, 14 requests, 144KB.
+
 ---
 
 ## CICLO 3 — Política de video
