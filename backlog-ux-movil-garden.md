@@ -211,13 +211,20 @@ Presupuesto del Ciclo 1 mantenido: `/_next/image` w>640 = 0, 14 requests, 144KB.
 - [x] Home móvil: **0 bytes de video** hasta interacción (verificado Lighthouse: 0 media). Peso total home 3.47MB → **500KB (−86%)**, Performance 75 → **86**, CLS 0.
 - [x] Hero = loop decorativo muted; ahora respeta `prefers-reduced-motion` y sin `autoPlay` (la carga la maneja el IntersectionObserver → no descarga en móvil).
 
-**Parte B — Videos de CONTENIDO (event pages) → pendiente.** Están en
-`/eventos/*`, no en la home, así que no afectan el DoD de la home. Son MP4 de
-11–23 MB servidos desde `public/`, y `AutoplayVideo` los reproduce solos al
-scrollear (viola "sin autoplay de contenido").
-- [ ] Cambiar `AutoplayVideo` → poster + play explícito, sin autoplay, con
-  peso+duración como texto visible. (Código — lo puedo hacer ya.)
-- [ ] Guardas de red (saveData/effectiveType) con chequeo de existencia (Safari). (Código.)
+**Parte B — Videos de CONTENIDO (event pages).** Están en `/eventos/*`, no en
+la home, así que no afectan el DoD de la home. Revisión del render real:
+
+- [x] `0` bytes de video hasta el play: los MP4 de contenido (11–23 MB) NO se
+  autoplayan. Se renderizan como `videoItems` con **poster** en el grid; el
+  video solo se carga al abrir el lightbox y darle play. La observación
+  original ("`AutoplayVideo` los reproduce solos") era inexacta: `AutoplayVideo`
+  se usa **solo** en el hero decorativo del evento (muted, reduced-motion,
+  `preload="none"` → excepción de loop de fondo permitida, commit `e38dc55`).
+- [ ] **Peso + duración como texto visible** junto al play ("Ver video ·
+  ~14 MB"): falta. El peso sale de `fs.statSync` en build (fácil); la duración
+  necesita `ffprobe` en build (agrega dep de ffmpeg, no disponible en Vercel)
+  o un sidecar de metadata. Enhancement opcional — el goal crítico (no
+  autocargar) ya se cumple.
 - [ ] Host externo adaptativo AD-FREE + sacar los MP4 >2MB de `public/`.
   **Decisión + upload del owner.** YouTube descartado (publicidad). Opciones
   ad-free: Cloudflare Stream / Bunny Stream (más baratos, pay-per-use) o Vimeo
