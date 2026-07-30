@@ -15,6 +15,11 @@ export default function AutoplayVideo({ src, poster, className }: Props) {
     const video = videoRef.current;
     if (!video) return;
 
+    // Loop de fondo decorativo (muted, aria-hidden): sólo se reproduce si el
+    // usuario no pidió movimiento reducido. Sin autoplay + preload="none" + el
+    // observer no dispara en display:none (móvil portrait) → no descarga de más.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
