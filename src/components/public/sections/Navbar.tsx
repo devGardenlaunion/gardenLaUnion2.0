@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { redesSociales } from "@/data/redes";
@@ -25,10 +25,9 @@ const navLinks = [
 export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant = "transparent" }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  // Ciclo 4: hide-on-scroll-down / show-on-scroll-up + scroll-spy.
-  const [navHidden, setNavHidden] = useState(false);
+  // Ciclo 4: scroll-spy. (El hide-on-scroll se retiró: en móvil el nav SIEMPRE
+  // queda visible — perder el acceso al menú en celular no es aceptable.)
   const [activeId, setActiveId] = useState("");
-  const lastY = useRef(0);
   const pathname = usePathname();
   const isOnepage = pathname === "/";
 
@@ -69,15 +68,7 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
 
   useEffect(() => {
     if (variant === "solid") return;
-    const onScroll = () => {
-      const y = window.scrollY;
-      setScrolled(y > 50);
-      // Ocultar al bajar (pasados 120px), mostrar al subir. Así el contenido
-      // recupera el alto del header al scrollear hacia abajo.
-      if (y > lastY.current && y > 120) setNavHidden(true);
-      else if (y < lastY.current) setNavHidden(false);
-      lastY.current = y;
-    };
+    const onScroll = () => setScrolled(window.scrollY > 50);
     onScroll(); // sincroniza estado inicial al recargar con scroll
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -106,9 +97,7 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-transform transition-colors duration-300 ${
-        navHidden && !isOpen ? "-translate-y-full lg:translate-y-0" : "translate-y-0"
-      } ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
         isLight
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b-2 border-gc-navy"
           : "bg-gc-green-900 border-b-2 border-gc-green-800"

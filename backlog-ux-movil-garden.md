@@ -265,10 +265,15 @@ Las tareas del Ciclo 3 aplican igual, porque son de peso y política de carga, n
 
 ### Estado Ciclo 4 (commit `4803342`, mobile-only + enhancements declarados)
 
-- [x] Contenido ≥85% del viewport con header colapsado: en móvil el header es
-  solo la barra principal `h-16` (64px = 7.6% de 844) — la barra de teléfonos
-  es `lg:` (no existe en móvil). Contenido = 92.4% con header visible, 100%
-  colapsado. Garantizado por CSS.
+- [x] Contenido ≥85% del viewport: en móvil el header es solo la barra
+  principal `h-16` (64px = 7.6% de 844) — la barra de teléfonos es `lg:` (no
+  existe en móvil). Contenido = **92.4%** siempre → cumple ≥85% sin necesidad
+  de ocultar el header.
+
+  > **Revisión posterior (owner):** el **hide-on-scroll-down se retiró**. En
+  > móvil perder el acceso al menú del nav al scrollear no es aceptable, así que
+  > el nav queda SIEMPRE visible. El criterio de ≥85% igual se cumple porque el
+  > header ocupa solo 64px. Se mantiene el scroll-spy y el cambio de color.
 - [x] Botón atrás restaura scroll: `scrollRestoration` híbrido — `manual` solo
   si la URL trae hash (fix del F5), `auto` si no. En el caso común (home sin
   hash → subpágina → atrás) el browser restaura la posición. Verificación fina
