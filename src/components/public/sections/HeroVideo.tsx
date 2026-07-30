@@ -63,7 +63,7 @@ export default function HeroVideo({ sources, poster }: HeroVideoProps) {
       /* object-contain: el video (cine 2.35:1) llena el ANCHO del contenedor y
          el alto queda proporcional; el bg-black rellena lo que sobra arriba y
          abajo con barras negras. Centrado vertical por defecto en object-contain. */
-      className="absolute inset-0 w-full h-full object-contain bg-black translate-y-[2px] hidden landscape:block md:block"
+      className="absolute inset-0 w-full h-full object-contain bg-black translate-y-[3px] hidden landscape:block md:block"
     >
       {sources.map((s) => (
         <source key={s.src} src={s.src} type={s.type} />
