@@ -136,7 +136,7 @@ export default function Hero({
 
       {/* Onda inferior — transición hacia la sección siguiente. La franja crema
           de 5mm bajo la onda la sube ~5mm sin dejar hueco negro en el borde. */}
-      <div className="absolute bottom-0 left-0 right-0 flex flex-col">
+      <div className="absolute bottom-[-4px] landscape:bottom-0 md:bottom-0 left-0 right-0 flex flex-col">
         <svg
           viewBox="0 0 1440 120"
           fill="none"
