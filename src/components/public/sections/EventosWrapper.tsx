@@ -11,6 +11,7 @@ export type EdicionCard = {
   fecha: string;
   imagenPortada: string | null;
   heroVideo: string | null;
+  heroVideoMobile: string | null;
 };
 
 // Fondos alternativos cuando no hay imagen
@@ -71,13 +72,21 @@ export default function EventosWrapper({
                   : "min-h-[270px] sm:min-h-[360px]"
               }`}
             >
-              {heroEdicion.heroVideo ? (
+              {heroEdicion.heroVideo && (
                 <AutoplayVideo
                   src={heroEdicion.heroVideo}
                   poster={heroEdicion.imagenPortada ?? undefined}
                   className="absolute inset-0 w-full h-full object-cover hidden landscape:block md:block"
                 />
-              ) : heroEdicion.imagenPortada ? (
+              )}
+              {heroEdicion.heroVideoMobile && (
+                <AutoplayVideo
+                  src={heroEdicion.heroVideoMobile}
+                  poster={heroEdicion.imagenPortada ?? undefined}
+                  className="absolute inset-0 w-full h-full object-cover block landscape:hidden md:hidden"
+                />
+              )}
+              {!heroEdicion.heroVideo && !heroEdicion.heroVideoMobile && heroEdicion.imagenPortada ? (
                 <img
                   src={heroEdicion.imagenPortada}
                   alt={heroEdicion.nombre}

@@ -17,9 +17,11 @@ function aCard(evento: Evento): EdicionCard {
     titulo: evento.titulo,
     extracto: evento.extracto,
     fecha: evento.fecha,
-    // Si hay video de portada manda el video; si no, la imagen.
+    // El video manda; la portada queda SIEMPRE como poster del video (y como
+    // fallback si no hay video). El video móvil usa su propio clip si existe.
     heroVideo: media.heroVideo,
-    imagenPortada: media.heroVideo ? null : media.portada,
+    heroVideoMobile: media.heroVideoMobile,
+    imagenPortada: media.portada,
   };
 }
 
