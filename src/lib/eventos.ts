@@ -89,10 +89,20 @@ export function getMediaEvento(evento: Evento) {
   const base = `eventos/${evento.slug}`;
   const anio = getEdicionActiva(evento);
 
+  // Convención: el archivo con "mobile" en el nombre es el clip vertical/cuadrado
+  // de móvil; el resto es el apaisado de desktop. Sin uno dedicado de móvil, cae
+  // al de desktop (object-cover recorta).
+  const heroVideosEvento = getMediaVideos(`${base}/hero`);
+  const heroVideoDesktop = heroVideosEvento.find((v) => !/mobile/i.test(v)) ?? null;
+  const heroVideoMobile =
+    heroVideosEvento.find((v) => /mobile/i.test(v)) ?? heroVideoDesktop;
+
   return {
     anio,
-    /** Video permanente de portada (carpeta hero/). */
-    heroVideo: getMediaVideos(`${base}/hero`)[0] ?? null,
+    /** Video permanente de portada, apaisado (carpeta hero/). */
+    heroVideo: heroVideoDesktop,
+    /** Video de portada para móvil portrait (archivo con "mobile"). */
+    heroVideoMobile,
     /** Imagen de portada: hero/ del año, si no la primera de hero/. */
     portada:
       (anio ? getMediaImages(`${base}/${anio}/hero`)[0]?.src : undefined) ??
