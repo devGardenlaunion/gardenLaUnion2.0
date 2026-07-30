@@ -43,9 +43,12 @@
    ============================================= */
 @layer base {
   html {
-    scroll-behavior: smooth;
     /* compensa navbar fijo (h-16 mobile / h-20 desktop) en todos los anchor targets */
     scroll-padding-top: 5rem;
+  }
+  /* Ciclo 4: scroll suave solo si el usuario no pidió movimiento reducido. */
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
   }
 
   body {
