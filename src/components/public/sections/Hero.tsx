@@ -1,4 +1,5 @@
 import HeroVideo from "./HeroVideo";
+import HeroVideoVertical from "./HeroVideoVertical";
 
 interface HeroProps {
   nombre: string;
@@ -6,6 +7,7 @@ interface HeroProps {
   mision: string;
   imagenMobile?: string;
   videoSources?: { src: string; type: string }[];
+  videoSourcesVert?: { src: string; type: string }[];
   videoPoster?: string;
 }
 
@@ -15,6 +17,7 @@ export default function Hero({
   mision,
   imagenMobile,
   videoSources = [],
+  videoSourcesVert = [],
   videoPoster,
 }: HeroProps) {
   return (
@@ -40,6 +43,11 @@ export default function Hero({
           className="absolute inset-0 w-full h-full object-cover block landscape:hidden md:hidden"
         />
       )}
+
+      {/* Loop promocional vertical (mobile portrait). Se superpone a la imagen:
+          el <img> de arriba es el LCP instantáneo y el video la cubre al
+          reproducirse. ~2-3MB, es un costo aceptado a propósito para el fondo. */}
+      <HeroVideoVertical sources={videoSourcesVert} poster={videoPoster} />
 
       <div className="absolute inset-0 bg-gradient-to-br from-gc-green-900/90 via-gc-green-800/85 to-gc-green-800/80" />
 

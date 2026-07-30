@@ -44,16 +44,28 @@ export default async function HomePage() {
   // Video del hero: se lee de public/media/Hero/ — cualquier nombre sirve.
   // webm primero (más liviano) y mp4 de fallback si existe. El poster es la
   // primera imagen de la carpeta, si hay.
-  const heroVideoSources = getMediaVideos("Hero")
-    .map((src) => ({
-      src,
-      type: /\.webm$/i.test(src)
-        ? "video/webm"
-        : /\.mov$/i.test(src)
-        ? "video/quicktime"
-        : "video/mp4",
-    }))
-    .sort((a, b) => (a.type === "video/webm" ? -1 : b.type === "video/webm" ? 1 : 0));
+  // Convención: los archivos con "vert" en el nombre son el loop vertical de
+  // móvil (portrait); el resto es el video horizontal de desktop/landscape.
+  const toSource = (src: string) => ({
+    src,
+    type: /\.webm$/i.test(src)
+      ? "video/webm"
+      : /\.mov$/i.test(src)
+      ? "video/quicktime"
+      : "video/mp4",
+  });
+  const webmFirst = (a: { type: string }, b: { type: string }) =>
+    a.type === "video/webm" ? -1 : b.type === "video/webm" ? 1 : 0;
+
+  const heroVideosTodos = getMediaVideos("Hero");
+  const heroVideoSources = heroVideosTodos
+    .filter((src) => !/vert/i.test(src))
+    .map(toSource)
+    .sort(webmFirst);
+  const heroVideoSourcesVert = heroVideosTodos
+    .filter((src) => /vert/i.test(src))
+    .map(toSource)
+    .sort(webmFirst);
 
   // Carrusel de la card visual de Sellos: se lee de la carpeta en vez de
   // hardcodear nombres, así basta con soltar archivos ahí. Se usan todas; el
@@ -104,6 +116,7 @@ export default async function HomePage() {
           mision={config["institucional.mision"] || ""}
           imagenMobile={imagenHeroMobile}
           videoSources={heroVideoSources}
+          videoSourcesVert={heroVideoSourcesVert}
           videoPoster={imagenHeroMobile}
         />
 
