@@ -19,17 +19,25 @@
  * Si algún día se agrega un recurso externo (Analytics, un embed, un CDN), hay
  * que sumar su origen a la directiva que corresponda o el navegador lo bloquea.
  */
+// En `next dev`, React usa eval() para features de debugging (reconstruir
+// stacks, source maps) y el HMR usa un WebSocket. Ambos los bloquea la CSP de
+// producción. Se relajan SOLO en desarrollo — en build/Vercel NODE_ENV es
+// 'production' y la CSP queda estricta (React nunca usa eval en prod).
+const isDev = process.env.NODE_ENV === 'development';
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'self'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  isDev
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+    : "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'self'",
+  isDev ? "connect-src 'self' ws: wss:" : "connect-src 'self'",
   "frame-src 'self'",
   "media-src 'self'",
   "manifest-src 'self'",
