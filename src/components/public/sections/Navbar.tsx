@@ -183,13 +183,14 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
                     borde del aro queda al ras del nav y el resto cuelga abajo.
                 translate-y es visual: no agranda la fila ni mueve los links. */}
             <div
-              className={`relative w-[4.5rem] h-[4.5rem] lg:w-[5.5rem] lg:h-[5.5rem] shrink-0 rounded-full overflow-hidden bg-white p-0.5 ring-[3px] ring-gc-gold shadow-md transition-transform duration-300 ease-out ${
-                // Móvil: SIEMPRE acomodado (translate-y-[7px]) → no rebosa hacia
-                // arriba, así el borde superior no se corta contra el viewport
-                // (no hay barra de teléfonos que dé espacio arriba). Solo cuelga
-                // hacia abajo. Desktop: conserva el rebose arriba↔acomodo, que
-                // ahí sí tiene el espacio de la barra superior.
-                isLight ? "translate-y-[7px]" : "translate-y-[7px] lg:translate-y-0"
+              className={`relative w-14 h-14 lg:w-[5.5rem] lg:h-[5.5rem] shrink-0 rounded-full overflow-hidden bg-white p-0.5 ring-[3px] ring-gc-gold shadow-md transition-transform duration-300 ease-out ${
+                // Móvil: el logo CABE dentro del nav (56px + aro dentro de los
+                // 64px de la barra) → no rebosa ni hacia arriba ni hacia abajo,
+                // así el borde superior nunca se corta contra el viewport cuando
+                // el navegador esconde la barra de direcciones al scrollear.
+                // Desktop: logo grande que rebosa la barra, con acomodo al scroll
+                // (ahí sí hay espacio arriba por la barra de teléfonos).
+                isLight ? "translate-y-0 lg:translate-y-[7px]" : "translate-y-0"
               }`}
             >
               <Image
