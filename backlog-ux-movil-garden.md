@@ -256,6 +256,43 @@ Las tareas del Ciclo 3 aplican igual, porque son de peso y política de carga, n
 - [ ] Con `prefers-reduced-motion: reduce`, el scroll es instantáneo y no hay animaciones de entrada.
 - [ ] Todo target táctil mide **≥ 44 × 44 px**.
 
+### Estado Ciclo 4 (commit `4803342`, mobile-only + enhancements declarados)
+
+- [x] Contenido ≥85% del viewport con header colapsado: en móvil el header es
+  solo la barra principal `h-16` (64px = 7.6% de 844) — la barra de teléfonos
+  es `lg:` (no existe en móvil). Contenido = 92.4% con header visible, 100%
+  colapsado. Garantizado por CSS.
+- [x] Botón atrás restaura scroll: `scrollRestoration` híbrido — `manual` solo
+  si la URL trae hash (fix del F5), `auto` si no. En el caso común (home sin
+  hash → subpágina → atrás) el browser restaura la posición. Verificación fina
+  en dispositivo la hace el owner.
+- [x] Sección visible marcada como activa: `IntersectionObserver` con
+  `rootMargin: "-45% 0px -50% 0px"` sobre las secciones del menú →
+  `aria-current` + estilo activo.
+- [x] Alto home móvil ≤18000px: **13120px** (Lighthouse full-page-screenshot,
+  412px de ancho). **Decisión punto 4:** dentro del presupuesto → NO se
+  extraen Niveles/Admisión a rutas propias. La medición es el argumento.
+- [x] Reduced-motion → scroll instantáneo + sin animaciones de entrada:
+  `scroll-behavior: smooth` envuelto en `@media (prefers-reduced-motion:
+  no-preference)`; `handleAnchorClick` usa `behavior: "auto"` bajo reduced.
+  No existen animaciones de entrada/scroll-reveal en el código (grep: solo
+  `animate-pulse`/`animate-spin`, que se neutralizan en el Ciclo 5).
+- [x] Targets táctiles ≥44px: hamburguesa `w-11 h-11` (44), links del menú
+  `px-4 py-3` (~48), tel `min-h-[44px]`.
+
+**Regresión desktop (regla 4):** el hide-on-scroll está gateado a móvil
+(`lg:translate-y-0` mantiene el nav siempre visible en desktop). El resaltado
+scroll-spy sí aparece en desktop — enhancement no-regresivo declarado (no
+altera layout, solo marca la sección actual). Barra de teléfonos y links de
+desktop sin cambios.
+
+> **Nota sobre el presupuesto de bytes (afecta DoD):** el hero vertical de
+> móvil (loop promocional, commit `e984a97`) reproduce ~2MB de video en móvil
+> por decisión explícita del owner. Esto revierte en parte la baja de peso del
+> Ciclo 3A (home móvil sin video = 500KB). Es un trade-off aceptado: el loop
+> promocional vale el peso. El DoD de "peso total ≤ 1.8MB" queda condicionado
+> a esa decisión.
+
 ---
 
 ## CICLO 5 — Accesibilidad, movimiento y copy
