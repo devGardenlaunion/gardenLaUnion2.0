@@ -28,8 +28,14 @@ async function getFotosGaleria(): Promise<FotoColumnas[]> {
   const MAX_FOTOS = 9;
 
   return Promise.all(
-    archivos.slice(0, MAX_FOTOS).map(async (archivo) => {
-      const alt = altDesdeArchivo(archivo, ALT_POR_DEFECTO);
+    archivos.slice(0, MAX_FOTOS).map(async (archivo, i) => {
+      // La mayoría son volcados de cámara (IMG_/WhatsApp), así que caen al alt
+      // por defecto. Si todas quedaran con el mismo texto, un lector de pantalla
+      // leería 9 veces lo mismo. Se numera el fallback para que cada foto tenga
+      // un alt único (criterio Ciclo 5: nada repetido >2×). Las que sí tienen
+      // nombre descriptivo conservan su alt propio.
+      const base = altDesdeArchivo(archivo, ALT_POR_DEFECTO);
+      const alt = base === ALT_POR_DEFECTO ? `${ALT_POR_DEFECTO} (${i + 1})` : base;
       const src = `/media/Galeria/${encodeURIComponent(archivo)}`;
       try {
         const meta = await sharp(path.join(GALERIA_DIR, archivo)).metadata();

@@ -60,9 +60,11 @@ export default function InfoCard({
               {icon}
             </div>
           )}
-          <h4 className={`font-display font-bold ${icon ? "text-base" : "text-xl"} ${s.title}`}>
+          {/* h3 (no h4): las cards van bajo el h2 de su sección; h4 saltaba un
+              nivel y rompía heading-order. El tamaño lo da la clase, no el tag. */}
+          <h3 className={`font-display font-bold ${icon ? "text-base" : "text-xl"} ${s.title}`}>
             {title}
-          </h4>
+          </h3>
         </div>
         <div className={`h-0.5 ${s.divider} rounded-full mb-3`} />
         <p className={`font-body text-sm leading-relaxed ${s.body}`}>

@@ -156,6 +156,30 @@
 }
 
 /* =============================================
+   MOVIMIENTO REDUCIDO (Ciclo 5)
+   Nada se mueve sin interacción: congela animate-pulse / animate-spin, el
+   crossfade de los carruseles y acorta transiciones. scroll instantáneo.
+   ============================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* CarouselLinkCard: el crossfade deja cada capa en opacity:0 y las prende por
+     turnos. Congelado sin más quedaría en blanco → se fija la primera imagen. */
+  .cf-slide {
+    animation: none !important;
+  }
+  .cf-slide-first {
+    opacity: 1 !important;
+  }
+}
+
+/* =============================================
    YARL — THUMBNAIL STRIP SCROLL
    Permite arrastrar la tira de miniaturas en mobile sin que el lightbox
    capture el gesto como swipe de navegación entre imágenes.
