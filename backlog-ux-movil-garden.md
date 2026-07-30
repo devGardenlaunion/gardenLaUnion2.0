@@ -38,6 +38,23 @@ curl -s https://garden-la-union2-0.vercel.app/ | grep -Eo '<meta[^>]*(og:|canoni
 
 Anotar: LCP, CLS, TBT, peso total, peso de imágenes, número de requests de imagen.
 
+### Baseline registrado (prod `garden-la-union2-0.vercel.app`, Lighthouse móvil vía Brave)
+
+| Métrica | Valor | Target DoD |
+|---|---|---|
+| Performance | 75 | ≥ 85 |
+| LCP | 3.1 s | < 2.5 s |
+| CLS | 0 | < 0.1 ✅ |
+| TBT | 760 ms | < 300 ms |
+| Peso total | 3472 KB | ≤ 1800 KB |
+| — media (video hero) | **2821 KB / 1 req** | (Ciclo 3) |
+| — imágenes | 310 KB / 14 req | ≤ 1200 KB / ≤ 25 (Ciclo 1: ya cumple peso) |
+| — script | 185 KB / 9 req | |
+| — fonts | 112 KB / 4 req | |
+
+Lectura: el video del hero es el 80% del peso. El presupuesto de imágenes ya
+está dentro de target. La palanca grande es la política de video (Ciclo 3).
+
 ---
 
 ## CICLO 0 — Metadatos de share (BLOQUEANTE)
