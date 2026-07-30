@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { redesSociales } from "@/data/redes";
@@ -25,6 +25,10 @@ const navLinks = [
 export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant = "transparent" }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // Ciclo 4: hide-on-scroll-down / show-on-scroll-up + scroll-spy.
+  const [navHidden, setNavHidden] = useState(false);
+  const [activeId, setActiveId] = useState("");
+  const lastY = useRef(0);
   const pathname = usePathname();
   const isOnepage = pathname === "/";
 
@@ -48,29 +52,63 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
     if (!isOnepage || !href.startsWith("#")) return;
     e.preventDefault();
     const id = href.slice(1);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(id)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
     if (closeMenu) setIsOpen(false);
   };
 
-  // Deshabilita scroll restoration del browser en la onepage para evitar
-  // que pise los scrollIntoView programáticos (race condition en F5).
+  // Scroll restoration: el fix del F5 (evitar que la restauración del browser
+  // pise el scrollIntoView) sólo hace falta cuando la URL trae hash — ahí se
+  // pone "manual". Sin hash dejamos "auto", así el botón atrás recupera la
+  // posición de scroll previa (Ciclo 4, criterio de back-restore).
   useEffect(() => {
     if (isOnepage && "scrollRestoration" in history) {
-      history.scrollRestoration = "manual";
+      history.scrollRestoration = window.location.hash ? "manual" : "auto";
     }
   }, [isOnepage]);
 
   useEffect(() => {
     if (variant === "solid") return;
-    const onScroll = () => setScrolled(window.scrollY > 50);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 50);
+      // Ocultar al bajar (pasados 120px), mostrar al subir. Así el contenido
+      // recupera el alto del header al scrollear hacia abajo.
+      if (y > lastY.current && y > 120) setNavHidden(true);
+      else if (y < lastY.current) setNavHidden(false);
+      lastY.current = y;
+    };
     onScroll(); // sincroniza estado inicial al recargar con scroll
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [variant]);
 
+  // Scroll-spy: marca la sección visible en el menú.
+  useEffect(() => {
+    if (!isOnepage) return;
+    const secciones = navLinks
+      .map((l) => document.getElementById(l.href.slice(1)))
+      .filter((el): el is HTMLElement => !!el);
+    if (secciones.length === 0) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visibles = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visibles[0]) setActiveId(visibles[0].target.id);
+      },
+      // banda de activación ~mitad superior del viewport
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
+    secciones.forEach((s) => obs.observe(s));
+    return () => obs.disconnect();
+  }, [isOnepage]);
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-transform transition-colors duration-300 ${
+        navHidden && !isOpen ? "-translate-y-full lg:translate-y-0" : "translate-y-0"
+      } ${
         isLight
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b-2 border-gc-navy"
           : "bg-gc-green-900 border-b-2 border-gc-green-800"
@@ -170,20 +208,30 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
 
           {/* Links — desktop */}
           <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={resolveHref(link)}
-                onClick={(e) => handleAnchorClick(e, link.href)}
-                className={`px-3 py-2 text-sm font-body font-medium rounded-lg transition-colors ${
-                  isLight
-                    ? "text-gc-green-800/70 hover:text-gc-green-800 hover:bg-gc-green/10"
-                    : "text-white/80 hover:text-white hover:bg-gc-green/10"
-                }`}
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const esActivo = isOnepage && activeId === link.href.slice(1);
+              return (
+                <a
+                  key={link.href}
+                  href={resolveHref(link)}
+                  onClick={(e) => handleAnchorClick(e, link.href)}
+                  aria-current={esActivo ? "true" : undefined}
+                  className={`px-3 py-2 text-sm font-body rounded-lg transition-colors ${
+                    esActivo ? "font-bold" : "font-medium"
+                  } ${
+                    isLight
+                      ? esActivo
+                        ? "text-gc-green bg-gc-green/10"
+                        : "text-gc-green-800/70 hover:text-gc-green-800 hover:bg-gc-green/10"
+                      : esActivo
+                        ? "text-white bg-white/15"
+                        : "text-white/80 hover:text-white hover:bg-gc-green/10"
+                  }`}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
             <a
               href={!isOnepage ? "/#admision" : "#admision"}
               onClick={(e) => handleAnchorClick(e, "#admision")}
@@ -196,12 +244,13 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
           {/* Hamburger — mobile */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`lg:hidden p-2 rounded-lg transition-colors ${
+            className={`lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-lg transition-colors ${
               isLight
                 ? "text-gc-green-800 hover:bg-gc-green/10"
                 : "text-white hover:bg-gc-green/10"
             }`}
             aria-label="Menú"
+            aria-expanded={isOpen}
           >
             <svg
               className="w-6 h-6"
@@ -233,16 +282,24 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
       {isOpen && (
         <div className="lg:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="container-gc py-4 space-y-1">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={resolveHref(link)}
-                onClick={(e) => handleAnchorClick(e, link.href, true)}
-                className="block px-4 py-3 text-gc-green-800 font-body font-medium rounded-lg hover:bg-gc-green/10 transition-colors"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const esActivo = isOnepage && activeId === link.href.slice(1);
+              return (
+                <a
+                  key={link.href}
+                  href={resolveHref(link)}
+                  onClick={(e) => handleAnchorClick(e, link.href, true)}
+                  aria-current={esActivo ? "true" : undefined}
+                  className={`block px-4 py-3 font-body rounded-lg transition-colors ${
+                    esActivo
+                      ? "font-bold text-gc-green bg-gc-green/10"
+                      : "text-gc-green-800 font-medium hover:bg-gc-green/10"
+                  }`}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
             <div className="pt-2">
               <a
                 href={!isOnepage ? "/#admision" : "#admision"}
@@ -252,6 +309,30 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
                 Admisión 2026
               </a>
             </div>
+            {/* Ciclo 4: acceso a llamada en el menú (en móvil no hay barra de
+                teléfonos). Targets ≥44px. */}
+            {(telefonoBasica || telefonoMedia) && (
+              <div className="pt-3 mt-2 border-t border-gray-100 space-y-1">
+                {telefonoBasica && (
+                  <a
+                    href={`tel:+56${telefonoBasica.replace(/\D/g, "")}`}
+                    className="flex items-center gap-2 px-4 py-3 min-h-[44px] text-gc-green-800 font-body font-medium rounded-lg hover:bg-gc-green/10 transition-colors"
+                  >
+                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+                    <span className="text-gc-green-800/60 mr-1">Básica</span>{telefonoBasica}
+                  </a>
+                )}
+                {telefonoMedia && (
+                  <a
+                    href={`tel:+56${telefonoMedia.replace(/\D/g, "")}`}
+                    className="flex items-center gap-2 px-4 py-3 min-h-[44px] text-gc-green-800 font-body font-medium rounded-lg hover:bg-gc-green/10 transition-colors"
+                  >
+                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+                    <span className="text-gc-green-800/60 mr-1">Media</span>{telefonoMedia}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
