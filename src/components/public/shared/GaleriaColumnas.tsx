@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
 import { ColumnsPhotoAlbum } from "react-photo-album";
 import SSR from "react-photo-album/ssr";
@@ -332,8 +332,19 @@ export default function GaleriaColumnas({
   }, [lbIndex, isMobile]);
 
   // Incluye todos los items: imágenes y videos (con o sin poster)
-  // resolvedFotos reemplaza a fotos con dimensiones reales una vez que el sondeo termina
-  const displayFotos = resolvedFotos;
+  // resolvedFotos reemplaza a fotos con dimensiones reales una vez que el sondeo termina.
+  //
+  // Orden por RATIO (ancho/alto): la galería se ve en apaisado, así que se
+  // agrupan las piezas por orientación —primero las horizontales, después las
+  // verticales— para que al recorrer el lightbox el usuario no tenga que girar
+  // el teléfono a cada rato: gira UNA vez al llegar a las verticales. Incluye
+  // los videos: su ratio sale de las dimensiones reales sondeadas (equivalen al
+  // del cover). El orden original queda como desempate (V8 ordena estable), así
+  // que dentro de cada orientación se respeta la secuencia de archivos.
+  const displayFotos = useMemo(() => {
+    const ratio = (f: FotoColumnas) => (f.width || 1) / (f.height || 1);
+    return [...resolvedFotos].sort((a, b) => ratio(b) - ratio(a));
+  }, [resolvedFotos]);
 
   // Ventana deslizante: mantiene el thumb activo siempre dentro del rango visible
   useEffect(() => {
