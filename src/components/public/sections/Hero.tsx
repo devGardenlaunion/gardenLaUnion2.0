@@ -47,7 +47,7 @@ export default function Hero({
       {/* Loop promocional vertical (mobile portrait). Se superpone a la imagen:
           el <img> de arriba es el LCP instantáneo y el video la cubre al
           reproducirse. ~2-3MB, es un costo aceptado a propósito para el fondo. */}
-      <HeroVideoVertical sources={videoSourcesVert} poster={videoPoster} />
+      <HeroVideoVertical sources={videoSourcesVert} poster={imagenMobile} />
 
       {/* Scrim radial: verde de marca sobre el centro (donde va el texto y el
           video), transparente en los bordes para que las barras del letterbox
@@ -129,11 +129,8 @@ export default function Hero({
         </div>
       </div>
 
-      {/* Onda inferior — SOLO móvil portrait. En desktop/landscape el video es
-          cine con object-contain y la onda tapaba el borde inferior del video
-          (recorte de ~0.5cm en la última escena). En móvil el video vertical
-          llena la pantalla, así que la onda sí hace de transición. */}
-      <div className="absolute bottom-0 left-0 right-0 block landscape:hidden md:hidden">
+      {/* Onda inferior — transición hacia la sección siguiente. */}
+      <div className="absolute bottom-0 left-0 right-0">
         <svg
           viewBox="0 0 1440 120"
           fill="none"

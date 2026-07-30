@@ -1,5 +1,5 @@
 import { getConfig } from "@/lib/config";
-import { getMediaCover, getMediaImages, getMediaVideos } from "@/lib/media";
+import { getMediaImageMap, getMediaImages, getMediaVideos } from "@/lib/media";
 import { shuffle } from "@/lib/utils";
 import { redesSociales } from "@/data/redes";
 import Navbar from "@/components/public/sections/Navbar";
@@ -33,7 +33,10 @@ export default async function HomePage() {
   const config = await getConfig();
 
   // ── Media desde carpetas ────────────────────────────────────────────────
-  const imagenHeroMobile   = getMediaCover("Hero");
+  // Posters del hero: cuadrado para móvil (portrait), horizontal para desktop.
+  const heroPosters = getMediaImageMap("Hero");
+  const posterHeroMobile  = heroPosters["posterMobile"];
+  const posterHeroDesktop = heroPosters["posterDesktop"];
 
   // Carrusel de admisión: fotos reales de la comunidad desde la carpeta.
   // Se barajan una vez por build, así el orden varía entre deploys.
@@ -114,10 +117,10 @@ export default async function HomePage() {
           nombre={nombre}
           slogan={slogan}
           mision={config["institucional.mision"] || ""}
-          imagenMobile={imagenHeroMobile}
+          imagenMobile={posterHeroMobile}
           videoSources={heroVideoSources}
           videoSourcesVert={heroVideoSourcesVert}
-          videoPoster={imagenHeroMobile}
+          videoPoster={posterHeroDesktop}
         />
 
         <QuienesSomos
