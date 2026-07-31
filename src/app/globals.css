@@ -65,17 +65,46 @@
   --gc-green-800:    26 46 82;
   --gc-green-900:    15 29 56;
   --gc-navy-dark:    15 27 46;
-  /* Carmesí como ACENTO real (~40%, las mangas/ribetes del bomber). En el sitio
-     el acento es la familia gc-gold (botones, badges, divisores, ring, hovers),
-     así que acá el "dorado" se vuelve carmesí y el rojo pasa a ser color de marca,
-     no solo de error. El dorado auténtico sobrevive únicamente en el monograma GC
-     del logo (raster), igual que el bordado amarillo del uniforme. */
-  --gc-gold-50:    251 235 236;
-  --gc-gold-light: 210 32 44;
-  --gc-gold:       176 23 34;
-  --gc-gold-dark:  138 16 25;
+  /* Dorado ámbar del uniforme (bordado GC). Se queda como acento de CONTENIDO:
+     texto, sección Sellos, botones, divisores. El carmesí (mangas/ribetes del
+     bomber) NO va en la paleta base —eso teñía de rojo el texto—: se aplica
+     quirúrgicamente SOLO a estructura (aro del logo, separador del nav, badges,
+     rayas del puño) en el bloque de abajo. */
+  --gc-gold-50:    250 244 228;
+  --gc-gold-light: 227 178 63;
+  --gc-gold:       199 144 24;
+  --gc-gold-dark:  143 105 16;
   --gc-red:        176 23 34;
   --gc-red-light:  210 32 44;
+}
+
+/* ===== ACENTOS CARMESÍ DEL TEMA UNIFORME (estructura, no contenido) =====
+   El carmesí es el rojo de las mangas/ribetes del bomber. Va SOLO en detalles
+   estructurales; el texto y Sellos se quedan en dorado. Todo scopeado a
+   data-theme="uniforme" para no tocar el tema actual. */
+/* Aro del logo del navbar (marcador .logo-anillo) */
+:root[data-theme="uniforme"] .logo-anillo { --tw-ring-color: rgb(var(--gc-red)); }
+/* Separador inferior del navbar (marcador .nav-sep-uniforme) */
+:root[data-theme="uniforme"] .nav-sep-uniforme { border-bottom-color: rgb(var(--gc-red)); }
+/* Badges doradas -> carmesí (Sellos usa un span propio, no .badge-gold, así que
+   no lo toca). */
+:root[data-theme="uniforme"] .badge-gold {
+  background-color: rgb(var(--gc-red) / 0.1);
+  color: rgb(var(--gc-red));
+  border-color: rgb(var(--gc-red) / 0.25);
+}
+/* Rayas del puño: dos líneas carmesí sobre navy, como el ribete del bomber.
+   Elemento decorativo .rayas-uniforme; oculto en el tema actual. */
+.rayas-uniforme { display: none; }
+:root[data-theme="uniforme"] .rayas-uniforme {
+  display: block;
+  height: 9px;
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--gc-red)) 0 3px,
+    transparent 3px 6px,
+    rgb(var(--gc-red)) 6px 9px
+  );
 }
 
 /* =============================================
