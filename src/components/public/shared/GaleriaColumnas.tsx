@@ -235,9 +235,6 @@ export default function GaleriaColumnas({
   const [isMobile, setIsMobile] = useState(false);
   const [rotateHintShow, setRotateHintShow] = useState(false);
   const [rotateHintVisible, setRotateHintVisible] = useState(false);
-  // Buffer-first de video: spinner mientras junta buffer, arranca al tener
-  // suficiente para correr de corrido (estilo YouTube).
-  const [videoBuffering, setVideoBuffering] = useState(false);
   const [windowStart, setWindowStart] = useState(0);
   const [resolvedFotos, setResolvedFotos] = useState<FotoColumnas[]>(fotos);
   const videoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -372,23 +369,22 @@ export default function GaleriaColumnas({
     });
   }, [lbIndex]);
 
-  // Play nativo simple (sin autoplay, sin buffer-first). El video muestra poster
-  // + play nativo; el usuario toca play (eso autoriza el audio) y arranca de
-  // una. Este efecto solo persiste el volumen y muestra un spinner mientras el
-  // navegador espera buffer (evento waiting). El arranque parejo lo da el
-  // re-encode de los videos con GOP corto + faststart, no la lógica de JS.
+  // Volumen persistido — YARL maneja el play/pause con autoPlay:true. Sin
+  // spinner propio: el reproductor del lightbox ya muestra el suyo.
   useEffect(() => {
     if (videoPlayRef.current) {
       clearTimeout(videoPlayRef.current);
       videoPlayRef.current = null;
     }
-    setVideoBuffering(false);
     if (lbIndex < 0) return;
     const foto = displayFotos[lbIndex];
     if (!foto || !isVideo(foto.src)) return;
 
     const targetSrc = foto.sources?.[0]?.src ?? foto.src;
-    const cleanups: (() => void)[] = [];
+    let activeVideo: HTMLVideoElement | null = null;
+    const onVolumeChange = () => {
+      if (activeVideo) userVolumeRef.current = activeVideo.volume;
+    };
 
     videoPlayRef.current = setTimeout(() => {
       const match = Array.from(
@@ -398,27 +394,12 @@ export default function GaleriaColumnas({
           (s) => s.getAttribute("src") === targetSrc
         ) || v.getAttribute("src") === targetSrc
       );
+      if (match) {
+        match.volume = userVolumeRef.current;
+        activeVideo = match;
+        match.addEventListener("volumechange", onVolumeChange);
+      }
       videoPlayRef.current = null;
-      if (!match) return;
-
-      // Play nativo simple: el usuario toca play (autoriza el audio) y el video
-      // arranca de una. Sin muteo ni seek — reiniciar a 0 tras bufferear metía
-      // un freeze al re-sincronizar el decoder. El arranque rápido lo da el
-      // re-encode de los videos con GOP corto + faststart. Acá solo se persiste
-      // el volumen y se muestra el spinner si el navegador queda esperando
-      // buffer (waiting), que se oculta al reanudar (playing).
-      match.volume = userVolumeRef.current;
-      const onVolumeChange = () => { userVolumeRef.current = match.volume; };
-      const onWaiting = () => setVideoBuffering(true);
-      const onPlaying = () => setVideoBuffering(false);
-      match.addEventListener("volumechange", onVolumeChange);
-      match.addEventListener("waiting", onWaiting);
-      match.addEventListener("playing", onPlaying);
-      cleanups.push(() => {
-        match.removeEventListener("volumechange", onVolumeChange);
-        match.removeEventListener("waiting", onWaiting);
-        match.removeEventListener("playing", onPlaying);
-      });
     }, 100);
 
     return () => {
@@ -426,8 +407,7 @@ export default function GaleriaColumnas({
         clearTimeout(videoPlayRef.current);
         videoPlayRef.current = null;
       }
-      cleanups.forEach((fn) => fn());
-      setVideoBuffering(false);
+      activeVideo?.removeEventListener("volumechange", onVolumeChange);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lbIndex]);
@@ -502,9 +482,7 @@ export default function GaleriaColumnas({
     if (isVideo(f.src)) {
       return {
         type: "video",
-        // autoPlay OFF: el arranque lo controla el efecto de buffer-first (no
-        // reproducir —ni audio— hasta tener buffer decente).
-        autoPlay: false,
+        autoPlay: true,
         sources: f.sources ?? [{ src: f.src, type: getMimeType(f.src) }],
         ...(f.poster && { poster: f.poster }),
         width: f.width,
@@ -663,7 +641,7 @@ export default function GaleriaColumnas({
         close={() => setLbIndex(-1)}
         slides={lightboxSlides}
         on={{ view: ({ index }) => setLbIndex(index) }}
-        video={{ autoPlay: false, playsInline: true, preload: "auto" }}
+        video={{ autoPlay: true, playsInline: true, preload: "auto" }}
         carousel={{ finite: true }}
         plugins={[Video]}
         styles={{
@@ -740,14 +718,6 @@ export default function GaleriaColumnas({
         </div>
       )}
 
-      {/* Spinner buffer-first: mientras el video junta buffer (no arranca hasta
-          poder correr de corrido). pointer-events-none para no bloquear el
-          control del lightbox. */}
-      {videoBuffering && lbIndex >= 0 && (
-        <div className="fixed inset-0 z-[10002] flex items-center justify-center pointer-events-none">
-          <div className="gc-loader-spin w-12 h-12 rounded-full border-4 border-white/25 border-t-white animate-spin" />
-        </div>
-      )}
     </div>
   );
 }
