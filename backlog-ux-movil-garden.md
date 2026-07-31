@@ -230,6 +230,21 @@ la home, así que no afectan el DoD de la home. Revisión del render real:
   ad-free: Cloudflare Stream / Bunny Stream (más baratos, pay-per-use) o Vimeo
   (tier gratis con límites, embed fácil).
 
+**Parte B.2 — Rendimiento de reproducción en móvil (esta sesión).** Los MP4 de
+galería se trababan al abrir en celulares (audio antes que imagen, freeze 2-3s).
+Diagnóstico e iteración larga:
+- Se descartó descarga/buffer (faststart + GOP 2s + 480p + WiFi no movieron la
+  aguja) → el cuello es el **DECODE en hardware de gama baja**, no la red.
+- **Fix aplicado (commit `518c2ac`, Opción A):** versión **480p H.264 Baseline
+  (0 B-frames, CAVLC)** por video (`<clip>-mobile.mp4`), servida SOLO en móvil
+  (`isMobile`); desktop mantiene el HD. Baseline = lo más liviano de decodificar
+  para SoCs débiles. Convención documentada en `docs/EVENTOS.md` (blueprint).
+- Verificado por dispositivo: **iPad** fluido; **Lenovo Tab M8** (Helio A22, 2GB)
+  reproduce coordinado tras un glitch inicial de RAM; **Moto One Macro** (Helio
+  P70) mantiene algo de delay = **piso de hardware, aceptado por el owner**.
+- El lock de orientación por ratio se mantiene (buena UX en equipos capaces).
+- Salto definitivo pendiente = el host externo adaptativo del punto anterior.
+
 ---
 
 ## DECISIÓN CERRADA — Orientación de video en galerías
