@@ -18,6 +18,8 @@ export interface FotoColumnas {
   alt: string;
   poster?: string;
   sources?: { src: string; type: string }[];
+  /** Fuentes livianas (480p) que se sirven solo en móvil, si existen. */
+  sourcesMobile?: { src: string; type: string }[];
 }
 
 interface GaleriaColumnasProps {
@@ -380,7 +382,10 @@ export default function GaleriaColumnas({
     const foto = displayFotos[lbIndex];
     if (!foto || !isVideo(foto.src)) return;
 
-    const targetSrc = foto.sources?.[0]?.src ?? foto.src;
+    const targetSrc =
+      (isMobile && foto.sourcesMobile?.[0]?.src) ||
+      foto.sources?.[0]?.src ||
+      foto.src;
     let activeVideo: HTMLVideoElement | null = null;
     const onVolumeChange = () => {
       if (activeVideo) userVolumeRef.current = activeVideo.volume;
@@ -480,10 +485,16 @@ export default function GaleriaColumnas({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lightboxSlides: any[] = displayFotos.map((f) => {
     if (isVideo(f.src)) {
+      // En móvil se sirve la versión liviana 480p si existe (arranca/decodifica
+      // mucho más rápido que el HD, que se queda para desktop).
+      const videoSources =
+        (isMobile && f.sourcesMobile) ||
+        f.sources ||
+        [{ src: f.src, type: getMimeType(f.src) }];
       return {
         type: "video",
         autoPlay: true,
-        sources: f.sources ?? [{ src: f.src, type: getMimeType(f.src) }],
+        sources: videoSources,
         ...(f.poster && { poster: f.poster }),
         width: f.width,
         height: f.height,

@@ -164,10 +164,13 @@ export default async function EventoPage({ params }: Props) {
   // Videos locales mezclados en la galería — se ponen al inicio
   const videoDir = path.join(process.cwd(), "public", "media", mediaBase);
 
-  // Group by stem so .mp4 + .webm of the same clip become one item with multiple sources
+  // Group by stem so .mp4 + .webm of the same clip become one item with multiple
+  // sources. Los archivos "<stem>-mobile.mp4" NO se listan como item aparte: son
+  // la versión liviana (480p) que se emparejan y se sirven solo en celular.
   const videosByStem = new Map<string, string[]>();
   getMediaVideos(mediaBase).forEach((src) => {
     const stem = path.basename(src, path.extname(src));
+    if (/-mobile$/i.test(stem)) return;
     videosByStem.set(stem, [...(videosByStem.get(stem) ?? []), src]);
   });
 
@@ -185,6 +188,11 @@ export default async function EventoPage({ params }: Props) {
     if (!posterExt) {
       console.warn(`[eventos/${slug}] Video sin poster: "${stem}" — agrega una imagen con el mismo nombre (ej: ${stem}.webp)`);
     }
+    // Versión móvil liviana (480p): "<stem>-mobile.mp4" si existe. La galería la
+    // sirve solo en celular (arranca/decodifica mucho más rápido que el HD).
+    const sourcesMobile = fs.existsSync(path.join(videoDir, `${stem}-mobile.mp4`))
+      ? [{ src: `/media/${mediaBase}/${stem}-mobile.mp4`, type: "video/mp4" }]
+      : undefined;
     return {
       src: srcs[0],
       width: 16,
@@ -192,6 +200,7 @@ export default async function EventoPage({ params }: Props) {
       alt: altDesdeArchivo(stem, `Video de ${altEvento}`),
       ...(posterExt && { poster: `/media/${mediaBase}/${stem}${posterExt}` }),
       sources,
+      ...(sourcesMobile && { sourcesMobile }),
     };
   });
   // Exclude poster images from fotosGrande — they're already shown as video thumbnails
