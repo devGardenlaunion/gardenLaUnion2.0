@@ -372,11 +372,13 @@ export default function GaleriaColumnas({
     });
   }, [lbIndex]);
 
-  // Buffer-first (estilo YouTube): con autoPlay OFF, este efecto controla el
-  // arranque del video activo. No reproduce —ni audio— hasta que el navegador
-  // estima que puede correr de corrido (canplaythrough / readyState 4). Muestra
-  // spinner mientras junta buffer, y lo vuelve a mostrar si se queda sin buffer
-  // en medio (waiting). También aplica el volumen guardado.
+  // Buffer-first (estilo YouTube). CLAVE en móvil: los navegadores ignoran
+  // preload="auto" en video, así que NO bufferean hasta que se llama play().
+  // Por eso se arranca reproduciendo MUTED (eso sí lo permite el navegador y
+  // dispara el buffer), con spinner arriba y sin que se escuche audio. Cuando
+  // hay ~4s de buffer (o readyState 4), se reinicia a 0, se des-mutea y arranca
+  // limpio con audio. Si se queda sin buffer en medio (waiting), vuelve el
+  // spinner. También persiste el volumen del usuario.
   useEffect(() => {
     if (videoPlayRef.current) {
       clearTimeout(videoPlayRef.current);
@@ -401,29 +403,46 @@ export default function GaleriaColumnas({
       videoPlayRef.current = null;
       if (!match) return;
 
-      match.volume = userVolumeRef.current;
-      const onVolumeChange = () => { userVolumeRef.current = match.volume; };
-      match.addEventListener("volumechange", onVolumeChange);
-      cleanups.push(() => match.removeEventListener("volumechange", onVolumeChange));
+      // Arranca MUTED para bufferear sin meter audio (móvil ignora preload).
+      let arrancado = false;
+      match.muted = true;
+      setVideoBuffering(true);
+      match.play().catch(() => {});
 
-      const arrancar = () => { setVideoBuffering(false); match.play().catch(() => {}); };
-      const onWaiting = () => setVideoBuffering(true);
-      const onPlaying = () => setVideoBuffering(false);
+      const bufferedEnd = () => {
+        const b = match.buffered;
+        return b.length ? b.end(b.length - 1) : 0;
+      };
+      const arrancarConAudio = () => {
+        if (arrancado) return;
+        if (match.readyState >= 4 || bufferedEnd() >= 4) {
+          arrancado = true;
+          try { match.currentTime = 0; } catch { /* seek no disponible aún */ }
+          match.muted = false;
+          match.volume = userVolumeRef.current;
+          setVideoBuffering(false);
+          match.play().catch(() => {});
+        }
+      };
+      const onVolumeChange = () => { if (arrancado) userVolumeRef.current = match.volume; };
+      const onWaiting = () => { if (arrancado) setVideoBuffering(true); };
+      const onPlaying = () => { if (arrancado) setVideoBuffering(false); };
+
+      match.addEventListener("volumechange", onVolumeChange);
+      match.addEventListener("progress", arrancarConAudio);
+      match.addEventListener("canplay", arrancarConAudio);
+      match.addEventListener("canplaythrough", arrancarConAudio);
       match.addEventListener("waiting", onWaiting);
       match.addEventListener("playing", onPlaying);
-      cleanups.push(() => match.removeEventListener("waiting", onWaiting));
-      cleanups.push(() => match.removeEventListener("playing", onPlaying));
-
-      // readyState 4 = HAVE_ENOUGH_DATA (puede correr de corrido) → arranca ya.
-      if (match.readyState >= 4) {
-        arrancar();
-      } else {
-        setVideoBuffering(true);
-        match.pause();
-        const onCanPlayThrough = () => arrancar();
-        match.addEventListener("canplaythrough", onCanPlayThrough, { once: true });
-        cleanups.push(() => match.removeEventListener("canplaythrough", onCanPlayThrough));
-      }
+      cleanups.push(() => {
+        match.removeEventListener("volumechange", onVolumeChange);
+        match.removeEventListener("progress", arrancarConAudio);
+        match.removeEventListener("canplay", arrancarConAudio);
+        match.removeEventListener("canplaythrough", arrancarConAudio);
+        match.removeEventListener("waiting", onWaiting);
+        match.removeEventListener("playing", onPlaying);
+      });
+      arrancarConAudio(); // por si ya hay buffer suficiente
     }, 100);
 
     return () => {
