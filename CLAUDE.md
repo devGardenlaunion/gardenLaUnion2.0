@@ -102,11 +102,15 @@ garden-web/
     ├── SETUP_DEV.md                 # Setup entorno local
     ├── UX_CONTEXT.md                # Informe UX/UI completo
     ├── PERFORMANCE_AUDIT.md         # Auditoría de rendimiento
+    ├── BACKLOG_UX_MOVIL.md          # Plan de UX móvil por ciclos + estado
+    ├── REDTEAM.md                   # Ejercicio de seguridad ofensiva
+    ├── BLUE_TEAM.md                 # Revisión de seguridad defensiva
     └── admin/                       # Spec del panel — NO implementado
         ├── README.md
         ├── BLUEPRINT_EVENTOS.md     # Referencia canónica de eventos
         ├── REQUISITOS.md            # Checklist de implementación del admin
         ├── GALERIAS.md              # Arquitectura de componentes de galería
+        ├── DOCUMENTOS.md            # Blueprint del centro de documentos
         └── SELLOS.md                # Guía editorial sección Sellos (ex Convivencia)
 ```
 
