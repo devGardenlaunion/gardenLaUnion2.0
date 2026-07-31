@@ -239,6 +239,8 @@ export default function GaleriaColumnas({
   const [resolvedFotos, setResolvedFotos] = useState<FotoColumnas[]>(fotos);
   const videoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userVolumeRef = useRef<number>(0.6);
+  // Para no repetir el hint de rotación al re-lockear en cada slide (Safari).
+  const hintedRef = useRef(false);
 
   // Detección de dispositivo — una sola vez al montar
   useEffect(() => {
@@ -288,48 +290,8 @@ export default function GaleriaColumnas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Al abrir el lightbox en móvil: la galería está DISEÑADA para horizontal, así
-  // que fuerza el arranque en apaisado (fullscreen + lock landscape) — pero NO
-  // deja el lock puesto: a los ~2s lo libera para que el usuario pueda rotar a
-  // portrait y ver pics verticales cómodo ("muevo la pantalla").
-  //
-  // Se intenta en cualquier navegador; donde no hay fullscreen+lock (Safari/iOS
-  // y algún otro) cae al hint de "girá el dispositivo". Así, un iOS que sí
-  // soporte el lock lo usa, y Safari —que no— muestra el hint.
-  useEffect(() => {
-    if (lbIndex < 0) {
-      (screen.orientation as any)?.unlock?.();
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-      return;
-    }
-    if (!isMobile) return;
-
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const mostrarHintRotar = () => {
-      setRotateHintShow(true);
-      timers.push(setTimeout(() => setRotateHintVisible(true), 50));
-      timers.push(setTimeout(() => setRotateHintVisible(false), 2800));
-      timers.push(setTimeout(() => setRotateHintShow(false), 3600));
-    };
-
-    const orientation = screen.orientation as any;
-    const puedeBloquear = typeof orientation?.lock === "function";
-    const fsPromise = document.documentElement.requestFullscreen?.();
-
-    if (puedeBloquear && fsPromise instanceof Promise) {
-      fsPromise
-        .then(() => orientation.lock("landscape"))
-        .then(() => {
-          // Arranca apaisado pero no lo deja locked → liberar tras el arranque.
-          timers.push(setTimeout(() => orientation.unlock?.(), 2000));
-        })
-        .catch(mostrarHintRotar);
-    } else {
-      mostrarHintRotar();
-    }
-
-    return () => timers.forEach(clearTimeout);
-  }, [lbIndex, isMobile]);
+  // (El lock de orientación del lightbox está más abajo, tras displayFotos,
+  //  porque necesita el ratio del slide actual.)
 
   // Incluye todos los items: imágenes y videos (con o sin poster)
   // resolvedFotos reemplaza a fotos con dimensiones reales una vez que el sondeo termina.
@@ -346,6 +308,56 @@ export default function GaleriaColumnas({
     const ratio = (f: FotoColumnas) => (f.width || 1) / (f.height || 1);
     return [...resolvedFotos].sort((a, b) => ratio(b) - ratio(a));
   }, [resolvedFotos, isMobile]);
+
+  // Orientación del lightbox (móvil): como la galería ordena por ratio, se
+  // LOCKEA la orientación a la del slide actual —apaisado para horizontales,
+  // retrato para verticales (el ratio de los videos sale de sus dimensiones
+  // sondeadas)— y se re-lockea al navegar. Así cada pieza se ve derecha en su
+  // mejor orientación y el usuario no tiene que girar el teléfono.
+  // Fullscreen al abrir; unlock + salir al cerrar. Donde no hay lock
+  // (Safari/iOS) cae al hint de rotación, una sola vez.
+  useEffect(() => {
+    if (lbIndex < 0) {
+      (screen.orientation as any)?.unlock?.();
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      hintedRef.current = false;
+      return;
+    }
+    if (!isMobile) return;
+
+    const orientation = screen.orientation as any;
+    const puedeBloquear = typeof orientation?.lock === "function";
+
+    const foto = displayFotos[lbIndex];
+    const ratio = foto ? (foto.width || 1) / (foto.height || 1) : 1;
+    const target = ratio >= 1 ? "landscape" : "portrait";
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const mostrarHintRotar = () => {
+      if (hintedRef.current) return;
+      hintedRef.current = true;
+      setRotateHintShow(true);
+      timers.push(setTimeout(() => setRotateHintVisible(true), 50));
+      timers.push(setTimeout(() => setRotateHintVisible(false), 2800));
+      timers.push(setTimeout(() => setRotateHintShow(false), 3600));
+    };
+
+    if (!puedeBloquear) {
+      mostrarHintRotar();
+      return () => timers.forEach(clearTimeout);
+    }
+
+    const lockTo = () => orientation.lock(target).catch(() => {});
+    if (document.fullscreenElement) {
+      lockTo();
+    } else {
+      const fsPromise = document.documentElement.requestFullscreen?.();
+      if (fsPromise instanceof Promise) fsPromise.then(lockTo).catch(mostrarHintRotar);
+      else mostrarHintRotar();
+    }
+
+    return () => timers.forEach(clearTimeout);
+  }, [lbIndex, isMobile, displayFotos]);
 
   // Ventana deslizante: mantiene el thumb activo siempre dentro del rango visible
   useEffect(() => {
