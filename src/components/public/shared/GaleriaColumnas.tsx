@@ -372,13 +372,13 @@ export default function GaleriaColumnas({
     });
   }, [lbIndex]);
 
-  // Buffer-first (estilo YouTube). CLAVE en móvil: los navegadores ignoran
-  // preload="auto" en video, así que NO bufferean hasta que se llama play().
-  // Por eso se arranca reproduciendo MUTED (eso sí lo permite el navegador y
-  // dispara el buffer), con spinner arriba y sin que se escuche audio. Cuando
-  // hay ~4s de buffer (o readyState 4), se reinicia a 0, se des-mutea y arranca
-  // limpio con audio. Si se queda sin buffer en medio (waiting), vuelve el
-  // spinner. También persiste el volumen del usuario.
+  // Buffer-first estilo YouTube, SIN autoplay (solución universal). El video no
+  // arranca solo: muestra poster + play nativo. Cuando el USUARIO toca play, ese
+  // gesto autoriza el audio en toda plataforma (evita el bloqueo de iOS al
+  // des-mutear tras autoplay). Recién ahí: mutea, bufferea reproduciendo (móvil
+  // ignora preload, así que hay que reproducir para bufferear), spinner arriba,
+  // y al llegar a ~4s de buffer reinicia a 0 y des-mutea → arranca limpio con
+  // audio. Si se queda sin buffer en medio (waiting), vuelve el spinner.
   useEffect(() => {
     if (videoPlayRef.current) {
       clearTimeout(videoPlayRef.current);
@@ -403,20 +403,20 @@ export default function GaleriaColumnas({
       videoPlayRef.current = null;
       if (!match) return;
 
-      // Arranca MUTED para bufferear sin meter audio (móvil ignora preload).
-      let arrancado = false;
-      match.muted = true;
-      setVideoBuffering(true);
-      match.play().catch(() => {});
-
+      match.volume = userVolumeRef.current;
+      let objetivoAlcanzado = false;
+      let gestionando = false;
       const bufferedEnd = () => {
         const b = match.buffered;
         return b.length ? b.end(b.length - 1) : 0;
       };
-      const arrancarConAudio = () => {
-        if (arrancado) return;
+      const alcanzarObjetivo = () => {
+        if (objetivoAlcanzado) return;
         if (match.readyState >= 4 || bufferedEnd() >= 4) {
-          arrancado = true;
+          objetivoAlcanzado = true;
+          match.removeEventListener("progress", alcanzarObjetivo);
+          match.removeEventListener("canplay", alcanzarObjetivo);
+          match.removeEventListener("canplaythrough", alcanzarObjetivo);
           try { match.currentTime = 0; } catch { /* seek no disponible aún */ }
           match.muted = false;
           match.volume = userVolumeRef.current;
@@ -424,25 +424,37 @@ export default function GaleriaColumnas({
           match.play().catch(() => {});
         }
       };
-      const onVolumeChange = () => { if (arrancado) userVolumeRef.current = match.volume; };
-      const onWaiting = () => { if (arrancado) setVideoBuffering(true); };
-      const onPlaying = () => { if (arrancado) setVideoBuffering(false); };
+      // El usuario da play (control nativo) → ese tap autoriza el audio en toda
+      // plataforma. Recién ahí buffer-first: mutea (sin audio antes que imagen),
+      // sigue reproduciendo para bufferear, y al llegar al objetivo reinicia a 0
+      // y des-mutea (des-mutear funciona porque el audio ya está autorizado).
+      const onUserPlay = () => {
+        if (gestionando) return;
+        gestionando = true;
+        if (match.readyState >= 4 || bufferedEnd() >= 4) { objetivoAlcanzado = true; return; }
+        match.muted = true;
+        setVideoBuffering(true);
+        match.addEventListener("progress", alcanzarObjetivo);
+        match.addEventListener("canplay", alcanzarObjetivo);
+        match.addEventListener("canplaythrough", alcanzarObjetivo);
+      };
+      const onVolumeChange = () => { if (objetivoAlcanzado) userVolumeRef.current = match.volume; };
+      const onWaiting = () => { if (objetivoAlcanzado) setVideoBuffering(true); };
+      const onPlaying = () => { if (objetivoAlcanzado) setVideoBuffering(false); };
 
+      match.addEventListener("play", onUserPlay);
       match.addEventListener("volumechange", onVolumeChange);
-      match.addEventListener("progress", arrancarConAudio);
-      match.addEventListener("canplay", arrancarConAudio);
-      match.addEventListener("canplaythrough", arrancarConAudio);
       match.addEventListener("waiting", onWaiting);
       match.addEventListener("playing", onPlaying);
       cleanups.push(() => {
+        match.removeEventListener("play", onUserPlay);
+        match.removeEventListener("progress", alcanzarObjetivo);
+        match.removeEventListener("canplay", alcanzarObjetivo);
+        match.removeEventListener("canplaythrough", alcanzarObjetivo);
         match.removeEventListener("volumechange", onVolumeChange);
-        match.removeEventListener("progress", arrancarConAudio);
-        match.removeEventListener("canplay", arrancarConAudio);
-        match.removeEventListener("canplaythrough", arrancarConAudio);
         match.removeEventListener("waiting", onWaiting);
         match.removeEventListener("playing", onPlaying);
       });
-      arrancarConAudio(); // por si ya hay buffer suficiente
     }, 100);
 
     return () => {
