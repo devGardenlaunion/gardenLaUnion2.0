@@ -192,17 +192,28 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
                 isLight ? "translate-y-0 lg:translate-y-[7px]" : "translate-y-0"
               }`}
             >
-              {/* Isotipo GC. Dos rasters (el color está horneado en el PNG, no se
-                  puede variabilizar como el resto de la paleta): el verde es el
-                  tema actual; el navy, el del uniforme. CSS muestra uno según
-                  data-theme — ver .logo-actual/.logo-uniforme en globals.css. */}
+              {/* Loop del logo: escudo institucional ↔ monograma GC (crossfade 8s,
+                  ver @keyframes logo-swap en globals.css). El escudo es la base y
+                  lleva el alt real; el GC (.logo-swap) se funde encima. El GC es un
+                  raster con el color horneado, así que van dos —verde para el tema
+                  actual, navy para el uniforme— y CSS muestra el que corresponde
+                  según data-theme (.logo-actual/.logo-uniforme). */}
               <Image
-                src="/media/Logo/gc-identidad.webp"
-                alt="Isotipo Garden College"
+                src="/media/Logo/leon-circulo.webp"
+                alt="Escudo de Garden College"
                 fill
                 loading="eager"
                 sizes="88px"
-                className="logo-actual object-contain p-0.5"
+                className="object-contain p-0.5"
+              />
+              <Image
+                src="/media/Logo/gc-identidad.webp"
+                alt=""
+                aria-hidden="true"
+                fill
+                loading="eager"
+                sizes="88px"
+                className="logo-actual logo-swap object-contain p-0.5"
               />
               <Image
                 src="/media/Logo/gc-identidad-uniforme.webp"
@@ -211,7 +222,7 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
                 fill
                 loading="eager"
                 sizes="88px"
-                className="logo-uniforme object-contain p-0.5"
+                className="logo-uniforme logo-swap object-contain p-0.5"
               />
             </div>
             <div>

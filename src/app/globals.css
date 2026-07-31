@@ -223,6 +223,23 @@
 :root[data-theme="uniforme"] .logo-actual { display: none; }
 :root[data-theme="uniforme"] .logo-uniforme { display: block; }
 
+/* Loop del logo: el escudo institucional es la base; el monograma GC (.logo-swap)
+   se funde encima en un ciclo de 8s (~escudo 3s → fundido → ~GC 3s → fundido). El
+   GC que se ve depende del tema (.logo-actual verde / .logo-uniforme navy). */
+@keyframes logo-swap {
+  0%, 40%  { opacity: 0; }
+  50%, 90% { opacity: 1; }
+  100%     { opacity: 0; }
+}
+.logo-swap {
+  opacity: 0;
+  animation: logo-swap 8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Sin animación se queda el escudo; el GC no aparece. */
+  .logo-swap { animation: none; opacity: 0; }
+}
+
 /* =============================================
    YARL — THUMBNAIL STRIP SCROLL
    Permite arrastrar la tira de miniaturas en mobile sin que el lightbox
