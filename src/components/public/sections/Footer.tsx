@@ -1,3 +1,5 @@
+import BotonRevision from "@/components/public/shared/BotonRevision";
+
 interface FooterProps {
   nombre: string;
   corporacion: string;
@@ -150,9 +152,13 @@ export default function Footer({ nombre, corporacion, redes }: FooterProps) {
           <p className="text-xs font-body text-white/30">
             © {year} {nombre}. Todos los derechos reservados.
           </p>
-          <p className="text-xs font-body text-white/20">
-            La Unión, Región de Los Ríos, Chile
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            {/* Vista previa interna del tema del uniforme nuevo (MODO REVISIÓN). */}
+            <BotonRevision />
+            <p className="text-xs font-body text-white/20">
+              La Unión, Región de Los Ríos, Chile
+            </p>
+          </div>
         </div>
       </div>
     </footer>

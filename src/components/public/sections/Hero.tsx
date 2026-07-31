@@ -146,13 +146,13 @@ export default function Hero({
         >
           <path
             d="M0 120V60C240 26 480 10 720 26C960 42 1200 68 1440 60V120H0Z"
-            fill="var(--gc-warm, #FAFAF8)"
+            fill="rgb(var(--gc-warm, 250 250 248))"
           />
         </svg>
         {/* La franja de 5mm sube la onda SOLO en desktop/landscape (donde el
             video es cine con barras). En móvil portrait el video llena la
             pantalla y esta franja solo le comía ~5mm, así que ahí no va. */}
-        <div className="hidden landscape:block md:block h-[5mm]" style={{ background: "var(--gc-warm, #FAFAF8)" }} />
+        <div className="hidden landscape:block md:block h-[5mm]" style={{ background: "rgb(var(--gc-warm, 250 250 248))" }} />
       </div>
     </section>
   );

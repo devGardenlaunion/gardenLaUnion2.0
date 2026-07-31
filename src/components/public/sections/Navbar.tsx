@@ -173,8 +173,7 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo + Nombre */}
           <a href={logoHref} className="flex items-center gap-3 group">
-            {/* Comportamiento/tamaño traídos de la rama del uniforme (solo eso;
-                el isotipo y la paleta se importan cuando llegue el rebrand).
+            {/* Comportamiento/tamaño traídos de la rama del uniforme.
                 Diámetro > alto del nav (h-16=64 / lg:h-20=80): el logo REBOSA la
                 barra. Dos estados con animación de acomodo:
                   · arriba (!isLight): centrado, rebosando por arriba y abajo.
@@ -193,14 +192,26 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
                 isLight ? "translate-y-0 lg:translate-y-[7px]" : "translate-y-0"
               }`}
             >
+              {/* Isotipo GC. Dos rasters (el color está horneado en el PNG, no se
+                  puede variabilizar como el resto de la paleta): el verde es el
+                  tema actual; el navy, el del uniforme. CSS muestra uno según
+                  data-theme — ver .logo-actual/.logo-uniforme en globals.css. */}
               <Image
-                src="/media/Logo/cropped-cropped-logo.png"
-                alt="Logo Garden College"
-                width={88}
-                height={88}
+                src="/media/Logo/gc-identidad.webp"
+                alt="Isotipo Garden College"
+                fill
                 loading="eager"
                 sizes="88px"
-                className="w-full h-full object-contain"
+                className="logo-actual object-contain p-0.5"
+              />
+              <Image
+                src="/media/Logo/gc-identidad-uniforme.webp"
+                alt=""
+                aria-hidden="true"
+                fill
+                loading="eager"
+                sizes="88px"
+                className="logo-uniforme object-contain p-0.5"
               />
             </div>
             <div>
