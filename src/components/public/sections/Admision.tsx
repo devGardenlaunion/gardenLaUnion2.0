@@ -36,7 +36,7 @@ export default function Admision({ info, linkSae, imagenes = [] }: AdmisionProps
                   <div className="relative aspect-[4/5] w-full md:aspect-auto md:h-[380px] rounded-xl overflow-hidden bg-gc-green flex items-center justify-center">
                     <div className="absolute inset-0 bg-gradient-to-t from-gc-green-900/40 to-transparent" />
                     <Image
-                      src="/media/Logo/cropped-cropped-logo.png"
+                      src="/media/Logo/gc-identidad.webp"
                       alt="Garden College"
                       width={120}
                       height={120}

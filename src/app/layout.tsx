@@ -2,7 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { Lora, Source_Sans_3 } from "next/font/google";
 import { SITE_URL, OG_IMAGE, jsonLdSitio } from "@/lib/seo";
 import JsonLd from "@/components/public/shared/JsonLd";
+import ModoRevision from "@/components/public/shared/ModoRevision";
 import "./globals.css";
+
+// Script inline que corre ANTES del primer paint: si la cookie gc-tema pide el
+// tema uniforme, pone data-theme en <html> para que no haya parpadeo (verde ->
+// navy) al cargar o navegar en MODO REVISIÓN. Es la única lectura de la cookie
+// que ocurre "temprano"; el resto lo maneja src/lib/tema.ts en el cliente.
+const NO_FLASH_TEMA = `(function(){try{var m=document.cookie.match(/(?:^|; )gc-tema=([^;]*)/);if(m&&decodeURIComponent(m[1])==='uniforme'){document.documentElement.dataset.theme='uniforme';}}catch(e){}})();`;
 
 const lora = Lora({
   subsets: ["latin"],
@@ -69,7 +76,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
-    apple: "/media/Logo/cropped-cropped-logo.png",
+    apple: "/media/Logo/gc-identidad.png",
   },
   robots: {
     index: true,
@@ -99,13 +106,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es-CL" className={`${lora.variable} ${sourceSans.variable}`}>
+    <html
+      lang="es-CL"
+      className={`${lora.variable} ${sourceSans.variable}`}
+      suppressHydrationWarning
+    >
       <head>
+        {/* Aplica el tema uniforme desde la cookie antes de pintar (sin parpadeo).
+            suppressHydrationWarning en <html> porque este script toca data-theme,
+            que React no controla y difiere entre server y cliente en MODO REVISIÓN. */}
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_TEMA }} />
         {/* Datos estructurados del colegio — alimentan el panel de conocimiento
             y las búsquedas locales. Van en el layout para estar en toda página. */}
         <JsonLd data={jsonLdSitio()} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Aviso flotante del MODO REVISIÓN (solo visible con la vista previa activa). */}
+        <ModoRevision />
+      </body>
     </html>
   );
 }

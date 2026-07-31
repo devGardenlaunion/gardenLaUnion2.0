@@ -6,36 +6,71 @@
    VARIABLES CSS — PALETA GARDEN COLLEGE
    ============================================= */
 :root {
+  /* ===== TEMA ACTUAL (verde jade) — valores por defecto =====
+     Los colores son TRIPLETES RGB (no hex): Tailwind los consume como
+     rgb(var(--x) / <alpha-value>) (ver tailwind.config.ts), así siguen
+     funcionando los modificadores de opacidad (bg-gc-green/10, text-.../60).
+     El tema alternativo del rebrand vive en [data-theme="uniforme"] más abajo:
+     un solo atributo en <html> reescribe estas variables y flipea TODO el sitio
+     sin recompilar (MODO REVISIÓN). Origen del toggle: src/lib/tema.ts. */
   /* Verde Jade — protagonista */
-  --gc-green-50:    #EBF5F3;
-  --gc-green-100:   #B8DDD5;
-  --gc-green-light: #5EAA9A;
-  --gc-green:       #3D8578;
-  --gc-green-dark:  #2D6A5F;
-  --gc-green-800:   #1F4F46;
-  --gc-green-900:   #143832;
+  --gc-green-50:    235 245 243;
+  --gc-green-100:   184 221 213;
+  --gc-green-light:  94 170 154;
+  --gc-green:        61 133 120;
+  --gc-green-dark:   45 106 95;
+  --gc-green-800:    31 79 70;
+  --gc-green-900:    20 56 50;
   /* Navy — base */
-  --gc-navy-50:    #E8ECF2;
-  --gc-navy-light: #2D4470;
-  --gc-navy:       #1B2A4A;
-  --gc-navy-dark:  #111B33;
+  --gc-navy-50:    232 236 242;
+  --gc-navy-light:  45 68 112;
+  --gc-navy:        27 42 74;
+  --gc-navy-dark:   17 27 51;
   /* Dorado — acento + CTA */
-  --gc-gold-50:    #FAF6EB;
-  --gc-gold-light: #D4B84E;
-  --gc-gold:       #B8943B;
-  --gc-gold-dark:  #7A6A2E;
+  --gc-gold-50:    250 246 235;
+  --gc-gold-light: 212 184 78;
+  --gc-gold:       184 148 59;
+  --gc-gold-dark:  122 106 46;
   /* Rojo — solo errores */
-  --gc-red:        #C62828;
-  --gc-red-light:  #E53935;
-  /* Neutros */
-  --gc-white:      #FAFAF8;
-  --gc-warm:       #FAFAF8;
-  --gc-cream:      #F7F4ED;
-  --gc-gray-100:   #F0EDE6;
-  --gc-gray-200:   #E0DCD4;
-  --gc-gray-500:   #8A8578;
-  --gc-gray-700:   #4A4640;
-  --gc-gray-900:   #2A2825;
+  --gc-red:        198 40 40;
+  --gc-red-light:  229 57 53;
+  /* Neutros (idénticos en ambos temas) */
+  --gc-white:      250 250 248;
+  --gc-warm:       250 250 248;
+  --gc-cream:      247 244 237;
+  --gc-gray-100:   240 237 230;
+  --gc-gray-200:   224 220 212;
+  --gc-gray-500:   138 133 120;
+  --gc-gray-700:   74 70 64;
+  --gc-gray-900:   42 40 37;
+  /* Semánticos (idénticos en ambos temas) */
+  --gc-success:    46 125 50;
+  --gc-warning:    245 127 23;
+  --gc-error:      198 40 40;
+  --gc-info:       21 101 192;
+}
+
+/* ===== TEMA UNIFORME (navy / carmesí del uniforme nuevo) — MODO REVISIÓN =====
+   Reescribe SOLO las familias de marca (green/navy/gold/red); los neutros y
+   semánticos se heredan del :root. Se activa poniendo data-theme="uniforme" en
+   <html> (botón del footer + cookie gc-tema, ver src/lib/tema.ts). La familia
+   "gc-green" conserva su NOMBRE pero contiene el navy del uniforme, para flipear
+   los componentes sin editarlos. Valores: rama feat/uniformes. */
+:root[data-theme="uniforme"] {
+  --gc-green-50:    234 238 247;
+  --gc-green-100:   205 217 239;
+  --gc-green-light:  90 121 190;
+  --gc-green:        46 78 140;
+  --gc-green-dark:   31 56 106;
+  --gc-green-800:    26 46 82;
+  --gc-green-900:    15 29 56;
+  --gc-navy-dark:    15 27 46;
+  --gc-gold-50:    250 244 228;
+  --gc-gold-light: 227 178 63;
+  --gc-gold:       199 144 24;
+  --gc-gold-dark:  143 105 16;
+  --gc-red:        176 23 34;
+  --gc-red-light:  210 32 44;
 }
 
 /* =============================================
@@ -178,6 +213,15 @@
     opacity: 1 !important;
   }
 }
+
+/* =============================================
+   SWAP DEL ISOTIPO SEGÚN TEMA (MODO REVISIÓN)
+   Los dos logos del navbar son rasters con el color horneado (no se pueden
+   variabilizar como la paleta). Default = verde; data-theme="uniforme" = navy.
+   ============================================= */
+.logo-uniforme { display: none; }
+:root[data-theme="uniforme"] .logo-actual { display: none; }
+:root[data-theme="uniforme"] .logo-uniforme { display: block; }
 
 /* =============================================
    YARL — THUMBNAIL STRIP SCROLL
