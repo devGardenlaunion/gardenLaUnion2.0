@@ -235,6 +235,9 @@ export default function GaleriaColumnas({
   const [isMobile, setIsMobile] = useState(false);
   const [rotateHintShow, setRotateHintShow] = useState(false);
   const [rotateHintVisible, setRotateHintVisible] = useState(false);
+  // Buffer-first de video: spinner mientras junta buffer, arranca al tener
+  // suficiente para correr de corrido (estilo YouTube).
+  const [videoBuffering, setVideoBuffering] = useState(false);
   const [windowStart, setWindowStart] = useState(0);
   const [resolvedFotos, setResolvedFotos] = useState<FotoColumnas[]>(fotos);
   const videoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -369,22 +372,23 @@ export default function GaleriaColumnas({
     });
   }, [lbIndex]);
 
-  // Volumen persistido — YARL maneja el play/pause con autoPlay:true.
-  // Este efecto solo aplica el volumen guardado y escucha cambios del usuario.
+  // Buffer-first (estilo YouTube): con autoPlay OFF, este efecto controla el
+  // arranque del video activo. No reproduce —ni audio— hasta que el navegador
+  // estima que puede correr de corrido (canplaythrough / readyState 4). Muestra
+  // spinner mientras junta buffer, y lo vuelve a mostrar si se queda sin buffer
+  // en medio (waiting). También aplica el volumen guardado.
   useEffect(() => {
     if (videoPlayRef.current) {
       clearTimeout(videoPlayRef.current);
       videoPlayRef.current = null;
     }
+    setVideoBuffering(false);
     if (lbIndex < 0) return;
     const foto = displayFotos[lbIndex];
     if (!foto || !isVideo(foto.src)) return;
 
     const targetSrc = foto.sources?.[0]?.src ?? foto.src;
-    let activeVideo: HTMLVideoElement | null = null;
-    const onVolumeChange = () => {
-      if (activeVideo) userVolumeRef.current = activeVideo.volume;
-    };
+    const cleanups: (() => void)[] = [];
 
     videoPlayRef.current = setTimeout(() => {
       const match = Array.from(
@@ -394,12 +398,32 @@ export default function GaleriaColumnas({
           (s) => s.getAttribute("src") === targetSrc
         ) || v.getAttribute("src") === targetSrc
       );
-      if (match) {
-        match.volume = userVolumeRef.current;
-        activeVideo = match;
-        match.addEventListener("volumechange", onVolumeChange);
-      }
       videoPlayRef.current = null;
+      if (!match) return;
+
+      match.volume = userVolumeRef.current;
+      const onVolumeChange = () => { userVolumeRef.current = match.volume; };
+      match.addEventListener("volumechange", onVolumeChange);
+      cleanups.push(() => match.removeEventListener("volumechange", onVolumeChange));
+
+      const arrancar = () => { setVideoBuffering(false); match.play().catch(() => {}); };
+      const onWaiting = () => setVideoBuffering(true);
+      const onPlaying = () => setVideoBuffering(false);
+      match.addEventListener("waiting", onWaiting);
+      match.addEventListener("playing", onPlaying);
+      cleanups.push(() => match.removeEventListener("waiting", onWaiting));
+      cleanups.push(() => match.removeEventListener("playing", onPlaying));
+
+      // readyState 4 = HAVE_ENOUGH_DATA (puede correr de corrido) → arranca ya.
+      if (match.readyState >= 4) {
+        arrancar();
+      } else {
+        setVideoBuffering(true);
+        match.pause();
+        const onCanPlayThrough = () => arrancar();
+        match.addEventListener("canplaythrough", onCanPlayThrough, { once: true });
+        cleanups.push(() => match.removeEventListener("canplaythrough", onCanPlayThrough));
+      }
     }, 100);
 
     return () => {
@@ -407,7 +431,8 @@ export default function GaleriaColumnas({
         clearTimeout(videoPlayRef.current);
         videoPlayRef.current = null;
       }
-      activeVideo?.removeEventListener("volumechange", onVolumeChange);
+      cleanups.forEach((fn) => fn());
+      setVideoBuffering(false);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lbIndex]);
@@ -482,7 +507,9 @@ export default function GaleriaColumnas({
     if (isVideo(f.src)) {
       return {
         type: "video",
-        autoPlay: true,
+        // autoPlay OFF: el arranque lo controla el efecto de buffer-first (no
+        // reproducir —ni audio— hasta tener buffer decente).
+        autoPlay: false,
         sources: f.sources ?? [{ src: f.src, type: getMimeType(f.src) }],
         ...(f.poster && { poster: f.poster }),
         width: f.width,
@@ -634,7 +661,7 @@ export default function GaleriaColumnas({
         close={() => setLbIndex(-1)}
         slides={lightboxSlides}
         on={{ view: ({ index }) => setLbIndex(index) }}
-        video={{ autoPlay: true, playsInline: true, preload: "auto" }}
+        video={{ autoPlay: false, playsInline: true, preload: "auto" }}
         carousel={{ finite: true }}
         plugins={[Video]}
         styles={{
@@ -708,6 +735,15 @@ export default function GaleriaColumnas({
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           Gira el dispositivo · Diseñado para modo horizontal
+        </div>
+      )}
+
+      {/* Spinner buffer-first: mientras el video junta buffer (no arranca hasta
+          poder correr de corrido). pointer-events-none para no bloquear el
+          control del lightbox. */}
+      {videoBuffering && lbIndex >= 0 && (
+        <div className="fixed inset-0 z-[10002] flex items-center justify-center pointer-events-none">
+          <div className="gc-loader-spin w-12 h-12 rounded-full border-4 border-white/25 border-t-white animate-spin" />
         </div>
       )}
     </div>

@@ -177,6 +177,11 @@
   .cf-slide-first {
     opacity: 1 !important;
   }
+  /* Excepción: el loader de buffer del video SÍ gira (es indicador de estado,
+     un spinner congelado se ve roto). */
+  .gc-loader-spin {
+    animation: spin 0.8s linear infinite !important;
+  }
 }
 
 /* =============================================
