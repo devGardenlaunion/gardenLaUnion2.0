@@ -372,13 +372,11 @@ export default function GaleriaColumnas({
     });
   }, [lbIndex]);
 
-  // Buffer-first estilo YouTube, SIN autoplay (solución universal). El video no
-  // arranca solo: muestra poster + play nativo. Cuando el USUARIO toca play, ese
-  // gesto autoriza el audio en toda plataforma (evita el bloqueo de iOS al
-  // des-mutear tras autoplay). Recién ahí: mutea, bufferea reproduciendo (móvil
-  // ignora preload, así que hay que reproducir para bufferear), spinner arriba,
-  // y al llegar a ~4s de buffer reinicia a 0 y des-mutea → arranca limpio con
-  // audio. Si se queda sin buffer en medio (waiting), vuelve el spinner.
+  // Play nativo simple (sin autoplay, sin buffer-first). El video muestra poster
+  // + play nativo; el usuario toca play (eso autoriza el audio) y arranca de
+  // una. Este efecto solo persiste el volumen y muestra un spinner mientras el
+  // navegador espera buffer (evento waiting). El arranque parejo lo da el
+  // re-encode de los videos con GOP corto + faststart, no la lógica de JS.
   useEffect(() => {
     if (videoPlayRef.current) {
       clearTimeout(videoPlayRef.current);
@@ -403,54 +401,20 @@ export default function GaleriaColumnas({
       videoPlayRef.current = null;
       if (!match) return;
 
+      // Play nativo simple: el usuario toca play (autoriza el audio) y el video
+      // arranca de una. Sin muteo ni seek — reiniciar a 0 tras bufferear metía
+      // un freeze al re-sincronizar el decoder. El arranque rápido lo da el
+      // re-encode de los videos con GOP corto + faststart. Acá solo se persiste
+      // el volumen y se muestra el spinner si el navegador queda esperando
+      // buffer (waiting), que se oculta al reanudar (playing).
       match.volume = userVolumeRef.current;
-      let objetivoAlcanzado = false;
-      let gestionando = false;
-      const bufferedEnd = () => {
-        const b = match.buffered;
-        return b.length ? b.end(b.length - 1) : 0;
-      };
-      const alcanzarObjetivo = () => {
-        if (objetivoAlcanzado) return;
-        if (match.readyState >= 4 || bufferedEnd() >= 4) {
-          objetivoAlcanzado = true;
-          match.removeEventListener("progress", alcanzarObjetivo);
-          match.removeEventListener("canplay", alcanzarObjetivo);
-          match.removeEventListener("canplaythrough", alcanzarObjetivo);
-          try { match.currentTime = 0; } catch { /* seek no disponible aún */ }
-          match.muted = false;
-          match.volume = userVolumeRef.current;
-          setVideoBuffering(false);
-          match.play().catch(() => {});
-        }
-      };
-      // El usuario da play (control nativo) → ese tap autoriza el audio en toda
-      // plataforma. Recién ahí buffer-first: mutea (sin audio antes que imagen),
-      // sigue reproduciendo para bufferear, y al llegar al objetivo reinicia a 0
-      // y des-mutea (des-mutear funciona porque el audio ya está autorizado).
-      const onUserPlay = () => {
-        if (gestionando) return;
-        gestionando = true;
-        if (match.readyState >= 4 || bufferedEnd() >= 4) { objetivoAlcanzado = true; return; }
-        match.muted = true;
-        setVideoBuffering(true);
-        match.addEventListener("progress", alcanzarObjetivo);
-        match.addEventListener("canplay", alcanzarObjetivo);
-        match.addEventListener("canplaythrough", alcanzarObjetivo);
-      };
-      const onVolumeChange = () => { if (objetivoAlcanzado) userVolumeRef.current = match.volume; };
-      const onWaiting = () => { if (objetivoAlcanzado) setVideoBuffering(true); };
-      const onPlaying = () => { if (objetivoAlcanzado) setVideoBuffering(false); };
-
-      match.addEventListener("play", onUserPlay);
+      const onVolumeChange = () => { userVolumeRef.current = match.volume; };
+      const onWaiting = () => setVideoBuffering(true);
+      const onPlaying = () => setVideoBuffering(false);
       match.addEventListener("volumechange", onVolumeChange);
       match.addEventListener("waiting", onWaiting);
       match.addEventListener("playing", onPlaying);
       cleanups.push(() => {
-        match.removeEventListener("play", onUserPlay);
-        match.removeEventListener("progress", alcanzarObjetivo);
-        match.removeEventListener("canplay", alcanzarObjetivo);
-        match.removeEventListener("canplaythrough", alcanzarObjetivo);
         match.removeEventListener("volumechange", onVolumeChange);
         match.removeEventListener("waiting", onWaiting);
         match.removeEventListener("playing", onPlaying);
