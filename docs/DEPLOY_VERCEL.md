@@ -59,6 +59,43 @@ mismo en vez de a producción.
 
 ---
 
+## Traspaso a otra cuenta de Vercel
+
+> Para cuando el repo pasa a la cuenta dedicada del colegio (u otra máquina). El
+> **código** viaja completo en git; lo que **no** viaja son los valores secretos
+> —viven en las Environment Variables de Vercel, no en el repo— y el dominio.
+> Esos hay que rehacerlos en la cuenta nueva.
+
+Orden de los pasos (cada uno detallado en su sección de este mismo documento):
+
+1. **Importar el repo** en la cuenta de Vercel nueva: *Add New → Project →* elegir
+   el repositorio. No hay que tocar el preset ni los comandos — ver
+   [Configuración del proyecto](#configuración-del-proyecto-en-vercel).
+2. **Cargar las variables de entorno** en *Settings → Environment Variables*.
+   Ninguna está en el repo; se cargan a mano desde [`.env.example`](../.env.example):
+   - `SITE_URL` → **solo Production**.
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `CONTACTO_FROM`,
+     `CONTACTO_FROM_NAME`, `CONTACTO_TO` → Production y Preview.
+   - La `SMTP_PASS` es la **contraseña de aplicación** de `web@gardenlaunion.cl`,
+     que **no** está en git. Si no la tenés a mano, se genera de nuevo — ver
+     [Configuración inicial del correo](#configuración-inicial).
+3. **Conectar el dominio** `gardenlaunion.cl` + `www` y apuntar el DNS a la cuenta
+   nueva — ver [Dominio](#dominio). El DNS del registrador pasa a apuntar a **este**
+   proyecto; el dominio no puede estar activo en dos proyectos de Vercel a la vez.
+4. **Revisar el DNS de correo** (SPF/DKIM) del dominio: si el registrador cambió,
+   el `include:_spf.google.com` (o los registros de Resend) tienen que seguir
+   ahí, o el acuse del formulario empieza a caer en spam.
+5. **Verificar** antes de dar por publicado: correr `git push` a `main` para
+   forzar un build limpio en la cuenta nueva, `node scripts/probar-smtp.js` para
+   el correo, y después un envío real del formulario. El checklist completo está
+   en [Pendientes antes de considerar el sitio publicado](#pendientes-antes-de-considerar-el-sitio-publicado).
+
+Lo que **no** hay que hacer: no hay base de datos que migrar, ni backups que
+mover, ni estado que exportar. El contenido y las fotos están en git; con el repo
+importado y las variables cargadas, el sitio queda idéntico.
+
+---
+
 ## Por qué el sitio es 100% estático
 
 **Esto no es una optimización — es un requisito.** Si alguien vuelve a poner
