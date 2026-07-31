@@ -65,10 +65,15 @@
   --gc-green-800:    26 46 82;
   --gc-green-900:    15 29 56;
   --gc-navy-dark:    15 27 46;
-  --gc-gold-50:    250 244 228;
-  --gc-gold-light: 227 178 63;
-  --gc-gold:       199 144 24;
-  --gc-gold-dark:  143 105 16;
+  /* Carmesí como ACENTO real (~40%, las mangas/ribetes del bomber). En el sitio
+     el acento es la familia gc-gold (botones, badges, divisores, ring, hovers),
+     así que acá el "dorado" se vuelve carmesí y el rojo pasa a ser color de marca,
+     no solo de error. El dorado auténtico sobrevive únicamente en el monograma GC
+     del logo (raster), igual que el bordado amarillo del uniforme. */
+  --gc-gold-50:    251 235 236;
+  --gc-gold-light: 210 32 44;
+  --gc-gold:       176 23 34;
+  --gc-gold-dark:  138 16 25;
   --gc-red:        176 23 34;
   --gc-red-light:  210 32 44;
 }
