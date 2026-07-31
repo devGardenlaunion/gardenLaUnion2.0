@@ -542,6 +542,13 @@ export default function GaleriaColumnas({
         {albumPhotos.map((f, i) => {
           const noPoster = noPosterVideoSrcs.has(f.src);
           const esVideo = noPoster || videoByPoster.has(f.src);
+          // sizes por imagen: la celda es ~50vw de ancho y aspecto 4:5 (alto
+          // ~62.5vw). Con object-cover una imagen apaisada se escala por alto y
+          // se muestra más ANCHA que la celda (ancho visible ≈ altoCelda ×
+          // ratio); decirle "50vw" hacía que se sirviera chica y se pixelara.
+          // Cap a 100vw (tope útil dado deviceSizes 1200).
+          const ratio = f.width && f.height ? f.width / f.height : 0.8;
+          const coverVw = Math.min(100, Math.max(50, Math.round(62.5 * ratio)));
           return (
             <button
               key={i}
@@ -555,7 +562,7 @@ export default function GaleriaColumnas({
                   src={f.src}
                   alt={f.alt ?? ""}
                   fill
-                  sizes="50vw"
+                  sizes={`${coverVw}vw`}
                   className="object-cover"
                   loading="lazy"
                   onLoad={handleImageLoad}
