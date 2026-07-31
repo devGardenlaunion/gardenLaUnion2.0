@@ -97,7 +97,7 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+      className={`nav-sep-uniforme fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
         isLight
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b-2 border-gc-navy"
           : "bg-gc-green-900 border-b-2 border-gc-green-800"
@@ -182,7 +182,7 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
                     borde del aro queda al ras del nav y el resto cuelga abajo.
                 translate-y es visual: no agranda la fila ni mueve los links. */}
             <div
-              className={`relative w-14 h-14 lg:w-[5.5rem] lg:h-[5.5rem] shrink-0 rounded-full overflow-hidden bg-white p-0.5 ring-[3px] ring-gc-gold shadow-md transition-transform duration-300 ease-out ${
+              className={`logo-anillo relative w-14 h-14 lg:w-[5.5rem] lg:h-[5.5rem] shrink-0 rounded-full overflow-hidden bg-white p-0.5 ring-[3px] ring-gc-gold shadow-md transition-transform duration-300 ease-out ${
                 // Móvil: el logo CABE dentro del nav (56px + aro dentro de los
                 // 64px de la barra) → no rebosa ni hacia arriba ni hacia abajo,
                 // así el borde superior nunca se corta contra el viewport cuando

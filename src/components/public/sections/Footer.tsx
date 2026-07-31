@@ -1,3 +1,4 @@
+import Image from "next/image";
 import BotonRevision from "@/components/public/shared/BotonRevision";
 
 interface FooterProps {
@@ -25,14 +26,33 @@ export default function Footer({ nombre, corporacion, redes }: FooterProps) {
 
   return (
     <footer className="bg-gc-green-900 text-white/70">
+      {/* Rayas del puño del bomber (solo en MODO REVISIÓN): dos líneas carmesí
+          sobre navy como remate superior del footer. */}
+      <div className="rayas-uniforme" aria-hidden="true" />
       {/* Contenido principal */}
       <div className="container-gc py-12 lg:py-16">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Logo + info */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gc-green flex items-center justify-center font-display font-bold text-gc-gold">
-                GC
+              {/* Mismo isotipo del navbar (GC), con swap de tema verde/navy. */}
+              <div className="relative w-10 h-10 shrink-0">
+                <Image
+                  src="/media/Logo/gc-identidad.webp"
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  sizes="40px"
+                  className="logo-actual object-contain"
+                />
+                <Image
+                  src="/media/Logo/gc-identidad-uniforme.webp"
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  sizes="40px"
+                  className="logo-uniforme object-contain"
+                />
               </div>
               <span className="font-display font-bold text-white text-lg">
                 {nombre}
