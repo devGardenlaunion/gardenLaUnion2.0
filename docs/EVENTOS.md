@@ -112,6 +112,15 @@ reciente que exista. Los otros años aparecen listados como "ediciones anteriore
 - **Video con poster:** si subís `clip.mp4` a una galería, poné también
   `clip.webp` (mismo nombre) como miniatura. El sitio los aparea solo y excluye
   el poster de la tira de fotos.
+- **Video de galería → versión móvil `-mobile` (recomendado):** en celular un
+  video HD grande traba el decoder del teléfono (incluso por WiFi — el cuello es
+  el decode, no el ancho de banda). Poné al lado una versión liviana **480p** con
+  el sufijo `-mobile`: `clip.mp4` (HD, desktop) + `clip-mobile.mp4` (480p). La
+  galería sirve la `-mobile` **solo en celular** y NO la muestra como item aparte
+  (se aparea sola). Comando: `-vf scale=-2:480 -crf 27 -movflags +faststart`.
+- **Hero con clip de móvil:** el hero del evento puede tener un clip aparte para
+  celular — nombralo con **`Mobile`** en el nombre (ej. `HeroMobile.mp4`) dentro
+  de `hero/`. Se usa en portrait; el que NO lleva "mobile" va en desktop.
 
 > Si no querés hacer la compresión a mano, pedísela a Claude: "comprimí estas
 > fotos para el evento X". El pipeline está documentado y probado.
@@ -135,6 +144,7 @@ reciente que exista. Los otros años aparecen listados como "ediciones anteriore
 - [ ] Carpetas `hero/`, `polaroid/`, `<año>/` creadas
 - [ ] Fotos comprimidas (webp ≤1600px) y videos comprimidos
 - [ ] Videos con su poster `.webp` del mismo nombre
+- [ ] (recomendado) Videos de galería con su `<clip>-mobile.mp4` (480p) para celular
 - [ ] `destacado`: solo uno en todo el archivo
 - [ ] `publicado: true`
 - [ ] `npm run build` pasa
