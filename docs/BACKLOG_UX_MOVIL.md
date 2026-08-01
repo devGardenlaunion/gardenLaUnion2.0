@@ -6,6 +6,32 @@
 
 ---
 
+## Estado global (cierre de sesión — 2026-07-31)
+
+Ciclos **0–5 cerrados y verificados** (ver el bloque "Estado" de cada ciclo, con
+sus commits y criterios binarios cumplidos). Quedan **dos ítems abiertos, ambos
+bloqueados fuera de este backlog**. Se documentan acá por la **regla #5** (no se
+reinterpretan ni se cierran unilateralmente):
+
+- **Ciclo 3B — host externo adaptativo de video.** Bloqueado en el **owner**:
+  requiere elegir proveedor (Cloudflare Stream / Bunny / Vimeo), crear cuenta y
+  subir los videos. Diferido explícitamente ("no por ahora"). Reabrir cuando el
+  owner decida.
+- **Etiqueta "peso + duración" junto al play (Ciclo 3 · Parte B).** Enhancement
+  **opcional**; el criterio crítico (no autocargar video) ya se cumple. El peso
+  es trivial (`fs.statSync` en build), pero la **duración es infeasible en Vercel**
+  (`ffprobe` no disponible) → bloqueo técnico. Pendiente que el owner confirme si
+  se cierra como opcional o se implementa solo el peso.
+
+> **Trabajo fuera del alcance de este backlog, hecho en la misma sesión** (pedido
+> explícito del owner, registrado acá solo para que el log sea honesto sobre qué
+> cambió en el repo): **MODO REVISIÓN** — vista previa del tema del uniforme nuevo
+> (paleta a variables CSS + toggle por cookie con botón en el footer y aviso
+> flotante) y **loop del logo** (escudo institucional ↔ monograma GC). Commits
+> `a93a186`, `9d08199`, `94c3942`, `85b3ae5`. No es parte del plan de UX móvil.
+
+---
+
 ## Reglas de trabajo para el agente
 
 1. **Se trabaja directo en `main`, un commit por ciclo** (o por sub-tarea clara
