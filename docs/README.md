@@ -53,7 +53,7 @@
 | Documento | Descripción |
 |-----------|-------------|
 | [admin/README.md](./admin/README.md) | Índice del admin — leer primero. |
-| [admin/BLUEPRINT_EVENTOS.md](./admin/BLUEPRINT_EVENTOS.md) | **Blueprint de subpáginas de eventos** (Fomento Lector como modelo). Estructura de página, galerías llamables, campos editables, temporalidad. |
+| [admin/BLUEPRINT_EVENTOS.md](./admin/BLUEPRINT_EVENTOS.md) | **Blueprint genérico de subpáginas de eventos.** Estructura de página, galerías llamables, campos editables, temporalidad. |
 | [admin/REQUISITOS.md](./admin/REQUISITOS.md) | Checklist completo del panel: auth, CRUD, uploads, hardcodeo pendiente. |
 | [admin/GALERIAS.md](./admin/GALERIAS.md) | Arquitectura de `GaleriaColumnas` y `GaleriaPolaroid` como componentes llamables. |
 | [admin/DOCUMENTOS.md](./admin/DOCUMENTOS.md) | Blueprint del centro de documentos (`/documentos`). |

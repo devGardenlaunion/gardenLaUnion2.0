@@ -15,25 +15,20 @@ import type { Evento } from "@/lib/eventos";
 export const eventos: Evento[] = [
   {
     slug: "fomento-lector",
-    nombre: "Semana del Fomento Lector",
+    nombre: "Fomento Lector",
     titulo: "Fomento Lector 2026 — De Peter Pan a Alicia en el país de las maravillas",
     extracto: "Peter Pan, Papelucho, El Principito, Coraline, Alicia en el país de las maravillas — cada curso eligió su aventura literaria.",
     fecha: "2026-04-20",
     destacado: true,
     publicado: true,
     texto: `
-      Cada año, en torno al Día Mundial del Libro, Garden College se transforma.
-No es una metáfora — es literal. Las salas dejan de ser salas. Mientras el colegio se prepara, los cursos ya llevan días construyendo sus mundos: cartón, pintura, tela, maquillaje, horas de trabajo colectivo convirtiendo cada espacio en el escenario de un universo literario distinto. Algo despierta en los pasillos antes de que empiece la semana. Quienes han estado antes, lo reconocen.
+      El fomento lector en Garden College no vive en un solo evento — vive en un trasfondo que no se apaga. A lo largo del año, el profesor de Lenguaje y el equipo PIE mantienen la lectura presente con acciones puntuales: un afiche, un stand, una actividad suelta en el pasillo. Nunca se detiene del todo. Y cada año, en torno al Día Mundial del Libro, ese trasfondo sube de intensidad hasta estallar en una semana completa.
 
-      Este año, 4° medio eligió Wonderland. Alicia, el Sombrerero Loco, la Reina de Corazones y los soldados naipe aparecieron en una sala que dejó de ser una sala — todo construido por los mismos estudiantes que días antes estaban en el suelo pintando cartones gigantes. En 3° medio eligieron a Coraline: sala oscura, telas negras, botones. En básica, Papelucho, fábulas, leyendas chilenas. Trece universos simultáneos, trece equipos que apostaron en serio.
+      Los cursos llevan días preparándose antes de que empiece: cartón, pintura, tela, maquillaje, convirtiendo cada sala en el escenario de un universo literario distinto. Este año, 4° medio construyó Wonderland — Alicia, el Sombrerero Loco, la Reina de Corazones. 3° medio eligió Coraline: sala oscura, telas negras, botones. En básica, Papelucho, fábulas, leyendas chilenas. Trece cursos, trece mundos simultáneos.
 
-      La semana tiene su propio ritmo, como siempre lo ha tenido. El lunes activa. El martes llega la Maratón Literaria Internivelada — estaciones de lectura donde los grandes leen a los chicos: 8° básico a 2°, 4° medio guiando a 1° medio. Liderazgo que no se enseña desde el pizarrón sino codo a codo, libro en mano. El miércoles, producción escrita y murales sobre autores chilenos. El jueves, expresión oral y galería abierta. Y el viernes, el cierre.
+      El martes llega la Maratón Literaria Internivelada — los grandes leen a los chicos: 8° básico a 2°, 4° medio guiando a 1° medio. Liderazgo que no se enseña desde el pizarrón sino codo a codo, libro en mano. El viernes cierra con desfile por los Halls de ambas sedes, estudiantes de todos los niveles en personaje, diplomas y reconocimientos. Garden La Unión participa además en Booktubers CRA, la iniciativa nacional del Ministerio de Educación — la misma voz lectora que se sostiene todo el año, esta vez en video.
 
-      El viernes es el cierre, y siempre lo dice todo. Desfile por los Halls de nuestras sedes — estudiantes de todos los niveles en personaje, mezclados, mundos distintos compartiendo el mismo espacio por un momento. La comunidad mirando desde nuestras transmisiones online. Diplomas, reconocimientos, el Director en el medio de todo. Y después, silencio. Hasta el próximo año.
-
-      Garden La Unión también participa en Booktubers CRA, la iniciativa nacional del Ministerio de Educación donde estudiantes voluntarios recomiendan un libro en video — porque la voz lectora de nuestros alumnos no se queda dentro del colegio.
-
-      Nada de esto ocurre porque el calendario lo exige. El Ministerio de Educación marca la ocasión — Garden College decide qué hacer con ella. Creemos que formar personas capaces de pensar por sí mismas, expresarse con confianza y reconocer todo lo que es verdadero y bello, no cabe en una hora de acto. Cabe en una semana entera — bien ejecutada. Año tras año.
+      El Ministerio marca la fecha. Lo que se hace con ella lo decide el colegio: no dejarla en un acto de una hora, sino sostenerla el resto del año, aunque nadie le ponga nombre de programa.
     `,
   },
   {

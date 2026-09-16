@@ -2,7 +2,9 @@
 
 > **Referencia canónica para todos los eventos recurrentes del colegio.**
 > Cada evento nuevo (Semana Adventista, Día de la Familia, Olimpiadas, etc.) sigue este blueprint.
-> Modelo base: Semana Fomento Lector.
+> Los mockups de esta página usan placeholders genéricos (`[Nombre del Evento]`,
+> `[slug-evento]`) — no están atados a ningún evento real. Para ver eventos
+> reales y su estado, ver la sección 10.
 
 ---
 
@@ -114,8 +116,8 @@ import GaleriaPolaroid, { type FotoPolaroid }
 
 <GaleriaPolaroid
   fotos={[
-    { src: "/media/eventos/fomento-lector/polaroid/foto-1.jpg", caption: "..." },
-    { src: "/media/eventos/fomento-lector/polaroid/foto-2.jpg", caption: "" },
+    { src: "/media/eventos/[slug-evento]/polaroid/foto-1.jpg", caption: "..." },
+    { src: "/media/eventos/[slug-evento]/polaroid/foto-2.jpg", caption: "" },
   ]}
   lightboxMode="inline"
   desorden={0.5}
@@ -211,8 +213,8 @@ Las fotos y videos de la galería anual van en BD (`Multimedia` → `GaleriaAnua
 subidas por el admin. No tienen carpeta en el filesystem.
 
 > **Convención anterior (migrar):** Las fotos anuales estaban en `public/media/eventos/[slug]/[año]/`.
-> Esa carpeta se mantiene por retrocompatibilidad con Fomento Lector 2026, pero el modelo
-> objetivo es que las fotos anuales vivan en BD y no en el filesystem.
+> Esa carpeta se mantiene por retrocompatibilidad con eventos ya publicados bajo el modelo
+> antiguo, pero el modelo objetivo es que las fotos anuales vivan en BD y no en el filesystem.
 
 ---
 
@@ -263,7 +265,7 @@ Este flujo se hace raramente (al crear el evento por primera vez, o si hay actua
 
 | Evento | Slug | Estado actual |
 |--------|------|---------------|
-| Semana Fomento Lector | `fomento-lector` | Publicado. Schema usa modelo antiguo (`Edicion` 2026). Requiere migración. |
+| Fomento Lector | `fomento-lector` | Publicado. Schema usa modelo antiguo (`Edicion` 2026). Requiere migración. |
 
 Los demás eventos del colegio (Semana Adventista, Día de la Familia, etc.) se crean
 desde cero siguiendo este blueprint — no tienen datos históricos que migrar.
@@ -297,9 +299,9 @@ el texto permanente del evento + la galería del año activo.
 │                                                             │
 │  ← Volver a Eventos                                         │
 │                                                             │
-│  [badge]  Semana Fomento Lector                             │
-│  Semana Fomento Lector          ← h1 (fuente display, bold) │
-│  Abril · Garden College · La Unión   ← subtítulo           │
+│  [badge]  [Nombre del Evento]                                │
+│  [Nombre del Evento]            ← h1 (fuente display, bold) │
+│  Mes · Garden College · La Unión     ← subtítulo           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -317,7 +319,7 @@ el texto permanente del evento + la galería del año activo.
 ### Zona 2 — EXTRACTO (blockquote con borde izquierdo dorado)
 
 ```
-│  ┃ "De Peter Pan a Alicia... [texto del extracto]"    │
+│  ┃ "[texto del extracto — cita destacada del evento]" │
 ```
 
 | Campo | `Evento.extracto` |
@@ -352,7 +354,7 @@ el texto permanente del evento + la galería del año activo.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Semana Fomento Lector          ← label del evento  │
+│  [Nombre del Evento]            ← label del evento  │
 │  Galería 2026                   ← heading + año     │
 │                                                     │
 │  [foto] [foto] [video] [foto]   ← masonry, lightbox │
@@ -377,7 +379,7 @@ Ver [GALERIAS.md](./GALERIAS.md).
 ### Zona 5 — OTRAS EDICIONES (pills de años)
 
 ```
-│  Ediciones anteriores — Semana Fomento Lector        │
+│  Ediciones anteriores — [Nombre del Evento]          │
 │  [2025]  [2024]                                      │
 ```
 
@@ -395,11 +397,11 @@ Ver [GALERIAS.md](./GALERIAS.md).
 
 ```
 /admin/eventos
-  └── [Listado de eventos: Fomento Lector, Semana Adventista…]
-      └── Fomento Lector
+  └── [Listado de eventos: Fomento Lector, Semana Adventista, Día de la Familia…]
+      └── [Nombre del Evento]
           ├── [Editar evento]          → Evento.nombre, extracto, contenido (WYSIWYG), imagenPortada
           └── [Galerías]
-              ├── 2026 (activa) ──────→ /admin/eventos/fomento-lector/galeria/2026
+              ├── [año] (activa) ─────→ /admin/eventos/[slug-evento]/galeria/[año]
               │     └── Subir fotos, videos, links YouTube, reordenar, publicar
               └── [+ Nueva galería]    → crear GaleriaAnual con solo el año
 ```

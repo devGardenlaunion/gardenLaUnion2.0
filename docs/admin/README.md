@@ -28,7 +28,7 @@
 
 | Archivo | Para qué sirve |
 |---------|----------------|
-| [BLUEPRINT_EVENTOS.md](./BLUEPRINT_EVENTOS.md) | **Leer primero si vas a tocar Eventos.** Blueprint completo de subpáginas de eventos (Fomento Lector como modelo). Define estructura de página, componentes de galería y qué edita el admin. Todo evento nuevo sigue este blueprint. |
+| [BLUEPRINT_EVENTOS.md](./BLUEPRINT_EVENTOS.md) | **Leer primero si vas a tocar Eventos.** Blueprint genérico de subpáginas de eventos. Define estructura de página, componentes de galería y qué edita el admin. Todo evento nuevo sigue este blueprint. |
 | [REQUISITOS.md](./REQUISITOS.md) | Checklist completo de lo que debe implementarse en el panel: autenticación, CRUD por sección, upload de archivos, pipeline de imágenes. Incluye hardcodeo pendiente de eliminar. |
 | [DOCUMENTOS.md](./DOCUMENTOS.md) | Blueprint del centro de documentos PDF: modelo de BD, categorías, tags, upload de PDFs y migración desde el hardcodeo actual de `src/app/documentos/page.tsx`. |
 | [GALERIAS.md](./GALERIAS.md) | Arquitectura de los componentes `GaleriaColumnas` y `GaleriaPolaroid`: cómo llamarlos, qué props reciben, estructura de carpetas, convención de thumbnails de video. |

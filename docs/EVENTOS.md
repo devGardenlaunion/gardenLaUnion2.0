@@ -7,8 +7,8 @@
 
 ## 1. El modelo mental
 
-Un **evento** es permanente: la Semana del Fomento Lector existe todos los años y
-su relato no cambia. Lo que cambia cada año es la **galería de fotos**.
+Un **evento** es permanente: existe todos los años y su relato no cambia (ej.
+Fomento Lector, Fiestas Patrias). Lo que cambia cada año es la **galería de fotos**.
 
 ```
 EVENTO (permanente)                    ← texto en src/content/eventos.ts
