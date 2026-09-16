@@ -132,9 +132,13 @@ export default async function EventoPage({ params }: Props) {
        getMediaImages(`${eventBase}/hero`)[0]?.src ??
        null);
 
+  // Solo el primer párrafo va a ancho completo — el resto entra al bloque de
+  // 2 columnas con la polaroid. Repartir de a 2 en la intro dejaba el cuerpo
+  // corto (a veces un solo párrafo) compitiendo en altura con la polaroid
+  // sticky, y abría un hueco incómodo entre el penúltimo y el último párrafo.
   const parrafos = getParrafos(evento);
-  const introParrafos = parrafos.slice(0, 2);
-  const cuerpoParrafos = parrafos.slice(2);
+  const introParrafos = parrafos.slice(0, 1);
+  const cuerpoParrafos = parrafos.slice(1);
 
   return (
     <>
