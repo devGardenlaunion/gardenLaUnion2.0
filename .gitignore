@@ -53,3 +53,5 @@ public/documentos/Archivador.zip
 *.mp4
 # Excepción: videos de eventos comprimidos (<10 MB) sí van en git
 !public/media/**/*.mp4
+
+.envrc
