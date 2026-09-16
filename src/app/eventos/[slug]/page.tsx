@@ -1,60 +1,24 @@
-import fs from "fs";
-import path from "path";
-import sharp from "sharp";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { getConfig } from "@/lib/config";
-import { altDesdeArchivo, getMediaImages, getMediaVideos } from "@/lib/media";
+import { getMediaImages, getMediaVideos } from "@/lib/media";
 import { absUrl, OG_IMAGE, jsonLdBreadcrumb } from "@/lib/seo";
 import {
   getEvento,
   getEventosPublicados,
   getEdicionActiva,
-  getAniosEvento,
   getMediaEvento,
+  getGaleriaEdiciones,
   getParrafos,
 } from "@/lib/eventos";
 import JsonLd from "@/components/public/shared/JsonLd";
 import Navbar from "@/components/public/sections/Navbar";
 import Footer from "@/components/public/sections/Footer";
 import GaleriaPolaroid, { type FotoPolaroid } from "@/components/public/shared/GaleriaPolaroid";
-import GaleriaColumnas, { type FotoColumnas } from "@/components/public/shared/GaleriaColumnas";
+import GaleriaEdiciones from "@/components/public/shared/GaleriaEdiciones";
 import AutoplayVideo from "@/components/public/shared/AutoplayVideo";
-
-const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
-
-async function getFotosGrande(
-  mediaBase: string,
-  altPorDefecto: string
-): Promise<FotoColumnas[]> {
-  const dir = path.join(process.cwd(), "public", "media", mediaBase);
-  if (!fs.existsSync(dir)) return [];
-
-  const archivos = fs
-    .readdirSync(dir)
-    .filter((f) => {
-      const full = path.join(dir, f);
-      return fs.statSync(full).isFile() && IMAGE_EXTS.has(path.extname(f).toLowerCase());
-    })
-    .sort();
-
-  if (archivos.length === 0) return [];
-
-  return Promise.all(
-    archivos.map(async (archivo) => {
-      const alt = altDesdeArchivo(archivo, altPorDefecto);
-      const src = `/media/${mediaBase}/${encodeURIComponent(archivo)}`;
-      try {
-        const meta = await sharp(path.join(dir, archivo)).metadata();
-        return { src, width: meta.width ?? 1200, height: meta.height ?? 800, alt };
-      } catch {
-        return { src, width: 1200, height: 800, alt };
-      }
-    })
-  );
-}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -136,7 +100,14 @@ export default async function EventoPage({ params }: Props) {
   // Alt de respaldo para las fotos cuyo nombre de archivo no describe nada.
   const altEvento = `${evento.nombre} ${year} en ${nombre}${ciudad ? `, ${ciudad}` : ""}`;
 
-  const fotosGrande = await getFotosGrande(mediaBase, altEvento);
+  // Una galería resuelta por cada año con carpeta — la activa se ve al entrar,
+  // las anteriores quedan detrás del selector dentro de GaleriaEdiciones.
+  const ediciones = await getGaleriaEdiciones(
+    evento.slug,
+    (anio) => `${evento.nombre} ${anio} en ${nombre}${ciudad ? `, ${ciudad}` : ""}`
+  );
+  const fotosGrande = ediciones.find((e) => e.anio === year)?.fotos ?? [];
+
   const fotosPolaroidBase: FotoPolaroid[] = getMediaImages(
     `${eventBase}/polaroid`,
     altEvento
@@ -161,62 +132,9 @@ export default async function EventoPage({ params }: Props) {
        getMediaImages(`${eventBase}/hero`)[0]?.src ??
        null);
 
-  // Videos locales mezclados en la galería — se ponen al inicio
-  const videoDir = path.join(process.cwd(), "public", "media", mediaBase);
-
-  // Group by stem so .mp4 + .webm of the same clip become one item with multiple
-  // sources. Los archivos "<stem>-mobile.mp4" NO se listan como item aparte: son
-  // la versión liviana (480p) que se emparejan y se sirven solo en celular.
-  const videosByStem = new Map<string, string[]>();
-  getMediaVideos(mediaBase).forEach((src) => {
-    const stem = path.basename(src, path.extname(src));
-    if (/-mobile$/i.test(stem)) return;
-    videosByStem.set(stem, [...(videosByStem.get(stem) ?? []), src]);
-  });
-
-  // width/height son placeholder 16:9 — GaleriaColumnas sondea las dimensiones reales del archivo
-  const videoItems: FotoColumnas[] = Array.from(videosByStem.entries()).map(([stem, srcs]) => {
-    const posterExt = [".jpg", ".webp", ".jpeg", ".png"].find((ext) =>
-      fs.existsSync(path.join(videoDir, `${stem}${ext}`))
-    );
-    // MP4 first: iOS uses hardware H.264 decoder; WebM second: VP9 for desktop
-    const sources: { src: string; type: string }[] = [
-      ...(srcs.some((s) => s.endsWith(".mp4"))  ? [{ src: `/media/${mediaBase}/${stem}.mp4`,  type: "video/mp4"       }] : []),
-      ...(srcs.some((s) => s.endsWith(".webm")) ? [{ src: `/media/${mediaBase}/${stem}.webm`, type: "video/webm"      }] : []),
-      ...(srcs.some((s) => s.endsWith(".mov"))  ? [{ src: `/media/${mediaBase}/${stem}.mov`,  type: "video/quicktime" }] : []),
-    ];
-    if (!posterExt) {
-      console.warn(`[eventos/${slug}] Video sin poster: "${stem}" — agrega una imagen con el mismo nombre (ej: ${stem}.webp)`);
-    }
-    // Versión móvil liviana (480p): "<stem>-mobile.mp4" si existe. La galería la
-    // sirve solo en celular (arranca/decodifica mucho más rápido que el HD).
-    const sourcesMobile = fs.existsSync(path.join(videoDir, `${stem}-mobile.mp4`))
-      ? [{ src: `/media/${mediaBase}/${stem}-mobile.mp4`, type: "video/mp4" }]
-      : undefined;
-    return {
-      src: srcs[0],
-      width: 16,
-      height: 9,
-      alt: altDesdeArchivo(stem, `Video de ${altEvento}`),
-      ...(posterExt && { poster: `/media/${mediaBase}/${stem}${posterExt}` }),
-      sources,
-      ...(sourcesMobile && { sourcesMobile }),
-    };
-  });
-  // Exclude poster images from fotosGrande — they're already shown as video thumbnails
-  const videoPosterUrls = new Set(videoItems.map((v) => v.poster).filter(Boolean) as string[]);
-  const galeriaItems: FotoColumnas[] = [
-    ...videoItems,
-    ...fotosGrande.filter((f) => !videoPosterUrls.has(f.src)),
-  ];
-
   const parrafos = getParrafos(evento);
   const introParrafos = parrafos.slice(0, 2);
   const cuerpoParrafos = parrafos.slice(2);
-
-  // "Ediciones anteriores" = los otros años que tienen carpeta de galería.
-  const otrosAnios = getAniosEvento(evento.slug).filter((a) => a !== year);
-
 
   return (
     <>
@@ -351,39 +269,12 @@ export default async function EventoPage({ params }: Props) {
               )
             )}
 
-            {/* Galería — fotos y videos con márgenes normales de página */}
-            {galeriaItems.length > 0 && (
-              <div className="mb-10">
-                <div className="border-l-4 border-gc-gold pl-4 mb-6">
-                  <p className="text-xs font-body font-semibold text-gc-green-600 uppercase tracking-widest mb-1">
-                    {evento.nombre}
-                  </p>
-                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-gc-green-800">
-                    Galería {year}
-                  </h2>
-                </div>
-                <GaleriaColumnas fotos={galeriaItems} />
-              </div>
-            )}
-
-            {/* Ediciones anteriores — otros años con galería */}
-            {otrosAnios.length > 0 && (
-              <div className="mb-10 p-6 bg-gc-cream rounded-2xl">
-                <p className="text-xs font-body font-semibold text-gc-green-800/40 uppercase tracking-wider mb-4">
-                  Ediciones anteriores — {evento.nombre}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {otrosAnios.map((anio) => (
-                    <span
-                      key={anio}
-                      className="px-4 py-2 bg-white border border-gc-green-100 text-gc-green-800/60 text-sm font-body rounded-full"
-                    >
-                      {anio}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Galería — fotos y videos, con selector de edición si hay más de un año */}
+            <GaleriaEdiciones
+              nombreEvento={evento.nombre}
+              ediciones={ediciones}
+              edicionActiva={year}
+            />
 
             {/* Volver */}
             <a href="/#eventos" className="btn-secondary inline-flex items-center gap-2">

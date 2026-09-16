@@ -218,22 +218,33 @@ subidas por el admin. No tienen carpeta en el filesystem.
 
 ---
 
-## 7. Historial de galerías — pendiente de decidir
+## 7. Historial de galerías — decidido: pills que cambian la galería inline
 
-Cuando llega un año nuevo, la galería activa se reemplaza. ¿Qué pasa con la anterior?
+Se optó por la variante estática de la **Opción A** (de las que estaban en
+discusión: pills de años, descargable, página de historial aparte, o solo en
+BD sin URL pública). La página trae, ya resueltas en el build, las
+fotos/videos de TODAS las carpetas de año que existan para ese evento
+(`getGaleriaEdiciones` en `src/lib/eventos.ts`). Un componente cliente
+(`GaleriaEdiciones`, en `src/components/public/shared/`) las recibe todas y
+muestra la del año activo; los pills de "Ediciones anteriores" son botones
+que cambian cuál se ve, sin recargar la página ni pedir nada al servidor —
+sigue siendo 100% estático (regla no negociable #4). Se descartó una ruta
+nueva de historial por evento (no se justifica con este volumen) y una
+galería descargable (trabajo de más para un beneficio marginal).
 
-**Opciones en discusión:**
+### Compactar ediciones viejas — para no acumular carpetas completas
 
-| Opción | Descripción | Ventaja | Pendiente |
-|--------|-------------|---------|-----------|
-| **A. Listado de años** | La página muestra pills de años anteriores (`2025`, `2026`, `2027`) | Simple, todo en la misma página | ¿Dónde se renderizan las galerías pasadas? |
-| **B. Descargable** | PDF o ZIP con las fotos del año | Sin complejidad de routing | Generar el archivo, almacenamiento |
-| **C. Página de historial** | `/eventos/[slug]/historial` con todas las galerías | Completo | Más desarrollo |
-| **D. Solo conservar en BD** | Las galerías pasadas quedan en BD pero sin URL pública | Simple | Sin acceso público al historial |
+El año recién pasado se deja con su galería completa un año más (la gente
+todavía lo busca fresco). A partir del segundo año hacia atrás, se compacta:
+se reemplaza el contenido de esa carpeta por una selección chica y curada a
+mano — no todas las fotos, una muestra — y si conviene se fusiona con la
+carpeta de otro año viejo para mostrarlos juntos bajo un solo pill (la
+carpeta se sigue llamando por un año, aunque adentro tenga fotos de más de
+uno). El archivo completo de cada evento no vive en el sitio — típicamente
+queda en YouTube o donde se haya transmitido — el sitio solo muestra una
+muestra curada.
 
-**Decisión pendiente.** Por ahora, al subir una nueva galería anual:
-- Marcar la nueva como `activa: true`
-- La anterior queda en BD con `activa: false` (conservada, sin exposición pública aún)
+Es trabajo manual, una vez al año, al preparar la edición nueva.
 
 ---
 
