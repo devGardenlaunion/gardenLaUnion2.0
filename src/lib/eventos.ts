@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
+import sharp from "sharp";
 import { eventos } from "@/content/eventos";
-import { getMediaImages, getMediaVideos, getMediaPhotos } from "@/lib/media";
+import { getMediaImages, getMediaVideos, getMediaPhotos, altDesdeArchivo } from "@/lib/media";
+import type { FotoColumnas } from "@/components/public/shared/GaleriaColumnas";
 
 /**
  * Un evento del colegio. El texto vive en src/content/eventos.ts; las fotos y
@@ -125,4 +127,114 @@ export function getParrafos(evento: Evento): string[] {
     .split("\n\n")
     .map((p) => p.trim())
     .filter(Boolean);
+}
+
+const IMAGE_EXTS_GALERIA = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+
+async function getFotosConDimensiones(
+  mediaBase: string,
+  altPorDefecto: string
+): Promise<FotoColumnas[]> {
+  const dir = path.join(process.cwd(), "public", "media", mediaBase);
+  if (!fs.existsSync(dir)) return [];
+
+  const archivos = fs
+    .readdirSync(dir)
+    .filter((f) => {
+      const full = path.join(dir, f);
+      return fs.statSync(full).isFile() && IMAGE_EXTS_GALERIA.has(path.extname(f).toLowerCase());
+    })
+    .sort();
+
+  if (archivos.length === 0) return [];
+
+  return Promise.all(
+    archivos.map(async (archivo) => {
+      const alt = altDesdeArchivo(archivo, altPorDefecto);
+      const src = `/media/${mediaBase}/${encodeURIComponent(archivo)}`;
+      try {
+        const meta = await sharp(path.join(dir, archivo)).metadata();
+        return { src, width: meta.width ?? 1200, height: meta.height ?? 800, alt };
+      } catch {
+        return { src, width: 1200, height: 800, alt };
+      }
+    })
+  );
+}
+
+/**
+ * Fotos y videos de UNA edición (año) puntual de un evento, listos para
+ * GaleriaColumnas. Agrupa .mp4/.webm/.mov del mismo clip en un solo item,
+ * empareja el poster (mismo nombre base) y la versión móvil liviana
+ * ("<stem>-mobile.mp4"). Se usa tanto para la edición activa como para las
+ * anteriores — ver getGaleriaEdiciones.
+ */
+export async function getGaleriaEdicion(
+  slug: string,
+  anio: number,
+  altEvento: string
+): Promise<FotoColumnas[]> {
+  const mediaBase = `eventos/${slug}/${anio}`;
+  const videoDir = path.join(process.cwd(), "public", "media", mediaBase);
+
+  const fotos = await getFotosConDimensiones(mediaBase, altEvento);
+
+  // Agrupa por "stem" (nombre sin extensión) para que .mp4 + .webm del mismo
+  // clip sean un solo item con varias fuentes. Los "<stem>-mobile.mp4" NO se
+  // listan aparte: son la versión liviana que se empareja y sirve solo en celular.
+  const videosByStem = new Map<string, string[]>();
+  getMediaVideos(mediaBase).forEach((src) => {
+    const stem = path.basename(src, path.extname(src));
+    if (/-mobile$/i.test(stem)) return;
+    videosByStem.set(stem, [...(videosByStem.get(stem) ?? []), src]);
+  });
+
+  // width/height son placeholder 16:9 — GaleriaColumnas sondea las dimensiones reales del archivo
+  const videoItems: FotoColumnas[] = Array.from(videosByStem.entries()).map(([stem, srcs]) => {
+    const posterExt = [".jpg", ".webp", ".jpeg", ".png"].find((ext) =>
+      fs.existsSync(path.join(videoDir, `${stem}${ext}`))
+    );
+    // MP4 primero: iOS usa el decoder H.264 de hardware; WebM después: VP9 para desktop
+    const sources: { src: string; type: string }[] = [
+      ...(srcs.some((s) => s.endsWith(".mp4"))  ? [{ src: `/media/${mediaBase}/${stem}.mp4`,  type: "video/mp4"       }] : []),
+      ...(srcs.some((s) => s.endsWith(".webm")) ? [{ src: `/media/${mediaBase}/${stem}.webm`, type: "video/webm"      }] : []),
+      ...(srcs.some((s) => s.endsWith(".mov"))  ? [{ src: `/media/${mediaBase}/${stem}.mov`,  type: "video/quicktime" }] : []),
+    ];
+    if (!posterExt) {
+      console.warn(`[eventos/${slug}] Video sin poster en ${anio}: "${stem}" — agrega una imagen con el mismo nombre (ej: ${stem}.webp)`);
+    }
+    const sourcesMobile = fs.existsSync(path.join(videoDir, `${stem}-mobile.mp4`))
+      ? [{ src: `/media/${mediaBase}/${stem}-mobile.mp4`, type: "video/mp4" }]
+      : undefined;
+    return {
+      src: srcs[0],
+      width: 16,
+      height: 9,
+      alt: altDesdeArchivo(stem, `Video de ${altEvento}`),
+      ...(posterExt && { poster: `/media/${mediaBase}/${stem}${posterExt}` }),
+      sources,
+      ...(sourcesMobile && { sourcesMobile }),
+    };
+  });
+
+  // Excluye los posters de la tira de fotos — ya se muestran como thumbnail del video
+  const videoPosterUrls = new Set(videoItems.map((v) => v.poster).filter(Boolean) as string[]);
+  return [
+    ...videoItems,
+    ...fotos.filter((f) => !videoPosterUrls.has(f.src)),
+  ];
+}
+
+/** Todas las ediciones (años) de un evento, cada una con su galería resuelta. */
+export async function getGaleriaEdiciones(
+  slug: string,
+  altPorAnio: (anio: number) => string
+): Promise<{ anio: number; fotos: FotoColumnas[] }[]> {
+  const anios = getAniosEvento(slug);
+  return Promise.all(
+    anios.map(async (anio) => ({
+      anio,
+      fotos: await getGaleriaEdicion(slug, anio, altPorAnio(anio)),
+    }))
+  );
 }

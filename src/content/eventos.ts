@@ -36,7 +36,7 @@ export const eventos: Evento[] = [
     nombre: "Fiestas Patrias",
     titulo: "Fiestas Patrias 2025 — Una semana de chilenidad en Garden College",
     extracto: "Ramadas, cueca, empanadas y parrillada. Toda la comunidad Garden celebró las fiestas patrias con una semana de actividades que fortalecen nuestra identidad y unión.",
-    fecha: "2025-09-19",
+    fecha: "2026-09-18",
     destacado: false,
     publicado: false,
     texto: `
