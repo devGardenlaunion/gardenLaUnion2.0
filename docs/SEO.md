@@ -150,7 +150,7 @@ un nombre legible.**
 El contexto lo pasa quien llama, con lo que sabe de la sección. Ejemplos reales:
 
 - Galería de la home → `Comunidad escolar de Garden College, La Unión — Región de Los Ríos`
-- Página de evento → `Semana del Fomento Lector 2026 en Garden College, La Unión`
+- Página de evento → `Fomento Lector 2026 en Garden College, La Unión`
 - Niveles → `Prebásica (Pre-Kínder y Kínder) en Garden College, La Unión`
 
 Quedan `alt=""` a propósito los fondos desenfocados de los carruseles y las
@@ -163,7 +163,7 @@ descripciones de algo que se ve como una sola imagen.
 ## Otros arreglos con efecto en posicionamiento
 
 - **`<h1>` de las páginas de evento.** Repetía el mismo texto del badge que
-  tiene justo encima (`Semana del Fomento Lector` dos veces), y el campo
+  tiene justo encima (`Fomento Lector` dos veces), y el campo
   `titulo` — descriptivo y con la edición del año — no se usaba en ninguna
   parte. Ahora el `h1` usa `titulo`.
 - **Placeholders de `picsum.photos` eliminados.** Si una carpeta de fotos
