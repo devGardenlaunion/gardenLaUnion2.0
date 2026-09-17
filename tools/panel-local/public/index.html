@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Panel local — Garden College</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; color: #222; background: #fafaf8; }
+  h1 { font-size: 1.3rem; }
+  p.aviso { background: #fff3cd; border: 1px solid #e0c36a; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; }
+  [hidden] { display: none !important; }
+
+  fieldset { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; padding: 12px 16px; background: #fff; }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin: 10px 0 4px; }
+  input[type=text] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-family: inherit; font-size: 0.95rem; }
+  .fila { display: flex; gap: 12px; }
+  .fila > div { flex: 1; }
+  .destinos-rapidos { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .destinos-rapidos button { font-size: 0.75rem; padding: 3px 10px; border: 1px solid #ccc; border-radius: 12px; background: #fff; cursor: pointer; }
+  .destinos-rapidos button.activo { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+
+  .grid-miniaturas { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+  .miniatura { position: relative; margin: 0; width: 110px; font-size: 0.7rem; text-align: center; color: #555; }
+  .miniatura img, .miniatura video { width: 110px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; background: #eee; display: block; }
+  .miniatura .sin-preview { width: 110px; height: 80px; display: flex; align-items: center; justify-content: center; background: #eee; border-radius: 6px; font-size: 0.65rem; padding: 4px; word-break: break-all; }
+  .miniatura figcaption { margin-top: 4px; word-break: break-word; }
+  .borrar-miniatura { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; background: #fff; font-size: 0.75rem; line-height: 1; padding: 0; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .borrar-miniatura:hover { background: #fdecea; border-color: #b00020; }
+  .vacia { color: #999; font-size: 0.8rem; font-style: italic; }
+
+  .dropzone { border: 2px dashed #bbb; border-radius: 8px; padding: 18px; margin-top: 8px; text-align: center; cursor: pointer; background: #fbfbfa; }
+  .dropzone.sobre { border-color: #2e7d32; background: #eef7ee; }
+  .dropzone p { margin: 0 0 8px; font-size: 0.85rem; color: #666; }
+  .pendientes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 8px; }
+  .pendiente-item { background: #eee; border-radius: 10px; padding: 2px 8px; font-size: 0.75rem; }
+  .pendiente-item button { border: none; background: none; cursor: pointer; font-weight: bold; margin-left: 4px; }
+  button.accion { margin-top: 10px; padding: 8px 16px; border: none; border-radius: 6px; background: #2e7d32; color: #fff; cursor: pointer; }
+  button.accion:disabled { background: #aaa; cursor: default; }
+
+  pre.resultado { background: #f0f0ee; padding: 10px; border-radius: 6px; font-size: 0.78rem; overflow-x: auto; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <h1>Panel local — compresor de medios</h1>
+  <p class="aviso">Corre solo en esta máquina (127.0.0.1). Comprime según las specs de <code>docs/EVENTOS.md</code> y escribe directo en <code>public/media/eventos/…</code> — revisá con <code>npm run dev</code>/<code>git diff</code> antes de commitear.</p>
+
+  <fieldset>
+    <div class="fila">
+      <div>
+        <label>Evento (slug)</label>
+        <input type="text" id="slug" list="lista-slugs" placeholder="gala-folclorica" />
+        <datalist id="lista-slugs"></datalist>
+      </div>
+      <div>
+        <label>Destino</label>
+        <input type="text" id="destino" placeholder="hero / polaroid / 2026" />
+        <div class="destinos-rapidos">
+          <button type="button" data-d="hero">hero</button>
+          <button type="button" data-d="polaroid">polaroid</button>
+          <button type="button" id="btn-anio-actual">año actual</button>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset id="fs-carpeta" hidden>
+    <h3 id="carpeta-titulo" style="margin-top:0"></h3>
+    <div id="carpeta-contenido">Cargando…</div>
+
+    <div class="dropzone" tabindex="0">
+      <p>Arrastrá fotos o videos acá, o hacé click para elegir</p>
+      <input type="file" multiple hidden />
+      <div class="pendientes"></div>
+      <button class="accion" type="button" disabled>Comprimir y guardar</button>
+      <span id="subida-estado"></span>
+    </div>
+  </fieldset>
+
+  <pre class="resultado" id="resultado" hidden></pre>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const EXT_IMAGEN = /\.(jpe?g|png|webp)$/i;
+  const EXT_VIDEO = /\.(mp4|webm|mov)$/i;
+
+  function tamañoLegible(bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+    return (bytes / 1024 / 1024).toFixed(1) + " MB";
+  }
+
+  fetch("/api/slugs").then((r) => r.json()).then((j) => {
+    if (j.ok) $("lista-slugs").innerHTML = j.slugs.map((s) => `<option value="${s}">`).join("");
+  });
+
+  $("btn-anio-actual").addEventListener("click", () => {
+    $("destino").value = String(new Date().getFullYear());
+    actualizarDestinoRapido();
+    cargarCarpeta();
+  });
+  document.querySelectorAll(".destinos-rapidos button[data-d]").forEach((b) => {
+    b.addEventListener("click", () => {
+      $("destino").value = b.dataset.d;
+      actualizarDestinoRapido();
+      cargarCarpeta();
+    });
+  });
+  function actualizarDestinoRapido() {
+    document.querySelectorAll(".destinos-rapidos button").forEach((b) => {
+      b.classList.toggle("activo", b.dataset.d === $("destino").value);
+    });
+  }
+
+  $("slug").addEventListener("change", cargarCarpeta);
+  $("destino").addEventListener("change", () => { actualizarDestinoRapido(); cargarCarpeta(); });
+
+  function slugYDestinoValidos() {
+    return /^[a-z0-9]+(-[a-z0-9]+)*$/.test($("slug").value.trim()) &&
+      (["hero", "polaroid"].includes($("destino").value.trim()) || /^\d{4}$/.test($("destino").value.trim()));
+  }
+
+  async function cargarCarpeta() {
+    if (!slugYDestinoValidos()) { $("fs-carpeta").hidden = true; return; }
+    const slug = $("slug").value.trim();
+    const destino = $("destino").value.trim();
+    $("fs-carpeta").hidden = false;
+    $("carpeta-titulo").textContent = `public/media/eventos/${slug}/${destino}/`;
+    const cont = $("carpeta-contenido");
+    cont.textContent = "Cargando…";
+    const r = await fetch(`/api/carpeta/${slug}/${destino}`);
+    const j = await r.json();
+    if (!j.ok) { cont.innerHTML = `<span style="color:#b00020">${j.error}</span>`; return; }
+    pintarArchivos(cont, slug, destino, j.archivos || []);
+  }
+
+  function pintarArchivos(cont, slug, destino, archivos) {
+    if (!archivos.length) { cont.innerHTML = `<div class="vacia">vacía todavía</div>`; return; }
+    cont.innerHTML = `<div class="grid-miniaturas">${archivos.map((a) => miniaturaArchivo(slug, destino, a)).join("")}</div>`;
+    cont.querySelectorAll(".borrar-miniatura").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const nombre = btn.dataset.nombre;
+        if (!confirm(`¿Borrar "${nombre}"? No se puede deshacer.`)) return;
+        const r = await fetch("/api/eliminar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, destino, archivo: nombre }),
+        });
+        const j = await r.json();
+        if (!j.ok) { alert("Error: " + j.error); return; }
+        cargarCarpeta();
+      });
+    });
+  }
+
+  function miniaturaArchivo(slug, destino, archivo) {
+    const src = `/vista-media/${encodeURIComponent(slug)}/${encodeURIComponent(destino)}/${encodeURIComponent(archivo.nombre)}`;
+    let previsualizacion;
+    if (EXT_IMAGEN.test(archivo.nombre)) previsualizacion = `<img src="${src}" loading="lazy" alt="" />`;
+    else if (EXT_VIDEO.test(archivo.nombre)) previsualizacion = `<video src="${src}" controls preload="metadata" muted></video>`;
+    else previsualizacion = `<div class="sin-preview">${archivo.nombre}</div>`;
+    return `<figure class="miniatura">
+        <button type="button" class="borrar-miniatura" data-nombre="${archivo.nombre.replace(/"/g, "&quot;")}" title="Borrar">🗑</button>
+        ${previsualizacion}
+        <figcaption>${archivo.nombre}<br>${tamañoLegible(archivo.bytes)}</figcaption>
+      </figure>`;
+  }
+
+  // ---- Dropzone ----
+  const dropzone = document.querySelector(".dropzone");
+  const inputArchivos = dropzone.querySelector("input[type=file]");
+  const pendientesEl = dropzone.querySelector(".pendientes");
+  const botonSubir = dropzone.querySelector("button.accion");
+  const estadoSubida = $("subida-estado");
+  let pendientes = [];
+
+  function pintarPendientes() {
+    pendientesEl.innerHTML = pendientes
+      .map((f, i) => `<span class="pendiente-item">${f.name}<button type="button" data-i="${i}">×</button></span>`)
+      .join("");
+    pendientesEl.querySelectorAll("button").forEach((b) => {
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        pendientes.splice(Number(b.dataset.i), 1);
+        pintarPendientes();
+      });
+    });
+    botonSubir.disabled = pendientes.length === 0;
+  }
+
+  function agregarArchivos(lista) {
+    pendientes.push(...[...lista]);
+    pintarPendientes();
+  }
+
+  dropzone.addEventListener("click", (e) => {
+    if (e.target === inputArchivos || e.target.closest(".pendiente-item") || e.target === botonSubir) return;
+    inputArchivos.click();
+  });
+  dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("sobre"); });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("sobre"));
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("sobre");
+    agregarArchivos(e.dataTransfer.files);
+  });
+  inputArchivos.addEventListener("change", () => { agregarArchivos(inputArchivos.files); inputArchivos.value = ""; });
+
+  botonSubir.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    if (!pendientes.length || !slugYDestinoValidos()) return;
+    estadoSubida.textContent = " Procesando…";
+    const form = new FormData();
+    form.append("slug", $("slug").value.trim());
+    form.append("destino", $("destino").value.trim());
+    pendientes.forEach((f) => form.append("archivos", f));
+    try {
+      const r = await fetch("/api/comprimir-medios", { method: "POST", body: form });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error);
+      estadoSubida.textContent = " ✓ listo";
+      pendientes = [];
+      pintarPendientes();
+      $("resultado").hidden = false;
+      $("resultado").textContent = JSON.stringify(j.resultados, null, 2);
+      await cargarCarpeta();
+      fetch("/api/slugs").then((r) => r.json()).then((j2) => {
+        if (j2.ok) $("lista-slugs").innerHTML = j2.slugs.map((s) => `<option value="${s}">`).join("");
+      });
+    } catch (err) {
+      estadoSubida.textContent = " Error: " + err.message;
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "panel-local",
+  "private": true,
+  "description": "Herramienta interna de Garden College — compresor genérico de medios de eventos. Solo local, nunca se despliega. Ver README.md.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^2.0.0",
+    "sharp": "^0.35.3",
+    "heic-convert": "^2.1.0"
+  }
+}
