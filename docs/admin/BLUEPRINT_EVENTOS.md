@@ -238,11 +238,19 @@ El año recién pasado se deja con su galería completa un año más (la gente
 todavía lo busca fresco). A partir del segundo año hacia atrás, se compacta:
 se reemplaza el contenido de esa carpeta por una selección chica y curada a
 mano — no todas las fotos, una muestra — y si conviene se fusiona con la
-carpeta de otro año viejo para mostrarlos juntos bajo un solo pill (la
-carpeta se sigue llamando por un año, aunque adentro tenga fotos de más de
-uno). El archivo completo de cada evento no vive en el sitio — típicamente
-queda en YouTube o donde se haya transmitido — el sitio solo muestra una
-muestra curada.
+carpeta de otro año viejo para mostrarlos juntos bajo un solo pill. El
+archivo completo de cada evento no vive en el sitio — típicamente queda en
+YouTube o donde se haya transmitido — el sitio solo muestra una muestra
+curada.
+
+**Regla de nombre, fija:** el detector de ediciones exige carpetas de
+exactamente 4 dígitos (`^\d{4}$`) — no entiende `2024-2025` ni ningún otro
+formato de rango. Por eso la carpeta compactada **siempre se nombra por el
+año más reciente que contiene**, nunca por el rango completo: si absorbe
+fotos desde 2024, sigue llamándose `2025` porque 2025 es el año más nuevo
+ahí adentro. Esto no se nota en el sitio — `GaleriaEdiciones.tsx` no
+muestra el año crudo, muestra "Última versión" / "Años anteriores" — pero
+importa al mirar la carpeta en el filesystem.
 
 Es trabajo manual, una vez al año, al preparar la edición nueva.
 

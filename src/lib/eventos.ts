@@ -23,8 +23,6 @@ export interface Evento {
   texto: string;
   /** ISO (YYYY-MM-DD). Define el mes que se muestra y ordena los eventos. */
   fecha: string;
-  /** El destacado es el hero grande de la sección Historias. Solo uno. */
-  destacado: boolean;
   /** false = preparado pero invisible en el sitio. */
   publicado: boolean;
   /**
@@ -70,10 +68,44 @@ export function getEventosPublicados(): Evento[] {
     .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
 }
 
-/** El destacado (hero de Historias). Si ninguno lo es, el más reciente. */
+/**
+ * Distancia en días entre hoy y la ocurrencia más cercana del mes/día de
+ * `fecha` — sin importar el año que tenga escrito (los eventos son anuales,
+ * recurrentes). Prueba el año pasado, este año y el próximo, y se queda con
+ * la más chica: así un 18 de septiembre a dos días se ve tan "cerca" como un
+ * 20 de abril recién pasado hace dos días, sin importar en qué mes estemos.
+ */
+function diasHastaOcurrenciaMasCercana(fecha: string, hoy: Date): number {
+  const [, mesStr, diaStr] = fecha.split("-");
+  const mes = Number(mesStr) - 1;
+  const dia = Number(diaStr);
+  const anioHoy = hoy.getFullYear();
+  const msPorDia = 24 * 60 * 60 * 1000;
+
+  return Math.min(
+    ...[anioHoy - 1, anioHoy, anioHoy + 1].map((anio) =>
+      Math.abs(new Date(anio, mes, dia).getTime() - hoy.getTime()) / msPorDia
+    )
+  );
+}
+
+/**
+ * El destacado (hero grande de Historias): el evento publicado cuya fecha
+ * anual está más cerca de hoy, recién pasada o por venir. Rota solo con el
+ * calendario — no hay flag que alguien tenga que acordarse de mover, y
+ * ningún evento se queda pegado como hero todo el año.
+ */
 export function getEventoDestacado(): Evento | null {
   const publicados = getEventosPublicados();
-  return publicados.find((e) => e.destacado) ?? publicados[0] ?? null;
+  if (publicados.length === 0) return null;
+
+  const hoy = new Date();
+  return publicados.reduce((masCercano, actual) =>
+    diasHastaOcurrenciaMasCercana(actual.fecha, hoy) <
+    diasHastaOcurrenciaMasCercana(masCercano.fecha, hoy)
+      ? actual
+      : masCercano
+  );
 }
 
 /** Publicados menos el destacado — alimentan el grid de tarjetas. */

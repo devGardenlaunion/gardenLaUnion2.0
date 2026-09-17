@@ -1,0 +1,35 @@
+# Carpeta de medios del evento "gala-folclorica". Ver docs/EVENTOS.md y
+# docs/admin/BLUEPRINT_EVENTOS.md (sección 7) para la convención completa.
+#
+# hero/     -> video o imagen permanente del evento
+# polaroid/ -> fotos del bloque polaroid (permanentes, se curan a mano)
+# 2026/     -> galería de la edición actual (completa)
+# 2025/     -> edición anterior, COMPACTADA: selección curada de 2024 en
+#              adelante — no la producción completa, una muestra. La gala
+#              entera se transmite y queda en YouTube, no en el sitio.
+#
+# REGLA DE NOMBRES (fija, no cambia): el sitio detecta ediciones leyendo
+# carpetas de EXACTAMENTE 4 dígitos y usa la más alta como "la actual" — no
+# hay forma de nombrar una carpeta "2024-2025" y que el sitio lo entienda.
+# Por eso la carpeta compactada de años viejos SIEMPRE se nombra por el año
+# MÁS RECIENTE que absorbe, nunca por el rango completo: aunque tenga fotos
+# desde 2024, se llama "2025" porque 2025 es el año más nuevo ahí adentro.
+# En el sitio esto no se nota — el label ya no muestra el año, dice
+# "Última versión" / "Años anteriores" (ver GaleriaEdiciones.tsx) — pero al
+# mirar la carpeta en el filesystem, acordate de esta regla.
+#
+# Al llegar la edición 2027:
+#   1. Crear carpeta 2027/ con la galería nueva (completa).
+#   2. Achicar 2026/ (que hoy está completa) a una selección curada chica.
+#   3. De la vieja 2025/, sumar a esa selección lo que todavía valga la
+#      pena conservar, y borrar la carpeta 2025/ — ya no queda nada
+#      guardado aparte con ese nombre.
+#   4. La carpeta resultante NO se renombra: sigue llamándose "2026",
+#      porque 2026 sigue siendo el año más reciente que contiene.
+#
+# Al terminar de cargar fotos, marcar `publicado: true` en el evento
+# correspondiente de src/content/eventos.ts.
+#
+# Los archivos "mock-*.webp" que puedan quedar acá son de una vista previa
+# temporal (fotos prestadas de otro evento real, solo para probar el layout)
+# — bórralos antes de cargar el material real.
