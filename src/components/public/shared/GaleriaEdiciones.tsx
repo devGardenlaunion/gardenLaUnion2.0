@@ -21,6 +21,12 @@ interface GaleriaEdicionesProps {
  * intercambian la galería sin salir de la página — todo resuelto en el build,
  * sin fetch ni ruta nueva (el sitio sigue 100% estático).
  */
+/** Etiqueta genérica de una edición — nunca el año crudo, para no tener que
+ *  tocar texto cada vez que se crea/compacta una carpeta nueva. */
+function etiquetaEdicion(anio: number, edicionActiva: number): string {
+  return anio === edicionActiva ? "Última versión" : "Años anteriores";
+}
+
 export default function GaleriaEdiciones({
   nombreEvento,
   ediciones,
@@ -38,21 +44,25 @@ export default function GaleriaEdiciones({
           <p className="text-xs font-body font-semibold text-gc-green-600 uppercase tracking-widest mb-1">
             {nombreEvento}
           </p>
-          <h2 className="text-2xl sm:text-3xl font-display font-bold text-gc-green-800">
-            Galería {anioSeleccionado}
+          <h2
+            className="text-2xl sm:text-3xl font-display font-bold text-gc-green-800"
+            title={String(anioSeleccionado)}
+          >
+            Galería — {etiquetaEdicion(anioSeleccionado, edicionActiva)}
           </h2>
         </div>
 
         {ediciones.length > 1 && (
           <div>
             <p className="text-xs font-body font-semibold text-gc-green-800/40 uppercase tracking-wider mb-2">
-              Ediciones anteriores
+              Ediciones
             </p>
             <div className="flex flex-wrap gap-2">
               {ediciones.map((e) => (
                 <button
                   key={e.anio}
                   type="button"
+                  title={String(e.anio)}
                   onClick={() => setAnioSeleccionado(e.anio)}
                   aria-pressed={e.anio === anioSeleccionado}
                   className={`px-4 py-2 text-sm font-body rounded-full border transition-colors duration-200 ${
@@ -61,7 +71,7 @@ export default function GaleriaEdiciones({
                       : "bg-white border-gc-green-100 text-gc-green-800/60 hover:border-gc-gold/50 hover:text-gc-green-800"
                   }`}
                 >
-                  {e.anio}
+                  {etiquetaEdicion(e.anio, edicionActiva)}
                 </button>
               ))}
             </div>

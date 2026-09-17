@@ -41,7 +41,6 @@ En `src/content/eventos.ts`, copiar un bloque existente y cambiar los valores:
   titulo: "Una semana de chilenidad",   // título de la edición
   extracto: "Ramadas, cueca, empanadas…",  // bajada corta (card y blockquote)
   fecha: "2026-09-19",                  // define el MES que se muestra
-  destacado: false,                     // true = es el hero grande de Historias
   publicado: false,                     // false = preparado pero invisible
   texto: `
     Primer párrafo del relato.
@@ -71,12 +70,18 @@ Cuando el texto y las fotos estén, poner `publicado: true`, commit y push.
 | Campo | Regla |
 |---|---|
 | `slug` | Minúsculas con guiones. **Debe coincidir** con el nombre de la carpeta en `public/media/eventos/`. No cambiarlo después: es la URL. |
-| `destacado` | **Solo uno** en `true`. Es el hero grande de Historias. Si ninguno lo está, se usa el más reciente. |
 | `publicado` | `false` deja el evento preparado pero fuera del sitio. Sirve para dejar todo listo y publicar el día que corresponde. |
 | `fecha` | ISO `YYYY-MM-DD`. Se muestra solo el mes, y ordena los eventos entre sí. |
 | `texto` | Párrafos separados por **línea en blanco**. Sin HTML. |
 | `extracto` | 1–2 líneas. Aparece en la card de la home y como blockquote en la subpágina. |
 | `edicionActiva` | Opcional. Ver abajo. |
+
+> **El hero grande de Historias no se marca a mano.** `getEventoDestacado()`
+> (en `src/lib/eventos.ts`) elige el evento publicado cuya `fecha` anual esté
+> más cerca de hoy — recién pasada o por venir — y lo pone de hero; el resto
+> cae al grid. Rota solo con el calendario. Hubo un campo `destacado: boolean`
+> que fijaba el hero a mano; se sacó porque un evento se quedaba pegado ahí
+> todo el año sin importar qué tan vigente fuera el otro.
 
 ---
 
@@ -145,7 +150,6 @@ reciente que exista. Los otros años aparecen listados como "ediciones anteriore
 - [ ] Fotos comprimidas (webp ≤1600px) y videos comprimidos
 - [ ] Videos con su poster `.webp` del mismo nombre
 - [ ] (recomendado) Videos de galería con su `<clip>-mobile.mp4` (480p) para celular
-- [ ] `destacado`: solo uno en todo el archivo
 - [ ] `publicado: true`
 - [ ] `npm run build` pasa
 - [ ] Commit + push

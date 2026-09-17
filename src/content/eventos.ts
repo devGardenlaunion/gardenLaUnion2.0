@@ -19,7 +19,6 @@ export const eventos: Evento[] = [
     titulo: "Fomento Lector 2026 — De Peter Pan a Alicia en el país de las maravillas",
     extracto: "Peter Pan, Papelucho, El Principito, Coraline, Alicia en el país de las maravillas — cada curso eligió su aventura literaria.",
     fecha: "2026-04-20",
-    destacado: true,
     publicado: true,
     texto: `
       El fomento lector en Garden College no vive en un solo evento — vive en un trasfondo que no se apaga. A lo largo del año, el profesor de Lenguaje y el equipo PIE mantienen la lectura presente con acciones puntuales: un afiche, un stand, una actividad suelta en el pasillo. Nunca se detiene del todo. Y cada año, en torno al Día Mundial del Libro, ese trasfondo sube de intensidad hasta estallar en una semana completa.
@@ -32,21 +31,18 @@ export const eventos: Evento[] = [
     `,
   },
   {
-    slug: "fiestas-patrias",
-    nombre: "Fiestas Patrias",
-    titulo: "Fiestas Patrias 2025 — Una semana de chilenidad en Garden College",
-    extracto: "Ramadas, cueca, empanadas y parrillada. Toda la comunidad Garden celebró las fiestas patrias con una semana de actividades que fortalecen nuestra identidad y unión.",
-    fecha: "2026-09-18",
-    destacado: false,
-    publicado: false,
+    slug: "gala-folclorica",
+    nombre: "Gala Folclórica",
+    titulo: "Gala Folclórica — Fiestas Patrias en Garden College",
+    extracto: "El baile es la excusa. Lo que hace la Gala Folclórica es juntar a todo Garden College, cada septiembre, a sostener una tradición a propósito — la del país, y la propia.",
+    fecha: "2026-09-14",
+    publicado: false, // falta el material real (fotos/video) — ver LEEME.txt de la carpeta
     texto: `
-      Durante la semana del 15 al 19 de septiembre, Garden College se vistió de colores patrios para celebrar la identidad chilena de la manera más auténtica: en comunidad.
+      Cada septiembre, en el marco de Fiestas Patrias, Garden College hace su Gala Folclórica. El baile importa — se nota el trabajo detrás —, pero no es el punto final: es cómo la comunidad completa se junta a celebrar una tradición, la del país y la que el colegio mismo se ha construido a pulso, año tras año. Una nación con tradiciones fuertes es una nación fuerte; un colegio que sostiene las suyas, también.
 
-      Los cursos compitieron en el concurso de empanadas, donde apoderados y estudiantes pusieron a prueba sus mejores recetas familiares. Las ramadas montadas por cada nivel llenaron los patios de olor a chilenería, con muelles, sopaipillas y bebidas tradicionales servidas con orgullo.
+      Sostenerla toma trabajo real. Mes y medio de ensayo dentro de las clases de Educación Física, con harto compromiso — el día previo se practica la jornada completa. El programa cambia cada año — quién abre, quién cierra, qué número nuevo arman los propios alumnos —, pero hay un clásico que nunca falta: el pie de cueca a la bandera, el que abre la gala propiamente tal después de los discursos. De ahí en adelante entran los bailes de todos los niveles y los apoderados, que también suben con su propio número.
 
-      El Departamento de Música y Artes organizó presentaciones de cueca, con parejas de todos los niveles desde pre-kínder hasta cuarto medio. Ver a los más pequeños bailar con sus trajes típicos fue uno de los momentos más emotivos de la semana, demostrando que la tradición se aprende y se vive desde los primeros años.
-
-      El cierre de semana fue una gran convivencia familiar con parrillada, música en vivo y un show artístico que reunió a toda la comunidad Garden en una tarde de celebración, orgullo y chilenidad compartida. Una semana que reafirma que ser chileno también se enseña.
+      Nada de esto pasa porque el calendario lo pida. Pasa porque hay una convicción detrás: que una tradición no se hereda sola — se sostiene a propósito, generación tras generación. Para cuarto medio, además, tiene un peso puntual: es su última presentación pública como alumnos del colegio, el primer paso de una despedida que termina en la Licenciatura. Un colegio que hace este esfuerzo cada año está, en el fondo, diciendo algo sobre quién es.
     `,
   },
   {
@@ -55,7 +51,6 @@ export const eventos: Evento[] = [
     titulo: "Campeonato comunal de tenis de mesa",
     extracto: "Estudiantes demostraron talento y espíritu competitivo representando al colegio.",
     fecha: "2025-09-10",
-    destacado: false,
     publicado: false,
     texto: `
       Nuestros estudiantes representaron a Garden College en el campeonato comunal de tenis de mesa, una disciplina que combina concentración, reflejos y estrategia.
