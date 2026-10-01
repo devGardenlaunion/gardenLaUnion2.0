@@ -233,8 +233,10 @@ function HistoriaGrande({
           <span className="inline-flex items-center px-3 py-1 bg-gc-gold/20 text-gc-gold-light text-xs font-semibold rounded-full backdrop-blur-sm border border-gc-gold/20 mb-4 block w-fit">
             {edicion.nombre}
           </span>
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white mb-2 leading-tight">
-            {edicion.nombre}
+          {/* `titulo` y no `nombre`: el nombre ya está en el badge de arriba, y
+              el título dice de qué va (igual que el h1 de la subpágina). */}
+          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white mb-2 leading-tight line-clamp-3">
+            {edicion.titulo}
           </h3>
           <p className="text-white/60 text-sm font-body mb-4 capitalize">
             {format(new Date(edicion.fecha), "MMMM", { locale: es })}{nombre ? ` · ${nombre}` : ""}

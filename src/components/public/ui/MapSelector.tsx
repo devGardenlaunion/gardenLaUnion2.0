@@ -61,13 +61,19 @@ export default function MapSelector({ direccion, queryEncoded, className }: MapS
   }, [sheetOpen]);
 
   const wazeUrl = `https://waze.com/ul?q=${queryEncoded}&navigate=yes`;
-  const mapsUrl = `https://maps.google.com/?daddr=${queryEncoded}`;
+  // Celular: RUTA — quien toca "¿Cómo llegar?" en el teléfono quiere partir, y
+  // la app de Maps arranca la navegación desde donde está.
+  const mapsUrlRuta = `https://www.google.com/maps/dir/?api=1&destination=${queryEncoded}`;
+  // Computador: BÚSQUEDA — nadie navega desde el escritorio; quiere ver DÓNDE
+  // queda. La ruta abría el trayecto desde la ubicación del navegador (p. ej.
+  // Valdivia) sin mostrar la sede; la búsqueda centra el mapa en ella con su pin.
+  const mapsUrlUbicacion = `https://www.google.com/maps/search/?api=1&query=${queryEncoded}`;
 
   const handleMainClick = () => {
     if (isMobile) {
       setSheetOpen(true);
     } else {
-      window.open(mapsUrl, "_blank");
+      window.open(mapsUrlUbicacion, "_blank");
     }
   };
 
@@ -152,7 +158,7 @@ export default function MapSelector({ direccion, queryEncoded, className }: MapS
             </button>
 
             <button
-              onClick={() => { window.open(mapsUrl, "_blank"); setSheetOpen(false); }}
+              onClick={() => { window.open(mapsUrlRuta, "_blank"); setSheetOpen(false); }}
               className="flex items-center gap-3 p-3 rounded-xl border border-gc-green/20 bg-gc-green-50 hover:bg-gc-green-100 transition-colors w-full min-h-[44px]"
             >
               <div className="w-10 h-10 rounded-xl bg-[#EA4335] flex items-center justify-center shrink-0">
