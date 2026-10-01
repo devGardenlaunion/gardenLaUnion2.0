@@ -32,7 +32,7 @@ export default function ModoRevision() {
       <span className="flex h-2 w-2 shrink-0 rounded-full bg-gc-gold animate-pulse" aria-hidden="true" />
       <span className="text-xs sm:text-sm font-body">
         <strong className="font-semibold">MODO REVISIÓN</strong>
-        <span className="hidden sm:inline"> · vista previa del tema del uniforme nuevo</span>
+        <span className="hidden sm:inline"> · tema clásico (verde jade)</span>
       </span>
       <button
         type="button"

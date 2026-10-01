@@ -159,6 +159,12 @@ export default async function EventoPage({ params }: Props) {
       />
 
       <main className="pt-20 bg-gc-warm min-h-screen">
+        {/* Sólo aparece en `npm run dev` — en el build un borrador no tiene página. */}
+        {!evento.publicado && (
+          <div className="bg-gc-gold text-gc-green-900 text-sm font-semibold font-body text-center px-4 py-2">
+            Borrador — vista previa local. Marcar <code>publicado: true</code> en src/content/eventos.ts para publicarlo.
+          </div>
+        )}
         {/* Hero del evento */}
         <div className="relative min-h-[50vh] flex items-end bg-gradient-to-br from-gc-green-900 via-gc-green-800 to-gc-green-800 overflow-hidden">
           {heroVideo && (
@@ -183,7 +189,7 @@ export default async function EventoPage({ params }: Props) {
           {/* Tint uniforme sobre el video */}
           <div className="absolute inset-0 bg-gc-green-900/50" />
           {/* Gradiente inferior — oscurece la zona del texto */}
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(20,56,50,0.95) 0%, rgba(20,56,50,0.55) 40%, transparent 70%)" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgb(var(--gc-green-900) / 0.95) 0%, rgb(var(--gc-green-900) / 0.55) 40%, transparent 70%)" }} />
           <div className="relative container-gc w-full pb-10 pt-14">
             <div className="max-w-3xl mx-auto">
               <a href="/#eventos" className="inline-flex items-center gap-2 text-white/50 hover:text-white/80 text-sm font-body mb-6 transition-colors">
@@ -273,20 +279,21 @@ export default async function EventoPage({ params }: Props) {
               )
             )}
 
-            {/* Galería — fotos y videos, con selector de edición si hay más de un año */}
+            {/* Galería — fotos y videos, con selector de edición arriba y abajo.
+                El "Volver" va como `pie` para compartir fila con el selector de abajo. */}
             <GaleriaEdiciones
               nombreEvento={evento.nombre}
               ediciones={ediciones}
               edicionActiva={year}
+              pie={
+                <a href="/#eventos" className="btn-secondary inline-flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                  </svg>
+                  Volver a Historias
+                </a>
+              }
             />
-
-            {/* Volver */}
-            <a href="/#eventos" className="btn-secondary inline-flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-              Volver a Historias
-            </a>
           </div>
         </div>
       </main>

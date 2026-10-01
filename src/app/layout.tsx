@@ -6,10 +6,11 @@ import ModoRevision from "@/components/public/shared/ModoRevision";
 import "./globals.css";
 
 // Script inline que corre ANTES del primer paint: si la cookie gc-tema pide el
-// tema uniforme, pone data-theme en <html> para que no haya parpadeo (verde ->
-// navy) al cargar o navegar en MODO REVISIÓN. Es la única lectura de la cookie
+// tema clásico, pone data-theme en <html> para que no haya parpadeo (navy ->
+// verde) al cargar o navegar en MODO REVISIÓN. Una cookie vieja "uniforme" (de
+// cuando el uniforme era la vista previa) se ignora: ya es el default. Es la única lectura de la cookie
 // que ocurre "temprano"; el resto lo maneja src/lib/tema.ts en el cliente.
-const NO_FLASH_TEMA = `(function(){try{var m=document.cookie.match(/(?:^|; )gc-tema=([^;]*)/);if(m&&decodeURIComponent(m[1])==='uniforme'){document.documentElement.dataset.theme='uniforme';}}catch(e){}})();`;
+const NO_FLASH_TEMA = `(function(){try{var m=document.cookie.match(/(?:^|; )gc-tema=([^;]*)/);if(m&&decodeURIComponent(m[1])==='clasico'){document.documentElement.dataset.theme='clasico';}}catch(e){}})();`;
 
 const lora = Lora({
   subsets: ["latin"],
@@ -95,7 +96,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#143832",
+  themeColor: "#0F1D38", // --gc-green-900 del tema uniforme (default)
   width: "device-width",
   initialScale: 1,
 };
@@ -112,7 +113,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Aplica el tema uniforme desde la cookie antes de pintar (sin parpadeo).
+        {/* Aplica el tema clásico desde la cookie antes de pintar (sin parpadeo).
             suppressHydrationWarning en <html> porque este script toca data-theme,
             que React no controla y difiere entre server y cliente en MODO REVISIÓN. */}
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_TEMA }} />

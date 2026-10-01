@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { TEMA_EVENT, temaActivo, toggleTema } from "@/lib/tema";
 
 /**
- * Botón discreto en el footer que enciende/apaga el MODO REVISIÓN (vista previa
- * del tema del uniforme nuevo). Se sincroniza con el aviso flotante vía el evento
+ * Botón discreto en el footer que enciende/apaga el MODO REVISIÓN (vista del
+ * tema clásico verde jade; el uniforme es el default). Se sincroniza con el aviso flotante vía el evento
  * TEMA_EVENT, así ambos reflejan el mismo estado sin recargar.
  */
 export default function BotonRevision() {
@@ -26,7 +26,7 @@ export default function BotonRevision() {
       className="text-xs font-body text-white/30 hover:text-gc-gold/80 transition-colors
                  underline-offset-2 hover:underline"
     >
-      {activo ? "Salir del modo revisión" : "Vista previa: tema uniforme nuevo"}
+      {activo ? "Salir del modo revisión" : "Ver tema clásico"}
     </button>
   );
 }

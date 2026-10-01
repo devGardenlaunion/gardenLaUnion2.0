@@ -51,12 +51,14 @@ export default function Hero({
 
       {/* Scrim DESKTOP: radial — verde sobre el centro (texto + video cine),
           transparente en los bordes para que las barras del letterbox queden
-          NEGRAS. Solo desktop/landscape. */}
+          NEGRAS. Solo desktop/landscape. Opacidades subidas (0.78/0.30 →
+          0.86/0.50) con el video nuevo: tiene más contraste y se comía el
+          texto, sobre todo la descripción en blanco al 70%. */}
       <div
         className="absolute inset-0 hidden landscape:block md:block"
         style={{
           background:
-            "radial-gradient(ellipse 78% 58% at center, rgba(20,56,50,0.78), rgba(20,56,50,0.30) 62%, transparent 85%)",
+            "radial-gradient(ellipse 78% 58% at center, rgb(var(--gc-green-900) / 0.86), rgb(var(--gc-green-900) / 0.50) 62%, transparent 85%)",
         }}
       />
 

@@ -1,11 +1,11 @@
 /**
- * MODO REVISIÓN — toggle del tema del uniforme nuevo (navy/carmesí).
+ * MODO REVISIÓN — toggle del tema CLÁSICO (verde jade).
  *
- * El sitio se sirve estático en verde jade (tema actual). Poniendo el atributo
- * `data-theme="uniforme"` en <html> se reescriben las variables CSS de la paleta
- * (ver src/app/globals.css) y el sitio entero flipea al tema del uniforme, sin
- * recompilar ni pedir nada al servidor. Es una vista previa interna: el editor
- * la enciende con el botón del footer para mostrar "lo que se viene".
+ * El sitio se sirve estático con el tema del uniforme (navy/carmesí) como
+ * default. Poniendo el atributo `data-theme="clasico"` en <html> deja de
+ * aplicar el bloque del uniforme en src/app/globals.css y el sitio entero
+ * vuelve al verde jade, sin recompilar ni pedir nada al servidor. Es una vista
+ * interna: se enciende con el botón del footer para comparar con "lo de antes".
  *
  * Persistencia por COOKIE (no localStorage: lo prohíbe CLAUDE.md, y además la
  * cookie la lee un script inline en el <head> del layout para aplicar el tema
@@ -16,25 +16,25 @@
  */
 
 export const TEMA_COOKIE = "gc-tema";
-export const TEMA_UNIFORME = "uniforme";
+export const TEMA_CLASICO = "clasico";
 /** Evento que emitimos al cambiar, para que el botón y el aviso se sincronicen. */
 export const TEMA_EVENT = "gc-tema-change";
 
 /** ¿Está activo el MODO REVISIÓN ahora mismo? (lee el DOM, la verdad de turno) */
 export function temaActivo(): boolean {
   if (typeof document === "undefined") return false;
-  return document.documentElement.dataset.theme === TEMA_UNIFORME;
+  return document.documentElement.dataset.theme === TEMA_CLASICO;
 }
 
-/** Aplica (o quita) el tema uniforme: <html>, cookie 30 días y avisa a la UI. */
+/** Aplica (o quita) el tema clásico: <html>, cookie 30 días y avisa a la UI. */
 export function aplicarTema(activo: boolean): void {
   if (typeof document === "undefined") return;
   const html = document.documentElement;
-  if (activo) html.dataset.theme = TEMA_UNIFORME;
+  if (activo) html.dataset.theme = TEMA_CLASICO;
   else delete html.dataset.theme;
 
   document.cookie = activo
-    ? `${TEMA_COOKIE}=${TEMA_UNIFORME}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`
+    ? `${TEMA_COOKIE}=${TEMA_CLASICO}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`
     : `${TEMA_COOKIE}=; path=/; max-age=0; samesite=lax`;
 
   window.dispatchEvent(new CustomEvent(TEMA_EVENT, { detail: { activo } }));

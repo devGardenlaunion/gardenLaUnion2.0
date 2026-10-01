@@ -28,6 +28,8 @@ interface GaleriaColumnasProps {
   columns?: (containerWidth: number) => number;
   showThumbnails?: boolean;
   className?: string;
+  /** Se llama una vez cuando terminaron de cargar las imágenes (o a los 8s). */
+  onLista?: () => void;
 }
 
 // ─── Helpers de módulo ────────────────────────────────────────────────────────
@@ -39,6 +41,19 @@ function getMimeType(src: string): string {
   if (/\.webm$/i.test(src)) return "video/webm";
   if (/\.mov$/i.test(src)) return "video/quicktime";
   return "video/mp4";
+}
+
+/**
+ * `sizes` de una celda de la grilla MÓVIL (2 columnas, aspecto 4:5). La celda es
+ * ~50vw de ancho y ~62.5vw de alto; con object-cover una imagen apaisada se
+ * escala por alto y se muestra más ANCHA que la celda (ancho visible ≈
+ * altoCelda × ratio); decirle "50vw" hacía que se sirviera chica y se pixelara.
+ * Cap a 100vw (tope útil dado deviceSizes 1200). Exportado para que la precarga
+ * de GaleriaEdiciones pida exactamente las mismas URLs.
+ */
+export function sizesCeldaMovil(f: { width: number; height: number }): string {
+  const ratio = f.width && f.height ? f.width / f.height : 0.8;
+  return `${Math.min(100, Math.max(50, Math.round(62.5 * ratio)))}vw`;
 }
 
 function defaultColumns(w: number) {
@@ -229,6 +244,7 @@ export default function GaleriaColumnas({
   columns = defaultColumns,
   showThumbnails = true,
   className,
+  onLista,
 }: GaleriaColumnasProps) {
   const [lbIndex, setLbIndex] = useState(-1);
   const [loadedCount, setLoadedCount] = useState(0);
@@ -288,7 +304,8 @@ export default function GaleriaColumnas({
     });
 
     return () => { cancelled = true; };
-  // fotos es un prop estable de Server Component — solo corre al montar
+  // Solo corre al montar: quien cambie `fotos` en caliente debe remontar con
+  // `key` (ver GaleriaEdiciones), si no resolvedFotos queda con la lista vieja.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -422,8 +439,15 @@ export default function GaleriaColumnas({
   const pct = imageCount > 0 ? Math.round((loadedCount / imageCount) * 100) : 100;
   const allLoaded = pct >= 100;
 
+  // Ref para no re-disparar el efecto si el padre pasa una función nueva en cada render.
+  const onListaRef = useRef(onLista);
+  onListaRef.current = onLista;
+
   useEffect(() => {
-    if (allLoaded && imageCount > 0 && mounted) {
+    if (!allLoaded || !mounted) return;
+    // Galería sin imágenes que esperar (solo videos sin poster): ya está lista.
+    onListaRef.current?.();
+    if (imageCount > 0) {
       // Flag global: permite que HashScrollClient detecte el evento aunque haya
       // montado después del dispatch (race condition con CDN cache en producción)
       (window as any).__galeriaLista = true;
@@ -526,13 +550,6 @@ export default function GaleriaColumnas({
         {albumPhotos.map((f, i) => {
           const noPoster = noPosterVideoSrcs.has(f.src);
           const esVideo = noPoster || videoByPoster.has(f.src);
-          // sizes por imagen: la celda es ~50vw de ancho y aspecto 4:5 (alto
-          // ~62.5vw). Con object-cover una imagen apaisada se escala por alto y
-          // se muestra más ANCHA que la celda (ancho visible ≈ altoCelda ×
-          // ratio); decirle "50vw" hacía que se sirviera chica y se pixelara.
-          // Cap a 100vw (tope útil dado deviceSizes 1200).
-          const ratio = f.width && f.height ? f.width / f.height : 0.8;
-          const coverVw = Math.min(100, Math.max(50, Math.round(62.5 * ratio)));
           return (
             <button
               key={i}
@@ -546,7 +563,7 @@ export default function GaleriaColumnas({
                   src={f.src}
                   alt={f.alt ?? ""}
                   fill
-                  sizes={`${coverVw}vw`}
+                  sizes={sizesCeldaMovil(f)}
                   className="object-cover"
                   loading="lazy"
                   onLoad={handleImageLoad}

@@ -61,10 +61,25 @@ export function getEdicionActiva(evento: Evento): number | null {
   return anios[0];
 }
 
-/** Todos los publicados, del más nuevo al más viejo. */
+/**
+ * Vista previa de borradores: en `npm run dev` los eventos con
+ * `publicado: false` también se ven (home y subpágina), para armar la página
+ * antes de tener todo el material. `next build` corre siempre con
+ * NODE_ENV=production, así que en Vercel un borrador sigue sin existir: ni
+ * página, ni card, ni sitemap. No usar una variable de entorno propia para
+ * esto — basta con que alguien la deje puesta en Vercel para publicar
+ * borradores sin querer.
+ */
+const VER_BORRADORES = process.env.NODE_ENV === "development";
+
+function esVisible(e: Evento): boolean {
+  return e.publicado || VER_BORRADORES;
+}
+
+/** Todos los publicados (más los borradores en dev), del más nuevo al más viejo. */
 export function getEventosPublicados(): Evento[] {
   return eventos
-    .filter((e) => e.publicado)
+    .filter(esVisible)
     .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
 }
 
@@ -115,7 +130,7 @@ export function getEventosGrid(): Evento[] {
 }
 
 export function getEvento(slug: string): Evento | null {
-  return eventos.find((e) => e.slug === slug && e.publicado) ?? null;
+  return eventos.find((e) => e.slug === slug && esVisible(e)) ?? null;
 }
 
 /** Media de un evento, toda desde el filesystem. */
@@ -186,7 +201,17 @@ async function getFotosConDimensiones(
       const src = `/media/${mediaBase}/${encodeURIComponent(archivo)}`;
       try {
         const meta = await sharp(path.join(dir, archivo)).metadata();
-        return { src, width: meta.width ?? 1200, height: meta.height ?? 800, alt };
+        const width = meta.width ?? 1200;
+        const height = meta.height ?? 800;
+        // EXIF orientation 5–8 = foto girada 90°: el archivo guarda los píxeles
+        // acostados y el navegador la muestra de pie. sharp reporta el ancho/alto
+        // CRUDO, así que sin este swap el masonry reserva una celda apaisada para
+        // una foto vertical y las columnas quedan descuadradas (típico en JPG de
+        // celular/cámara sin procesar; los webp del pipeline ya vienen rotados).
+        const girada = (meta.orientation ?? 1) >= 5;
+        return girada
+          ? { src, width: height, height: width, alt }
+          : { src, width, height, alt };
       } catch {
         return { src, width: 1200, height: 800, alt };
       }
@@ -221,6 +246,12 @@ export async function getGaleriaEdicion(
     videosByStem.set(stem, [...(videosByStem.get(stem) ?? []), src]);
   });
 
+  // TODAS las URLs de la galería se arman igual que las de las fotos
+  // (encodeURIComponent). Con un nombre con espacios ("Promocional Gala.webp")
+  // el poster sin codificar no coincidía con la foto codificada, el filtro de
+  // abajo no lo reconocía y la miniatura del video aparecía como foto suelta.
+  const url = (archivo: string) => `/media/${mediaBase}/${encodeURIComponent(archivo)}`;
+
   // width/height son placeholder 16:9 — GaleriaColumnas sondea las dimensiones reales del archivo
   const videoItems: FotoColumnas[] = Array.from(videosByStem.entries()).map(([stem, srcs]) => {
     const posterExt = [".jpg", ".webp", ".jpeg", ".png"].find((ext) =>
@@ -228,22 +259,22 @@ export async function getGaleriaEdicion(
     );
     // MP4 primero: iOS usa el decoder H.264 de hardware; WebM después: VP9 para desktop
     const sources: { src: string; type: string }[] = [
-      ...(srcs.some((s) => s.endsWith(".mp4"))  ? [{ src: `/media/${mediaBase}/${stem}.mp4`,  type: "video/mp4"       }] : []),
-      ...(srcs.some((s) => s.endsWith(".webm")) ? [{ src: `/media/${mediaBase}/${stem}.webm`, type: "video/webm"      }] : []),
-      ...(srcs.some((s) => s.endsWith(".mov"))  ? [{ src: `/media/${mediaBase}/${stem}.mov`,  type: "video/quicktime" }] : []),
+      ...(srcs.some((s) => s.endsWith(".mp4"))  ? [{ src: url(`${stem}.mp4`),  type: "video/mp4"       }] : []),
+      ...(srcs.some((s) => s.endsWith(".webm")) ? [{ src: url(`${stem}.webm`), type: "video/webm"      }] : []),
+      ...(srcs.some((s) => s.endsWith(".mov"))  ? [{ src: url(`${stem}.mov`),  type: "video/quicktime" }] : []),
     ];
     if (!posterExt) {
       console.warn(`[eventos/${slug}] Video sin poster en ${anio}: "${stem}" — agrega una imagen con el mismo nombre (ej: ${stem}.webp)`);
     }
     const sourcesMobile = fs.existsSync(path.join(videoDir, `${stem}-mobile.mp4`))
-      ? [{ src: `/media/${mediaBase}/${stem}-mobile.mp4`, type: "video/mp4" }]
+      ? [{ src: url(`${stem}-mobile.mp4`), type: "video/mp4" }]
       : undefined;
     return {
-      src: srcs[0],
+      src: url(path.basename(srcs[0])),
       width: 16,
       height: 9,
       alt: altDesdeArchivo(stem, `Video de ${altEvento}`),
-      ...(posterExt && { poster: `/media/${mediaBase}/${stem}${posterExt}` }),
+      ...(posterExt && { poster: url(`${stem}${posterExt}`) }),
       sources,
       ...(sourcesMobile && { sourcesMobile }),
     };

@@ -173,7 +173,7 @@ export default function Footer({ nombre, corporacion, redes }: FooterProps) {
             © {year} {nombre}. Todos los derechos reservados.
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-            {/* Vista previa interna del tema del uniforme nuevo (MODO REVISIÓN). */}
+            {/* Vista interna del tema clásico verde jade (MODO REVISIÓN). */}
             <BotonRevision />
             <p className="text-xs font-body text-white/20">
               La Unión, Región de Los Ríos, Chile

@@ -21,7 +21,9 @@ function aCard(evento: Evento): EdicionCard {
     // fallback si no hay video). El video móvil usa su propio clip si existe.
     heroVideo: media.heroVideo,
     heroVideoMobile: media.heroVideoMobile,
-    imagenPortada: media.portada,
+    // Sin portada dedicada (hero/ vacío o solo con clips), la primera foto de
+    // la galería: una card vacía en el 50/50 se ve rota.
+    imagenPortada: media.portada ?? media.galeria[0]?.src ?? null,
   };
 }
 

@@ -6,13 +6,14 @@
    VARIABLES CSS — PALETA GARDEN COLLEGE
    ============================================= */
 :root {
-  /* ===== TEMA ACTUAL (verde jade) — valores por defecto =====
+  /* ===== TEMA CLÁSICO (verde jade) — base de las variables =====
      Los colores son TRIPLETES RGB (no hex): Tailwind los consume como
      rgb(var(--x) / <alpha-value>) (ver tailwind.config.ts), así siguen
      funcionando los modificadores de opacidad (bg-gc-green/10, text-.../60).
-     El tema alternativo del rebrand vive en [data-theme="uniforme"] más abajo:
-     un solo atributo en <html> reescribe estas variables y flipea TODO el sitio
-     sin recompilar (MODO REVISIÓN). Origen del toggle: src/lib/tema.ts. */
+     El tema POR DEFECTO es el del uniforme: el bloque
+     :root:not([data-theme="clasico"]) de más abajo reescribe estas variables
+     siempre, salvo que <html> lleve data-theme="clasico" (MODO REVISIÓN, que
+     hoy muestra este verde jade). Origen del toggle: src/lib/tema.ts. */
   /* Verde Jade — protagonista */
   --gc-green-50:    235 245 243;
   --gc-green-100:   184 221 213;
@@ -50,13 +51,15 @@
   --gc-info:       21 101 192;
 }
 
-/* ===== TEMA UNIFORME (navy / carmesí del uniforme nuevo) — MODO REVISIÓN =====
+/* ===== TEMA UNIFORME (navy / carmesí) — TEMA POR DEFECTO =====
    Reescribe SOLO las familias de marca (green/navy/gold/red); los neutros y
-   semánticos se heredan del :root. Se activa poniendo data-theme="uniforme" en
-   <html> (botón del footer + cookie gc-tema, ver src/lib/tema.ts). La familia
+   semánticos se heredan del :root. Aplica siempre, salvo con data-theme="clasico"
+   en <html> (MODO REVISIÓN: botón del footer + cookie gc-tema, ver
+   src/lib/tema.ts). `:root:not(...)` le gana en especificidad a `:root`, así
+   que no depende del orden de los bloques. La familia
    "gc-green" conserva su NOMBRE pero contiene el navy del uniforme, para flipear
    los componentes sin editarlos. Valores: rama feat/uniformes. */
-:root[data-theme="uniforme"] {
+:root:not([data-theme="clasico"]) {
   --gc-green-50:    234 238 247;
   --gc-green-100:   205 217 239;
   --gc-green-light:  90 121 190;
@@ -81,22 +84,22 @@
 /* ===== ACENTOS CARMESÍ DEL TEMA UNIFORME (estructura, no contenido) =====
    El carmesí es el rojo de las mangas/ribetes del bomber. Va SOLO en detalles
    estructurales; el texto y Sellos se quedan en dorado. Todo scopeado a
-   data-theme="uniforme" para no tocar el tema actual. */
+   al tema uniforme para no tocar el clásico. */
 /* Aro del logo del navbar (marcador .logo-anillo) */
-:root[data-theme="uniforme"] .logo-anillo { --tw-ring-color: rgb(var(--gc-red)); }
+:root:not([data-theme="clasico"]) .logo-anillo { --tw-ring-color: rgb(var(--gc-red)); }
 /* Separador inferior del navbar (marcador .nav-sep-uniforme) */
-:root[data-theme="uniforme"] .nav-sep-uniforme { border-bottom-color: rgb(var(--gc-red)); }
+:root:not([data-theme="clasico"]) .nav-sep-uniforme { border-bottom-color: rgb(var(--gc-red)); }
 /* Badges doradas -> carmesí (Sellos usa un span propio, no .badge-gold, así que
    no lo toca). */
-:root[data-theme="uniforme"] .badge-gold {
+:root:not([data-theme="clasico"]) .badge-gold {
   background-color: rgb(var(--gc-red) / 0.1);
   color: rgb(var(--gc-red));
   border-color: rgb(var(--gc-red) / 0.25);
 }
 /* Rayas del puño: dos líneas carmesí sobre navy, como el ribete del bomber.
-   Elemento decorativo .rayas-uniforme; oculto en el tema actual. */
+   Elemento decorativo .rayas-uniforme; oculto en el tema clásico. */
 .rayas-uniforme { display: none; }
-:root[data-theme="uniforme"] .rayas-uniforme {
+:root:not([data-theme="clasico"]) .rayas-uniforme {
   display: block;
   height: 9px;
   background: linear-gradient(
@@ -251,11 +254,11 @@
 /* =============================================
    SWAP DEL ISOTIPO SEGÚN TEMA (MODO REVISIÓN)
    Los dos logos del navbar son rasters con el color horneado (no se pueden
-   variabilizar como la paleta). Default = verde; data-theme="uniforme" = navy.
+   variabilizar como la paleta). Default = navy; data-theme="clasico" = verde.
    ============================================= */
 .logo-uniforme { display: none; }
-:root[data-theme="uniforme"] .logo-actual { display: none; }
-:root[data-theme="uniforme"] .logo-uniforme { display: block; }
+:root:not([data-theme="clasico"]) .logo-actual { display: none; }
+:root:not([data-theme="clasico"]) .logo-uniforme { display: block; }
 
 /* Loop del logo: el escudo institucional es la base; el monograma GC (.logo-swap)
    se funde encima en un ciclo de 8s (~escudo 3s → fundido → ~GC 3s → fundido). El

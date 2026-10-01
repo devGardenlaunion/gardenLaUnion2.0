@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Isotipo GC del tema actual (verde jade-900), para que el favicon del tab
-       coincida con el logo del navbar. El tema uniforme (navy) NO se refleja acá:
-       el favicon es estático en el <head> y no flipea con MODO REVISIÓN. -->
-  <circle cx="16" cy="16" r="16" fill="#143832"/>
-  <text x="16" y="22" font-family="Georgia, 'Times New Roman', serif" font-size="17" font-weight="700" text-anchor="middle" fill="#C9A03A">GC</text>
+  <!-- Isotipo GC del tema por defecto (uniforme: navy green-900 + dorado ámbar),
+       para que el favicon del tab coincida con el logo del navbar. El tema
+       clásico (verde) NO se refleja acá: el favicon es estático en el <head> y
+       no flipea con MODO REVISIÓN. -->
+  <circle cx="16" cy="16" r="16" fill="#0F1D38"/>
+  <text x="16" y="22" font-family="Georgia, 'Times New Roman', serif" font-size="17" font-weight="700" text-anchor="middle" fill="#C79018">GC</text>
 </svg>

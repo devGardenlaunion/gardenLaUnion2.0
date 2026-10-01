@@ -12,7 +12,7 @@ const config: Config = {
       // patrón rgb(var(--x) / <alpha-value>) preserva los modificadores de
       // opacidad de Tailwind (bg-gc-green/10, text-gc-green-800/60). Cambiar el
       // atributo data-theme del <html> reescribe las variables y flipea el sitio
-      // entero (MODO REVISIÓN / tema uniforme).
+      // entero (default: uniforme; MODO REVISIÓN: data-theme="clasico").
       colors: {
         // VERDE JADE — color protagonista (uniforme, tartán)
         "gc-green": {
