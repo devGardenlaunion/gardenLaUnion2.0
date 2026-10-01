@@ -99,6 +99,12 @@ export const viewport: Viewport = {
   themeColor: "#0F1D38", // --gc-green-900 del tema uniforme (default)
   width: "device-width",
   initialScale: 1,
+  // Celulares con cámara en la pantalla: al esconder la barra de direcciones,
+  // algunos navegadores dibujan la página bajo la barra de estado y el navbar
+  // fijo quedaba con el tope (el aro del logo) tapado. Con "cover" la zona es
+  // nuestra y el navbar la compensa con env(safe-area-inset-top). Donde no
+  // existe esa zona el inset vale 0 y nada cambia.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

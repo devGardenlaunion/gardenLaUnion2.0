@@ -48,8 +48,9 @@ export default function DocumentViewer({
   return (
     <div className="h-screen overflow-hidden flex flex-col">
 
-      {/* Spacer para el Navbar fixed (h-16 mobile / h-20 desktop) */}
-      <div className="h-16 lg:h-20 flex-shrink-0" />
+      {/* Spacer para el Navbar fixed (h-16 mobile / h-20 desktop) + la zona de
+          la barra de estado que el navbar ahora cubre (safe-area-inset-top). */}
+      <div className="h-[calc(4rem+env(safe-area-inset-top))] lg:h-[calc(5rem+env(safe-area-inset-top))] flex-shrink-0" />
 
       {/* ── BODY — ocupa el resto del viewport ── */}
       <div className="flex-1 flex overflow-hidden relative">

@@ -116,7 +116,7 @@
 @layer base {
   html {
     /* compensa navbar fijo (h-16 mobile / h-20 desktop) en todos los anchor targets */
-    scroll-padding-top: 5rem;
+    scroll-padding-top: calc(5rem + env(safe-area-inset-top));
   }
   /* Ciclo 4: scroll suave solo si el usuario no pidió movimiento reducido. */
   @media (prefers-reduced-motion: no-preference) {

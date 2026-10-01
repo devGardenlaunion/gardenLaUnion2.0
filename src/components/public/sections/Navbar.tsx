@@ -97,7 +97,9 @@ export default function Navbar({ nombre, telefonoBasica, telefonoMedia, variant 
 
   return (
     <nav
-      className={`nav-sep-uniforme fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+      // pt-[env(safe-area-inset-top)]: el fondo del nav cubre la zona de la
+      // barra de estado y el contenido (logo, hamburguesa) parte debajo de ella.
+      className={`nav-sep-uniforme fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] transition-colors duration-300 ${
         isLight
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b-2 border-gc-navy"
           : "bg-gc-green-900 border-b-2 border-gc-green-800"

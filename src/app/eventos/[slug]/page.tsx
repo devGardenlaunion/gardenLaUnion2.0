@@ -158,7 +158,7 @@ export default async function EventoPage({ params }: Props) {
         variant="solid"
       />
 
-      <main className="pt-20 bg-gc-warm min-h-screen">
+      <main className="pt-[calc(5rem+env(safe-area-inset-top))] bg-gc-warm min-h-screen">
         {/* Sólo aparece en `npm run dev` — en el build un borrador no tiene página. */}
         {!evento.publicado && (
           <div className="bg-gc-gold text-gc-green-900 text-sm font-semibold font-body text-center px-4 py-2">
