@@ -17,6 +17,8 @@ export interface CategoriaContacto {
   label: string;
   /** Si el formulario ofrece "Adjuntar archivo" para esta categoría. */
   adjuntos?: boolean;
+  /** Texto que se muestra sobre el campo de adjuntos. */
+  aviso_adjuntos?: string;
 }
 
 // El contenido es `as const` (readonly): se copia para exponerlo mutable sin

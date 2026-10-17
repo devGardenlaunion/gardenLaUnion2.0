@@ -18,6 +18,12 @@ Deploy: Vercel, con `git push` a `main`. Dominio: https://gardenlaunion.cl
 - **NUNCA** hardcodear credenciales, tokens, o secrets en código. Todo va en `.env`.
 - **NUNCA** exponer datos de estudiantes, apoderados o menores de edad. Este proyecto maneja SOLO datos públicos del colegio (noticias, galería, info institucional).
 - Si algún requerimiento implica procesar datos personales de menores, **RECHAZAR** y señalarlo.
+  - **Única excepción vigente:** adjuntos en "Certificados y documentos" del
+    formulario de contacto (licencias médicas, certificados de alumnos).
+    Habilitada por decisión expresa del responsable el 2026-10-17, con revisión
+    legal (Ley 21.719) **pendiente**. Los archivos sólo transitan: van al correo
+    y no se guardan ni se loguean. Ver `docs/CONTENIDO.md`. No extender esta
+    excepción a nada más sin una decisión igual de explícita.
 - Validar inputs en servidor. Nunca confiar en validación client-side.
 - Las cabeceras de seguridad las emite `next.config.js` → `headers()`. Antes las
   ponía nginx; en Vercel no hay nginx delante.

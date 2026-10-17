@@ -34,13 +34,21 @@ export const contenido = {
   // misma casilla, así que ofrecer un receptor concreto es una promesa que el
   // colegio no puede garantizar y que salta el conducto regular.
   //
-  // `adjuntos: true` habilita "Adjuntar archivo" para esa categoría. Sólo donde
-  // los datos son de adultos (un CV). NO activarlo en "documentos" sin revisión
-  // legal: ahí llegarían licencias médicas y certificados de alumnos, que son
-  // datos sensibles de menores (Ley 21.719). Ver docs/CONTENIDO.md.
+  // `adjuntos: true` habilita "Adjuntar archivo" para esa categoría.
+  // `aviso_adjuntos` es el texto que se muestra sobre el campo.
+  //
+  // "documentos" recibe licencias médicas y certificados de alumnos: datos
+  // sensibles de menores. Está habilitado por decisión expresa del responsable
+  // del sitio (2026-10-17), como excepción a la regla #1 de CLAUDE.md, con la
+  // revisión legal (Ley 21.719) PENDIENTE. Ver docs/CONTENIDO.md.
   "contacto.categorias": [
     { "id": "admision", "label": "Admisión y matrícula" },
-    { "id": "documentos", "label": "Certificados y documentos" },
+    {
+      "id": "documentos",
+      "label": "Certificados y documentos",
+      "adjuntos": true,
+      "aviso_adjuntos": "Puedes adjuntar licencias médicas, certificados u otros documentos. Llegan sólo al correo del colegio y se usan únicamente para tramitar tu solicitud; el sitio web no los guarda."
+    },
     { "id": "proveedores", "label": "Proveedores" },
     { "id": "trabajo", "label": "Trabaja con nosotros", "adjuntos": true },
     { "id": "otro", "label": "Otro" }

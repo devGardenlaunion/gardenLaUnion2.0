@@ -51,6 +51,23 @@ export interface MetaSolicitud {
   fecha: string;
 }
 
+/**
+ * Lo que se deja en el log cuando un mensaje no se pudo enviar.
+ *
+ * Los adjuntos van sólo por nombre y tamaño, NUNCA el contenido: en
+ * "Certificados y documentos" llegan licencias médicas de alumnos, y un
+ * `JSON.stringify` del Buffer las dejaría copiadas byte a byte en los logs de
+ * Vercel, que retienen y que ve cualquiera con acceso al proyecto.
+ */
+function paraLog(datos: DatosContacto, ip: string): string {
+  const { adjuntos, ...resto } = datos;
+  return JSON.stringify({
+    ...resto,
+    adjuntos: (adjuntos ?? []).map((a) => `${a.filename} (${a.content.length} B)`),
+    ip,
+  });
+}
+
 let transportCache: nodemailer.Transporter | null = null;
 
 /** Devuelve el transport, o null si falta configuración SMTP. */
@@ -157,7 +174,7 @@ export async function notificarContacto(
     // del server para no romper el formulario mientras se cargan las credenciales.
     console.warn(
       "[mail] SMTP no configurado — mensaje NO enviado:",
-      JSON.stringify({ ...datos, ip: meta.ip })
+      paraLog(datos, meta.ip)
     );
     throw new Error("mail-no-configurado");
   }
@@ -167,7 +184,7 @@ export async function notificarContacto(
   if (!remitente || !to) {
     console.warn(
       "[mail] Falta CONTACTO_FROM o CONTACTO_TO — mensaje NO enviado:",
-      JSON.stringify({ ...datos, ip: meta.ip })
+      paraLog(datos, meta.ip)
     );
     throw new Error("mail-sin-direcciones");
   }

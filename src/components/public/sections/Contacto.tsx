@@ -23,7 +23,7 @@ interface ContactoProps {
   redes: Redes;
   /** contacto.categorias del contenido. Llega por props para no arrastrar todo
       src/content/config.ts al bundle del cliente. */
-  categorias: { id: string; label: string; adjuntos?: boolean }[];
+  categorias: { id: string; label: string; adjuntos?: boolean; aviso_adjuntos?: string }[];
 }
 
 const sedesConfig = {

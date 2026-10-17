@@ -11,7 +11,7 @@ const MAX_MENSAJE = 2000;
 interface ContactFormProps {
   sede: "basica" | "media";
   /** Vienen de contacto.categorias en src/content/config.ts, vía page.tsx. */
-  categorias: { id: string; label: string; adjuntos?: boolean }[];
+  categorias: { id: string; label: string; adjuntos?: boolean; aviso_adjuntos?: string }[];
 }
 
 /** Lado mayor de una foto adjunta. Sobra para leer una licencia o un certificado. */
@@ -98,8 +98,10 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
   const [sugerencia, setSugerencia] = useState<string | null>(null);
   const [archivos, setArchivos] = useState<File[]>([]);
   const [procesando, setProcesando] = useState(false);
+  const [arrastrando, setArrastrando] = useState(false);
   const [errorArchivo, setErrorArchivo] = useState("");
-  const aceptaAdjuntos = categorias.find((c) => c.id === categoria)?.adjuntos === true;
+  const categoriaActual = categorias.find((c) => c.id === categoria);
+  const aceptaAdjuntos = categoriaActual?.adjuntos === true;
   const totalBytes = archivos.reduce((s, f) => s + f.size, 0);
   const emailRef = useRef<HTMLInputElement>(null);
   const exitoRef = useRef<HTMLHeadingElement>(null);
@@ -398,6 +400,11 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
               (opcional · hasta {MAX_ADJUNTOS} · PDF, Word o foto)
             </span>
           </span>
+          {categoriaActual?.aviso_adjuntos && (
+            <p className="text-xs font-body text-gc-gray-700 bg-gc-cream rounded-lg px-3 py-2 mb-2">
+              {categoriaActual.aviso_adjuntos}
+            </p>
+          )}
           {archivos.length > 0 && (
             <ul className="space-y-1 mb-2">
               {archivos.map((archivo, i) => (
@@ -422,8 +429,53 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
             </ul>
           )}
           {archivos.length < MAX_ADJUNTOS && (
-            <label className="btn-ghost w-full cursor-pointer text-sm">
-              {procesando ? "Preparando archivo..." : "+ Elegir archivo"}
+            // Zona de arrastre. Es un <label> del input: tocarla abre el selector
+            // de archivos, que en celular es lo único que existe (no hay drag
+            // and drop en táctil). En escritorio, además, acepta soltar archivos.
+            <label
+              onDragEnter={(e) => {
+                e.preventDefault();
+                setArrastrando(true);
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDragLeave={(e) => {
+                // dragleave también salta al pasar sobre un hijo: sólo se apaga
+                // cuando el puntero sale de verdad de la zona.
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setArrastrando(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setArrastrando(false);
+                if (!procesando) agregarArchivos(e.dataTransfer.files);
+              }}
+              className={`flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-5 text-center font-body transition-colors duration-200 focus-within:ring-2 focus-within:ring-gc-gold ${
+                arrastrando
+                  ? "border-gc-gold bg-gc-gold/10"
+                  : "border-gc-gray-200 bg-gc-white hover:border-gc-gold/60 hover:bg-gc-cream"
+              } ${procesando ? "pointer-events-none opacity-60" : ""}`}
+            >
+              <svg className="h-6 w-6 text-gc-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+              </svg>
+              <span className="text-sm text-gc-gray-900">
+                {procesando ? (
+                  "Preparando archivo..."
+                ) : arrastrando ? (
+                  "Suelta los archivos aquí"
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">Arrastra tus archivos aquí o </span>
+                    <span className="font-semibold text-gc-gold-dark underline underline-offset-2">
+                      <span className="sm:hidden">Elegir archivo</span>
+                      <span className="hidden sm:inline">elige un archivo</span>
+                    </span>
+                  </>
+                )}
+              </span>
+              <span className="text-xs text-gc-gray-500">
+                PDF, Word o foto · {MAX_ADJUNTOS - archivos.length} restante
+                {MAX_ADJUNTOS - archivos.length === 1 ? "" : "s"}
+              </span>
               <input
                 type="file"
                 multiple

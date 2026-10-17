@@ -66,11 +66,18 @@ Iconos disponibles para `sellos.cards`: `book-open`, `heart-pulse`, `globe`,
   tres fotos de celular entran sin problema. Los archivos van **sólo** al aviso
   interno, nunca al acuse. Reglas en `src/lib/adjuntos.ts`; el server revisa el
   tipo real por los bytes del archivo, no por la extensión.
-- **Hoy está activo sólo en `trabajo`.** No activarlo en `documentos` sin
-  revisión legal: ahí llegarían licencias médicas y certificados de alumnos, que
-  son datos sensibles de menores (Ley 21.719, vigente desde dic-2026). Hace falta
-  antes un aviso de privacidad que cubra finalidad, plazo de retención y el paso
-  por Vercel (EE.UU.) y Google.
+- **`"aviso_adjuntos"`** es el texto que aparece sobre el campo de archivos.
+- **Activo en `trabajo` y en `documentos`.** `documentos` recibe licencias
+  médicas y certificados de alumnos: datos sensibles de menores (Ley 21.719,
+  vigente desde dic-2026). Se habilitó el 2026-10-17 por decisión expresa del
+  responsable, como excepción a la regla #1 de `CLAUDE.md`. Lo que el código
+  garantiza: los archivos sólo transitan por la función de Vercel hacia el
+  correo, no se escriben en disco ni en los logs (`paraLog()` en `mail.ts`), y
+  no vuelven en el acuse.
+- **Pendiente legal** (no es de código, lo define el colegio con un abogado):
+  base de licitud para datos de salud de menores, plazo de retención en el
+  buzón, quién del colegio accede a ese buzón, y que el aviso de privacidad del
+  formulario mencione el paso por Vercel (EE.UU.) y Google.
 
 ---
 
