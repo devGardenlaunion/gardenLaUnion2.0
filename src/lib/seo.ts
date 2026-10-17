@@ -163,6 +163,7 @@ export function jsonLdSitio() {
           c["redes.facebook"],
           c["redes.instagram"],
           c["redes.youtube"],
+          c["redes.tiktok"],
         ].filter(Boolean),
       },
       {

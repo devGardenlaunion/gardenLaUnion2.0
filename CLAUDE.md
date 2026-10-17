@@ -317,7 +317,7 @@ El orden y contenido de cada sección se basa en el PEI del colegio y el anális
 ### 9. Footer
 - Logo + nombre + "Corporación Educacional Filadelfia Garden"
 - Links a secciones
-- Redes sociales (Facebook, Instagram, YouTube)
+- Redes sociales (Facebook, Instagram, YouTube, TikTok)
 - Link a documentos/reglamentos (página separada o acordeón)
 
 ---
@@ -356,6 +356,7 @@ contacto.categorias (JSON array — {id, label}; el desplegable "Motivo" del for
 redes.facebook
 redes.instagram
 redes.youtube
+redes.tiktok
 admision.info
 admision.link_sae
 

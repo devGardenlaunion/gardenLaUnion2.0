@@ -305,6 +305,7 @@ export default async function EventoPage({ params }: Props) {
           facebook: config["redes.facebook"],
           instagram: config["redes.instagram"],
           youtube: config["redes.youtube"],
+          tiktok: config["redes.tiktok"],
         }}
       />
     </>
