@@ -55,3 +55,6 @@ public/documentos/Archivador.zip
 !public/media/**/*.mp4
 
 .envrc
+
+# Material de trabajo local (capturas, notas) — nunca va al repo
+gitIgnore/
