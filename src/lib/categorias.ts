@@ -15,6 +15,8 @@ import { contenido } from "@/content/config";
 export interface CategoriaContacto {
   id: string;
   label: string;
+  /** Si el formulario ofrece "Adjuntar archivo" para esta categoría. */
+  adjuntos?: boolean;
 }
 
 // El contenido es `as const` (readonly): se copia para exponerlo mutable sin
@@ -26,6 +28,11 @@ const IDS = new Set(CATEGORIAS.map((c) => c.id));
 /** True si el id vino de la lista real. El server NUNCA confía en el cliente. */
 export function esCategoriaValida(id: unknown): id is string {
   return typeof id === "string" && IDS.has(id);
+}
+
+/** True si la categoría acepta archivos adjuntos. El server lo vuelve a chequear. */
+export function categoriaAceptaAdjuntos(id: string): boolean {
+  return CATEGORIAS.find((c) => c.id === id)?.adjuntos === true;
 }
 
 /** Texto legible de una categoría. Cae al propio id si no la encuentra. */

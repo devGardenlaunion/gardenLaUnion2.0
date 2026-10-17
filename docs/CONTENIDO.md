@@ -60,6 +60,17 @@ Iconos disponibles para `sellos.cards`: `book-open`, `heart-pulse`, `globe`,
   "hablar con el profesor jefe"). El formulario es público y todo cae en la misma
   casilla: ofrecer un receptor concreto es una promesa que el colegio no controla,
   y además invita a saltarse el conducto regular. Se sacó una por este motivo.
+- **`"adjuntos": true`** muestra "Adjuntar archivos" en esa categoría: hasta 3
+  archivos (PDF, Word, JPG, PNG, WebP), 4 MB entre todos, porque Vercel corta el
+  request en 4,5 MB. El formulario achica las fotos antes de subirlas, así que
+  tres fotos de celular entran sin problema. Los archivos van **sólo** al aviso
+  interno, nunca al acuse. Reglas en `src/lib/adjuntos.ts`; el server revisa el
+  tipo real por los bytes del archivo, no por la extensión.
+- **Hoy está activo sólo en `trabajo`.** No activarlo en `documentos` sin
+  revisión legal: ahí llegarían licencias médicas y certificados de alumnos, que
+  son datos sensibles de menores (Ley 21.719, vigente desde dic-2026). Hace falta
+  antes un aviso de privacidad que cubra finalidad, plazo de retención y el paso
+  por Vercel (EE.UU.) y Google.
 
 ---
 

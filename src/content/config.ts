@@ -33,11 +33,16 @@ export const contenido = {
   // "hablar con el profesor jefe"): el formulario es público y todo cae en la
   // misma casilla, así que ofrecer un receptor concreto es una promesa que el
   // colegio no puede garantizar y que salta el conducto regular.
+  //
+  // `adjuntos: true` habilita "Adjuntar archivo" para esa categoría. Sólo donde
+  // los datos son de adultos (un CV). NO activarlo en "documentos" sin revisión
+  // legal: ahí llegarían licencias médicas y certificados de alumnos, que son
+  // datos sensibles de menores (Ley 21.719). Ver docs/CONTENIDO.md.
   "contacto.categorias": [
     { "id": "admision", "label": "Admisión y matrícula" },
     { "id": "documentos", "label": "Certificados y documentos" },
     { "id": "proveedores", "label": "Proveedores" },
-    { "id": "trabajo", "label": "Trabaja con nosotros" },
+    { "id": "trabajo", "label": "Trabaja con nosotros", "adjuntos": true },
     { "id": "otro", "label": "Otro" }
   ],
   "eventos.titulo": "Historias Garden",
@@ -88,6 +93,7 @@ export const contenido = {
   "redes.facebook": "https://www.facebook.com/people/Garden-La-Uni%C3%B3n/100090639256568/",
   "redes.instagram": "https://www.instagram.com/garden.launion/",
   "redes.youtube": "https://www.youtube.com/@Garden.launion",
+  "redes.tiktok": "https://www.tiktok.com/@gardenlaunion",
   "sellos.titulo": "Un lugar donde tu hijo se siente seguro",
   "sellos.descripcion": "En Garden College creemos que un niño que se siente seguro, aprende mejor. Nuestro enfoque nace de un principio simple: tratar al otro como queremos ser tratados. Eso se enseña, se practica y se vive cada día.",
   "sellos.cta": {

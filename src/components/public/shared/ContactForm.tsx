@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { ACCEPT_ADJUNTOS, MAX_ADJUNTOS, MAX_TOTAL_BYTES, formatoMB } from "@/lib/adjuntos";
 
 type FormState = "idle" | "loading" | "success" | "error";
 
@@ -10,7 +11,47 @@ const MAX_MENSAJE = 2000;
 interface ContactFormProps {
   sede: "basica" | "media";
   /** Vienen de contacto.categorias en src/content/config.ts, vía page.tsx. */
-  categorias: { id: string; label: string }[];
+  categorias: { id: string; label: string; adjuntos?: boolean }[];
+}
+
+/** Lado mayor de una foto adjunta. Sobra para leer una licencia o un certificado. */
+const FOTO_MAX_PX = 2000;
+/** Bajo esto, una foto se manda tal cual: comprimirla no gana nada. */
+const FOTO_SIN_TOCAR_BYTES = 600 * 1024;
+
+/**
+ * Achica una foto antes de subirla. Sin esto, una sola foto de celular (3-6 MB)
+ * se come el tope de 4 MB que impone Vercel por request, y tres no entran.
+ *
+ * Sale como JPEG: es lo que todo cliente de correo abre. `createImageBitmap`
+ * con `imageOrientation` respeta la rotación EXIF, así una foto tomada en
+ * vertical no llega acostada. Si el navegador no puede decodificarla (HEIC en
+ * Android, p. ej.) devuelve null y el formulario lo dice.
+ */
+async function comprimirFoto(archivo: File): Promise<File | null> {
+  if (archivo.size <= FOTO_SIN_TOCAR_BYTES && /^image\/(jpeg|png|webp)$/.test(archivo.type)) {
+    return archivo;
+  }
+  try {
+    const bitmap = await createImageBitmap(archivo, { imageOrientation: "from-image" });
+    const escala = Math.min(1, FOTO_MAX_PX / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * escala);
+    canvas.height = Math.round(bitmap.height * escala);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    // Fondo blanco: un PNG con transparencia pasado a JPEG queda negro si no.
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.82));
+    if (!blob) return null;
+    const nombre = archivo.name.replace(/\.[^.]*$/, "") + ".jpg";
+    return new File([blob], nombre, { type: "image/jpeg" });
+  } catch {
+    return null;
+  }
 }
 
 const DOMINIOS_COMUNES = [
@@ -55,6 +96,11 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
   const [categoria, setCategoria] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [sugerencia, setSugerencia] = useState<string | null>(null);
+  const [archivos, setArchivos] = useState<File[]>([]);
+  const [procesando, setProcesando] = useState(false);
+  const [errorArchivo, setErrorArchivo] = useState("");
+  const aceptaAdjuntos = categorias.find((c) => c.id === categoria)?.adjuntos === true;
+  const totalBytes = archivos.reduce((s, f) => s + f.size, 0);
   const emailRef = useRef<HTMLInputElement>(null);
   const exitoRef = useRef<HTMLHeadingElement>(null);
   // Momento en que se montó el form — la trampa de tiempo antibot.
@@ -72,25 +118,20 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
     setState("loading");
     setErrorMsg("");
 
+    // Multipart y no JSON: es la única forma de mandar archivos sin inflarlos
+    // un 33% en base64, y ese 33% es justo lo que no sobra bajo el tope de Vercel.
+    // Los campos salen del form; los archivos, del estado (ya comprimidos).
     const formData = new FormData(e.currentTarget);
-    const body = {
-      nombre: formData.get("nombre") as string,
-      email: formData.get("email") as string,
-      telefono: formData.get("telefono") as string || undefined,
-      categoria: formData.get("categoria") as string,
-      asunto: formData.get("asunto") as string,
-      mensaje: formData.get("mensaje") as string,
-      sede: formData.get("sede") as string,
-      // Antispam
-      companyWebsite: (formData.get("companyWebsite") as string) || "",
-      tiempoMs: Date.now() - abiertoEn.current,
-    };
+    formData.set("tiempoMs", String(Date.now() - abiertoEn.current));
+    if (aceptaAdjuntos) {
+      for (const archivo of archivos) formData.append("adjuntos", archivo);
+    }
 
     try {
+      // Sin Content-Type a mano: el navegador lo pone con el boundary del multipart.
       const res = await fetch("/api/contacto", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: formData,
       });
 
       if (res.ok) {
@@ -101,6 +142,10 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
         // reset() no toca los campos controlados
         setCategoria("");
         setMensaje("");
+        setArchivos([]);
+      } else if (res.status === 413) {
+        setState("error");
+        setErrorMsg("Los archivos son demasiado pesados. Prueba con menos archivos o PDF más livianos.");
       } else if (res.status === 429) {
         setState("error");
         setErrorMsg("Demasiados mensajes enviados. Por favor espera un momento.");
@@ -113,6 +158,38 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
       setState("error");
       setErrorMsg("No se pudo conectar. Verifica tu conexión a internet.");
     }
+  }
+
+  async function agregarArchivos(lista: FileList | null) {
+    if (!lista || lista.length === 0) return;
+    setErrorArchivo("");
+    const nuevos = Array.from(lista);
+    if (archivos.length + nuevos.length > MAX_ADJUNTOS) {
+      setErrorArchivo(`Puedes adjuntar hasta ${MAX_ADJUNTOS} archivos.`);
+      return;
+    }
+    setProcesando(true);
+    const listos: File[] = [];
+    for (const archivo of nuevos) {
+      const esImagen = archivo.type.startsWith("image/") || /\.(heic|heif)$/i.test(archivo.name);
+      const final = esImagen ? await comprimirFoto(archivo) : archivo;
+      if (!final) {
+        setErrorArchivo(`No pudimos leer "${archivo.name}". Envíala como JPG o PDF.`);
+        setProcesando(false);
+        return;
+      }
+      listos.push(final);
+    }
+    setProcesando(false);
+    const total = [...archivos, ...listos].reduce((s, f) => s + f.size, 0);
+    if (total > MAX_TOTAL_BYTES) {
+      setErrorArchivo(
+        `Entre todos pesan ${formatoMB(total)} y el máximo es ${formatoMB(MAX_TOTAL_BYTES)}. ` +
+          "Prueba con un PDF más liviano o una foto en vez del escaneo."
+      );
+      return;
+    }
+    setArchivos((prev) => [...prev, ...listos]);
   }
 
   if (state === "success") {
@@ -313,6 +390,68 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
         </p>
       </div>
 
+      {aceptaAdjuntos && (
+        <div>
+          <span className="label-gc">
+            Adjuntar archivos{" "}
+            <span className="text-gc-green-800/30 text-xs">
+              (opcional · hasta {MAX_ADJUNTOS} · PDF, Word o foto)
+            </span>
+          </span>
+          {archivos.length > 0 && (
+            <ul className="space-y-1 mb-2">
+              {archivos.map((archivo, i) => (
+                <li
+                  key={`${archivo.name}-${i}`}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-gc-cream px-3 py-2 text-sm font-body"
+                >
+                  <span className="truncate text-gc-gray-900">{archivo.name}</span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="text-xs text-gc-gray-500">{formatoMB(archivo.size)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setArchivos((prev) => prev.filter((_, j) => j !== i))}
+                      className="rounded px-1 text-gc-gray-500 transition-colors duration-200 hover:text-gc-red"
+                      aria-label={`Quitar ${archivo.name}`}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {archivos.length < MAX_ADJUNTOS && (
+            <label className="btn-ghost w-full cursor-pointer text-sm">
+              {procesando ? "Preparando archivo..." : "+ Elegir archivo"}
+              <input
+                type="file"
+                multiple
+                accept={ACCEPT_ADJUNTOS}
+                disabled={procesando}
+                className="sr-only"
+                onChange={(e) => {
+                  agregarArchivos(e.target.files);
+                  // Permite volver a elegir el mismo archivo después de quitarlo.
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          )}
+          <p className="text-xs font-body text-gc-green-800/40 mt-1">
+            {archivos.length > 0
+              ? `${formatoMB(totalBytes)} de ${formatoMB(MAX_TOTAL_BYTES)}. `
+              : ""}
+            Las fotos se achican solas antes de enviarse.
+          </p>
+          {errorArchivo && (
+            <p role="alert" className="text-xs font-body text-gc-red mt-1">
+              {errorArchivo}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* role="alert" para que un lector de pantalla anuncie el fallo: sin esto
           el envío falla en silencio para quien no está mirando la pantalla. */}
       {state === "error" && (
@@ -323,7 +462,7 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
 
       <button
         type="submit"
-        disabled={state === "loading"}
+        disabled={state === "loading" || procesando}
         className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {state === "loading" ? (

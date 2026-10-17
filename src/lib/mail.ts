@@ -18,6 +18,13 @@ import { labelCategoria } from "./categorias";
  * `CONTACTO_FROM`. Por eso son variables separadas.
  */
 
+/** Archivo ya validado por /api/contacto (tipo real por firma, nombre saneado). */
+export interface Adjunto {
+  filename: string;
+  contentType: string;
+  content: Buffer;
+}
+
 export interface DatosContacto {
   /** Identificador de la solicitud. Va en el asunto, en X-GC-Id y en el acuse. */
   id: string;
@@ -29,6 +36,8 @@ export interface DatosContacto {
   asunto: string;
   mensaje: string;
   sede: string;
+  /** Sólo llegan en categorías con `adjuntos: true`. Nunca van en el acuse. */
+  adjuntos?: Adjunto[];
 }
 
 /** Metadata forense — para adjuntar al mail en caso de amenaza/abuso. */
@@ -176,6 +185,8 @@ export async function notificarContacto(
 
   const categoriaLabel = labelCategoria(datos.categoria);
   const sedeLabel = labelSede(datos.sede);
+  const adjuntos = datos.adjuntos ?? [];
+  const listaAdjuntos = adjuntos.map((a) => a.filename).join(", ") || "—";
 
   // Bloque legible por máquina. Sin esto, cualquier triage automático tiene que
   // reparsear la prosa del correo — trabajo y errores gratis. Va delimitado y en
@@ -194,6 +205,7 @@ export async function notificarContacto(
       telefono: datos.telefono || null,
       asunto: datos.asunto,
       mensaje: datos.mensaje,
+      adjuntos: adjuntos.map((a) => a.filename),
     },
     null,
     2
@@ -211,6 +223,7 @@ export async function notificarContacto(
     `Email:    ${datos.email}`,
     `Teléfono: ${datos.telefono || "—"}`,
     `Asunto:   ${datos.asunto}`,
+    `Adjuntos: ${listaAdjuntos}`,
     ``,
     `Mensaje:`,
     datos.mensaje,
@@ -239,6 +252,7 @@ export async function notificarContacto(
         <tr><td style="padding:4px 8px;color:#8A8578">Email</td><td style="padding:4px 8px">${esc(datos.email)}</td></tr>
         <tr><td style="padding:4px 8px;color:#8A8578">Teléfono</td><td style="padding:4px 8px">${esc(datos.telefono || "—")}</td></tr>
         <tr><td style="padding:4px 8px;color:#8A8578">Asunto</td><td style="padding:4px 8px">${esc(datos.asunto)}</td></tr>
+        <tr><td style="padding:4px 8px;color:#8A8578">Adjuntos</td><td style="padding:4px 8px">${esc(listaAdjuntos)}</td></tr>
       </table>
       <p style="white-space:pre-wrap;color:#2A2825;background:#F5F0E8;padding:16px;border-radius:8px">${esc(datos.mensaje)}</p>
       <pre style="font-size:11px;color:#8A8578;border-top:1px solid #E0DCD4;padding-top:12px;margin-top:24px;white-space:pre-wrap">${esc(forense)}</pre>
@@ -265,6 +279,7 @@ export async function notificarContacto(
     },
     text: texto,
     html,
+    attachments: adjuntos,
   });
 }
 
@@ -306,6 +321,12 @@ export async function enviarAcuse(datos: DatosContacto, fechaIso: string): Promi
   const fecha = fechaChile(fechaIso);
   const categoriaLabel = labelCategoria(datos.categoria);
   const sedeLabel = labelSede(datos.sede);
+  // Sólo la cantidad. Los archivos no se devuelven (sería reenviarle a un
+  // tercero lo que alguien subió con su correo) y el nombre lo escribió quien
+  // subió el archivo: no se repite.
+  const nAdjuntos = datos.adjuntos?.length ?? 0;
+  const adjuntosRecibidos =
+    nAdjuntos === 0 ? "" : nAdjuntos === 1 ? "1 archivo" : `${nAdjuntos} archivos`;
 
   const texto = [
     `Hola ${datos.nombre}:`,
@@ -320,6 +341,7 @@ export async function enviarAcuse(datos: DatosContacto, fechaIso: string): Promi
     `  Sede            : ${sedeLabel}`,
     `  Asunto          : ${datos.asunto}`,
     `  Tu mensaje      : ${extracto}`,
+    ...(adjuntosRecibidos ? [`  Adjuntos        : ${adjuntosRecibidos}`] : []),
     ``,
     `— — — — — — — — — — — — — — — —`,
     `Este es un aviso automático de recepción, no una respuesta a tu consulta.`,
@@ -346,6 +368,7 @@ export async function enviarAcuse(datos: DatosContacto, fechaIso: string): Promi
         ${fila("Sede", sedeLabel)}
         ${fila("Asunto", datos.asunto)}
         ${fila("Tu mensaje", extracto)}
+        ${adjuntosRecibidos ? fila("Adjuntos", adjuntosRecibidos) : ""}
       </table>
       <p style="font-size:12px;color:#8A8578;border-top:1px solid #E0DCD4;padding-top:12px">
         Este es un aviso automático de recepción, no una respuesta a tu consulta.

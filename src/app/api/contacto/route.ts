@@ -1,9 +1,10 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { notificarContacto, enviarAcuse, type MetaSolicitud } from "@/lib/mail";
+import { notificarContacto, enviarAcuse, type Adjunto, type MetaSolicitud } from "@/lib/mail";
 import { dominioRecibeCorreo, pareceBot } from "@/lib/anti-spam";
-import { esCategoriaValida, esSedeValida } from "@/lib/categorias";
+import { categoriaAceptaAdjuntos, esCategoriaValida, esSedeValida } from "@/lib/categorias";
+import { MAX_ADJUNTOS, MAX_TOTAL_BYTES, detectarTipo, nombreSeguro } from "@/lib/adjuntos";
 
 // Rate limiting en memoria. OJO: en serverless (Vercel) cada instancia tiene su
 // propio Map y las instancias se reciclan, así que el límite es best-effort, no
@@ -73,8 +74,62 @@ const contactoSchema = z.object({
   sede: z.string().refine(esSedeValida, "Sede inválida").optional(),
   // Antispam — no se muestran al usuario
   companyWebsite: z.string().max(TOPE_ABSURDO).optional(), // honeypot
-  tiempoMs: z.number().optional(),        // ms desde que se abrió el form
+  // ms desde que se abrió el form. Llega como texto: el body es multipart.
+  tiempoMs: z.coerce.number().optional(),
 });
+
+/** Campos de texto del multipart como objeto plano; los archivos van aparte. */
+function camposDeTexto(form: FormData): Record<string, string> {
+  const campos: Record<string, string> = {};
+  for (const [clave, valor] of form) {
+    if (typeof valor === "string" && clave !== "adjuntos") campos[clave] = valor;
+  }
+  // Opcional vacío = ausente, igual que antes con JSON.
+  if (!campos.telefono) delete campos.telefono;
+  return campos;
+}
+
+/**
+ * Valida los adjuntos y los deja listos para el correo. Devuelve el mensaje de
+ * error para el usuario, o la lista.
+ *
+ * Acá sí se le explica al usuario qué falló: a diferencia de un payload
+ * manipulado, un archivo pesado o de tipo raro es un error honesto y frecuente.
+ */
+async function leerAdjuntos(
+  form: FormData,
+  categoria: string
+): Promise<{ error: string } | { adjuntos: Adjunto[] }> {
+  const archivos = form
+    .getAll("adjuntos")
+    .filter((f): f is File => typeof f !== "string" && f.size > 0);
+
+  if (archivos.length === 0) return { adjuntos: [] };
+  // El formulario no muestra el campo en estas categorías: llegar acá es un
+  // cliente manipulado, o alguien intentando colar documentos de alumnos por
+  // una categoría que no los tiene autorizados.
+  if (!categoriaAceptaAdjuntos(categoria)) {
+    return { error: "Este motivo no admite archivos adjuntos." };
+  }
+  if (archivos.length > MAX_ADJUNTOS) {
+    return { error: `Puedes adjuntar hasta ${MAX_ADJUNTOS} archivos.` };
+  }
+  const total = archivos.reduce((s, f) => s + f.size, 0);
+  if (total > MAX_TOTAL_BYTES) {
+    return { error: "Los archivos superan el tamaño máximo permitido." };
+  }
+
+  const adjuntos: Adjunto[] = [];
+  for (const [i, archivo] of archivos.entries()) {
+    const contenido = Buffer.from(await archivo.arrayBuffer());
+    const tipo = detectarTipo(contenido, archivo.name);
+    if (!tipo) {
+      return { error: `"${archivo.name.slice(0, 60)}" no es un PDF, Word o imagen válido.` };
+    }
+    adjuntos.push({ filename: nombreSeguro(archivo.name, tipo, i + 1), contentType: tipo, content: contenido });
+  }
+  return { adjuntos };
+}
 
 /**
  * Número de solicitud. Sirve para tres cosas: que el apoderado lo cite, que el
@@ -177,23 +232,23 @@ export async function POST(req: NextRequest) {
     rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
   }
 
-  // Tamaño máximo del body. El formulario legítimo más grande (mensaje 2000 +
-  // campos + honeypot) no llega a 8 KB; 32 KB deja margen de sobra. Se corta por
-  // Content-Length ANTES de parsear, para no gastar CPU deserializando un JSON
-  // gigante. Vercel corta a 4.5 MB, pero eso es demasiado tarde y demasiado alto.
+  // Tamaño máximo del body: los adjuntos (MAX_TOTAL_BYTES) más 64 KB para los
+  // campos y el overhead del multipart. Se corta por Content-Length ANTES de
+  // parsear, para no gastar memoria leyendo un cuerpo gigante. Vercel corta
+  // igual a 4,5 MB, pero con un error que el formulario no sabe explicar.
   const largo = Number(req.headers.get("content-length") || 0);
-  if (largo > 32_768) {
-    return json({ error: "Cuerpo demasiado grande" }, 413);
+  if (largo > MAX_TOTAL_BYTES + 65_536) {
+    return json({ error: "Los archivos superan el tamaño máximo permitido." }, 413);
   }
 
-  let body: unknown;
+  let form: FormData;
   try {
-    body = await req.json();
+    form = await req.formData();
   } catch {
     return json({ error: "Cuerpo inválido" }, 400);
   }
 
-  const result = contactoSchema.safeParse(body);
+  const result = contactoSchema.safeParse(camposDeTexto(form));
   if (!result.success) {
     // El detalle de validación (qué campo, qué regla) va al log del server, no
     // al cliente: el formulario ya valida antes de enviar, así que un 400 acá es
@@ -220,6 +275,11 @@ export async function POST(req: NextRequest) {
     return json({ error: "No pudimos verificar ese correo. ¿Está bien escrito?" }, 400);
   }
 
+  const lectura = await leerAdjuntos(form, data.categoria);
+  if ("error" in lectura) {
+    return json({ error: lectura.error }, 400);
+  }
+
   const meta = getMeta(req);
   const datos = {
     id: nuevoId(new Date(meta.fecha)),
@@ -230,11 +290,16 @@ export async function POST(req: NextRequest) {
     asunto: data.asunto,
     mensaje: data.mensaje,
     sede: data.sede || "—",
+    adjuntos: lectura.adjuntos,
   };
 
   try {
     await notificarContacto(datos, meta);
-  } catch {
+  } catch (e) {
+    // Sin este log, un SMTP mal configurado en Vercel sólo se ve como un 502
+    // en el navegador. Va el error, no los datos: esos ya los loguea mail.ts
+    // cuando falta configuración, y si la falla es del SMTP no hacen falta.
+    console.error(`[mail] envío al colegio falló (${datos.id}):`, e);
     return json({ error: "No pudimos enviar tu mensaje. Intenta más tarde." }, 502);
   }
 
