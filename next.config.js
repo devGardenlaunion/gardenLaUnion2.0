@@ -42,8 +42,13 @@ const csp = [
   "media-src 'self'",
   "manifest-src 'self'",
   "worker-src 'self' blob:",
-  'upgrade-insecure-requests',
-].join('; ');
+  // Sólo en Vercel (VERCEL=1), donde todo es HTTPS. Probando el build desde el
+  // celular por http://<ip-del-pc>:<puerto>, esta directiva hace que el
+  // navegador pida el CSS y el JS por https a esa IP, donde no hay nada, y la
+  // página sale sin estilos. localhost se salva porque los navegadores lo
+  // exceptúan; una IP de la red local no.
+  process.env.VERCEL && 'upgrade-insecure-requests',
+].filter(Boolean).join('; ');
 
 // Cabeceras de seguridad. En el deploy de Docker las ponía nginx; en Vercel no
 // hay nginx delante, así que las emite Next para TODAS las rutas.
