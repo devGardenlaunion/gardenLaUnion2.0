@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Lora, Source_Sans_3 } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SITE_URL, OG_IMAGE, jsonLdSitio } from "@/lib/seo";
 import JsonLd from "@/components/public/shared/JsonLd";
 import ModoRevision from "@/components/public/shared/ModoRevision";
@@ -131,6 +132,9 @@ export default function RootLayout({
         {children}
         {/* Aviso flotante del MODO REVISIÓN (solo visible con la vista previa activa). */}
         <ModoRevision />
+        {/* Vercel Web Analytics: sin cookies, se sirve desde /_vercel/insights
+            (mismo origen, la CSP no necesita cambios). Fuera de Vercel no envía nada. */}
+        <Analytics />
       </body>
     </html>
   );

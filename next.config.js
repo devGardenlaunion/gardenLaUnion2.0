@@ -16,7 +16,10 @@
  * cargar un `<script src>` externo, ni exfiltrar por fetch/form a otro dominio,
  * ni secuestrar con `<base>`, ni embeber el sitio en un frame ajeno.
  *
- * Si algún día se agrega un recurso externo (Analytics, un embed, un CDN), hay
+ * Vercel Web Analytics no cuenta como externo: su script y su envío viven en
+ * /_vercel/insights/ del mismo dominio.
+ *
+ * Si algún día se agrega un recurso externo (un embed, un CDN), hay
  * que sumar su origen a la directiva que corresponda o el navegador lo bloquea.
  */
 // En `next dev`, React usa eval() para features de debugging (reconstruir
