@@ -177,6 +177,13 @@ descripciones de algo que se ve como una sola imagen.
 - **`minimumCacheTTL` de un año** para las imágenes optimizadas: los medios no
   cambian sin un deploy.
 - **Redirect `www` → apex** con 301 permanente en `next.config.js`.
+- **URLs del WordPress anterior redirigidas** (`REDIRECTS_WORDPRESS` en
+  `next.config.js`). En octubre 2026 Google seguía mostrando `/conocenos/`,
+  `/proyecto-educativo-institucional/`, etc. como sitelinks bajo el resultado de
+  marca, y todas daban 404. Cada página de documento va a su PDF en
+  `/documentos?doc=…`; noticias, categorías y etiquetas van a `/#eventos`. Si se
+  renombra el `id` de un documento en `src/app/documentos/page.tsx`, actualizar
+  también este mapa.
 - **Previews de Vercel bloqueados en `robots.txt`.** Sin esto, Google puede
   indexar `garden-web-xxxx.vercel.app` y que ese dominio compita con el real.
 

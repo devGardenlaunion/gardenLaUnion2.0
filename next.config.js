@@ -1,6 +1,65 @@
 /** @type {import('next').NextConfig} */
 
 /**
+ * URLs del WordPress anterior → su equivalente en el sitio actual.
+ *
+ * Google las siguió mostrando después del cambio (incluso como sitelinks bajo
+ * el resultado de marca) y daban 404: el apoderado que buscaba un reglamento
+ * caía en una página de error, y el posicionamiento que habían ganado se
+ * perdía. Con 301 Google traspasa ese peso a la URL nueva y la reemplaza en el
+ * índice. Lista sacada del Internet Archive y de `site:gardenlaunion.cl`
+ * (2026-10-21). Ver docs/SEO.md.
+ *
+ * Lo que no tiene equivalente (noticias viejas, categorías, etiquetas) va a la
+ * sección de la home más cercana, no a un 404.
+ */
+const REDIRECTS_WORDPRESS = {
+  // Institucional
+  '/quienes-somos': '/#quienes-somos',
+  '/conocenos': '/#quienes-somos',
+  '/historia': '/#quienes-somos',
+  '/centro-de-alumnos': '/#quienes-somos',
+  '/talleres': '/#niveles',
+  '/horario-de-clases-por-curso': '/#niveles',
+  '/galeria-2-0': '/#galeria',
+  '/admision': '/#admision',
+  '/contacto': '/#contacto',
+
+  // Documentos: cada página del WP tenía un PDF que hoy vive en /documentos
+  '/reglamentos-y-protocolos': '/documentos',
+  '/proyecto-educativo-institucional': '/documentos?doc=pei',
+  '/reglamento-de-covivencia-escolar': '/documentos?doc=reglamento-convivencia',
+  '/reglamento-de-evaluacion': '/documentos?doc=reglamento-evaluacion',
+  '/reglamento-consejo-escolar': '/documentos?doc=reglamento-consejo-escolar',
+  '/protocolo-de-salud-mental': '/documentos?doc=protocolo-salud-mental',
+  '/protocolo-de-retencion-y-apoyo-para-estudiantes-embarazadas-padres-y-madres':
+    '/documentos?doc=protocolo-retencion-embarazo',
+  '/protocolo-frente-a-situaciones-de-consumo-o-venta-de-alcohol-y-drogas':
+    '/documentos?doc=protocolo-drogas-alcohol',
+  '/protocolo-de-situaciones-de-agresiones-sexuales-y-hechos-de-connotacion-sexual':
+    '/documentos?doc=protocolo-agresiones-sexuales',
+  '/protocolo-de-situaciones-de-vulneracion-de-derechos-del-estudiantes':
+    '/documentos?doc=protocolo-vulneracion-derechos',
+  '/protocolo-de-actuacion-frente-a-violencia': '/documentos?doc=protocolo-violencia',
+  '/protocolo-frente-a-accidentes-escolares': '/documentos?doc=protocolo-accidentes-escolares',
+  '/plan-de-apoyo-a-la-inclusion': '/documentos?doc=plan-inclusion',
+  '/plan-de-formacion-ciudadana': '/documentos?doc=plan-formacion-ciudadana',
+  '/plan-de-gestion-de-convivencia-escolar': '/documentos?doc=plan-convivencia-escolar',
+
+  // Blog: noticias /AAAA/MM/DD/slug, archivos y taxonomías → Historias
+  '/blog': '/#eventos',
+  '/page/:n': '/#eventos',
+  '/:anio(\\d{4})/:resto*': '/#eventos',
+  '/category/:resto*': '/#eventos',
+  '/tag/:resto*': '/#eventos',
+  '/author/:resto*': '/#eventos',
+
+  // Páginas de adjunto de fotos del WP
+  '/fachada': '/#galeria',
+  '/fotogc:n': '/#galeria',
+};
+
+/**
  * Content-Security-Policy.
  *
  * El sitio NO carga ningún recurso de terceros: las fuentes se auto-hospedan
@@ -119,6 +178,11 @@ const nextConfig = {
         destination: 'https://gardenlaunion.cl/:path*',
         permanent: true,
       },
+      ...Object.entries(REDIRECTS_WORDPRESS).map(([source, destination]) => ({
+        source,
+        destination,
+        permanent: true,
+      })),
     ];
   },
 };
