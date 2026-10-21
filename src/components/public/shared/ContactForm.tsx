@@ -12,9 +12,11 @@ interface ContactFormProps {
   sede: "basica" | "media";
   /** Vienen de contacto.categorias en src/content/config.ts, vía page.tsx. */
   categorias: { id: string; label: string; adjuntos?: boolean; aviso_adjuntos?: string }[];
+  /** contacto.aviso_privacidad y contacto.consentimiento, vía page.tsx. */
+  privacidad: { aviso: string; consentimiento: string };
 }
 
-/** Lado mayor de una foto adjunta. Sobra para leer una licencia o un certificado. */
+/** Lado mayor de una foto adjunta. Sobra para leer un currículum fotografiado. */
 const FOTO_MAX_PX = 2000;
 /** Bajo esto, una foto se manda tal cual: comprimirla no gana nada. */
 const FOTO_SIN_TOCAR_BYTES = 600 * 1024;
@@ -89,7 +91,7 @@ function distancia(a: string, b: string): number {
   return d[a.length][b.length];
 }
 
-export default function ContactForm({ sede, categorias }: ContactFormProps) {
+export default function ContactForm({ sede, categorias, privacidad }: ContactFormProps) {
   const [state, setState] = useState<FormState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [solicitudId, setSolicitudId] = useState<string | null>(null);
@@ -504,6 +506,29 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
         </div>
       )}
 
+      {/* Aviso de privacidad + casilla de consentimiento. Textos del asesor legal
+          (ver contacto.aviso_privacidad en src/content/config.ts). Van ANTES del
+          botón: la autorización tiene que darse antes de enviar, no leerse después.
+          La casilla parte desmarcada y es obligatoria; el server la vuelve a
+          exigir y deja la versión del texto aceptado en el correo. */}
+      <div className="space-y-3">
+        <p className="text-xs text-gc-gray-700 font-body leading-relaxed">
+          {privacidad.aviso}
+        </p>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="consentimiento"
+            value="si"
+            required
+            className="mt-0.5 h-4 w-4 shrink-0 accent-gc-green-800"
+          />
+          <span className="text-sm text-gc-gray-900 font-body leading-snug">
+            {privacidad.consentimiento}
+          </span>
+        </label>
+      </div>
+
       {/* role="alert" para que un lector de pantalla anuncie el fallo: sin esto
           el envío falla en silencio para quien no está mirando la pantalla. */}
       {state === "error" && (
@@ -529,20 +554,6 @@ export default function ContactForm({ sede, categorias }: ContactFormProps) {
           "Enviar mensaje"
         )}
       </button>
-
-      {/* Aviso de privacidad. Cubre finalidad + tipo de dato, que es el mínimo
-          exigible. TODO legal antes de publicar: validar con un abogado a la luz
-          de la Ley 21.719 (moderniza la 19.628, vigencia dic-2026, estándar
-          tipo-GDPR). Falta definir por el colegio, no por código: responsable
-          del tratamiento, base de licitud, plazo de retención y una política de
-          privacidad enlazable con el derecho de acceso/rectificación/supresión.
-          Ver docs/BLUE_TEAM.md → Cumplimiento. */}
-      <p className="text-xs text-gc-green-800/40 font-body text-center leading-relaxed">
-        Al enviar aceptas que registremos los datos del formulario y datos
-        técnicos de tu conexión (IP, ubicación aproximada) para responder tu
-        consulta y prevenir abusos. No los usamos para ningún otro fin ni los
-        compartimos. Puedes pedir su eliminación escribiéndonos.
-      </p>
     </form>
   );
 }

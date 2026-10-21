@@ -81,14 +81,18 @@ security.txt 200.
 > La Ley 21.719 (publicada dic-2024, en vigencia ~dic-2026) moderniza la 19.628,
 > crea la Agencia de Protección de Datos y sube el estándar a algo tipo-GDPR.
 > El formulario trata datos personales: nombre, email, teléfono, mensaje **e IP
-> + ubicación aproximada** (estos dos también son dato personal).
+> + navegador** (también son dato personal). La ubicación aproximada se dejó de
+> registrar el 2026-10-21.
 
-Estado: el aviso cubre **finalidad** y **tipo de dato**, que es el mínimo. Lo que
-falta NO es código, es **definición del colegio** (idealmente con abogado):
+Estado (2026-10-21): el asesor legal de la corporación revisó el formulario. Su
+aviso y su casilla de consentimiento están publicados (ver docs/CONTENIDO.md →
+"Aviso de privacidad"), y se cerraron los adjuntos de datos de salud. Lo que
+falta NO es código, es **definición del colegio**:
 
 - [ ] **Responsable del tratamiento** identificado (Corporación Educacional
       Filadelfia Garden) con un contacto para ejercer derechos.
-- [ ] **Base de licitud** del tratamiento (consentimiento / interés legítimo).
+- [x] **Base de licitud** del tratamiento: consentimiento expreso por casilla
+      (texto del asesor legal, 2026-10-21).
 - [ ] **Plazo de retención** de los correos y logs con IP. Hoy no hay política:
       los mails quedan en la casilla indefinidamente.
 - [ ] **Política de privacidad enlazable** con derechos de acceso, rectificación,

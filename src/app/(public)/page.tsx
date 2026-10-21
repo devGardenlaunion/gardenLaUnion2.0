@@ -158,6 +158,10 @@ export default async function HomePage() {
           sedes={sedes}
           redes={redesSociales}
           categorias={config["contacto.categorias"] || []}
+          privacidad={{
+            aviso: config["contacto.aviso_privacidad"] || "",
+            consentimiento: config["contacto.consentimiento"] || "",
+          }}
         />
       </main>
 

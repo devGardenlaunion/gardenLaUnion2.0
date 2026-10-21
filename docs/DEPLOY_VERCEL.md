@@ -311,8 +311,8 @@ Cada envío genera **dos** correos:
 **1. Aviso al colegio** (`CONTACTO_TO`). El `Reply-To` es el email del apoderado:
 al apretar "Responder" se le contesta directo a la persona. El asunto va con la
 categoría y la sede al frente — `[admision][media] Consulta por…` — y el cuerpo
-incluye un bloque de metadata (IP, ubicación aproximada, navegador, referer) por
-si alguna vez hay que reportar un abuso.
+incluye un bloque de metadata (IP, navegador, referer) por si alguna vez hay que
+reportar un abuso, y la constancia del consentimiento aceptado con su versión.
 
 **2. Acuse de recibo al apoderado.** Confirma la recepción y le deja el N° de
 solicitud. Es corto a propósito: lleva un **extracto recortado** del mensaje

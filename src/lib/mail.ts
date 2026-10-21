@@ -46,18 +46,15 @@ export interface MetaSolicitud {
   userAgent: string;
   idioma: string;
   referer: string;
-  pais: string;
-  ciudad: string;
   fecha: string;
 }
 
 /**
  * Lo que se deja en el log cuando un mensaje no se pudo enviar.
  *
- * Los adjuntos van sólo por nombre y tamaño, NUNCA el contenido: en
- * "Certificados y documentos" llegan licencias médicas de alumnos, y un
- * `JSON.stringify` del Buffer las dejaría copiadas byte a byte en los logs de
- * Vercel, que retienen y que ve cualquiera con acceso al proyecto.
+ * Los adjuntos van sólo por nombre y tamaño, NUNCA el contenido: un
+ * `JSON.stringify` del Buffer dejaría currículums copiados byte a byte en los
+ * logs de Vercel, que retienen y que ve cualquiera con acceso al proyecto.
  */
 function paraLog(datos: DatosContacto, ip: string): string {
   const { adjuntos, ...resto } = datos;
@@ -193,12 +190,19 @@ export async function notificarContacto(
 
   const forense = [
     `IP:        ${meta.ip}`,
-    `Ubicación: ${[meta.ciudad, meta.pais].filter(Boolean).join(", ") || "—"}`,
     `Navegador: ${meta.userAgent}`,
     `Idioma:    ${meta.idioma}`,
     `Origen:    ${meta.referer || "—"}`,
     `Fecha:     ${meta.fecha}`,
   ].join("\n");
+
+  // El endpoint rechaza todo envío sin la casilla marcada, así que si llegamos
+  // acá el remitente aceptó ESTE texto. Se deja constancia del texto y su
+  // versión en el correo: es el registro que pide el asesor legal.
+  const consentimiento = {
+    version: contenido["contacto.consentimiento_version"],
+    texto: contenido["contacto.consentimiento"],
+  };
 
   const categoriaLabel = labelCategoria(datos.categoria);
   const sedeLabel = labelSede(datos.sede);
@@ -223,6 +227,7 @@ export async function notificarContacto(
       asunto: datos.asunto,
       mensaje: datos.mensaje,
       adjuntos: adjuntos.map((a) => a.filename),
+      consentimiento: { aceptado: true, version: consentimiento.version },
     },
     null,
     2
@@ -246,6 +251,9 @@ export async function notificarContacto(
     datos.mensaje,
     ``,
     `— — — — — — — — — — — — — — — —`,
+    `Consentimiento aceptado (versión ${consentimiento.version}, ${fechaChile(meta.fecha)}):`,
+    `"${consentimiento.texto}"`,
+    ``,
     `Datos de origen (para eventual reporte de abuso):`,
     forense,
     ``,
@@ -272,7 +280,9 @@ export async function notificarContacto(
         <tr><td style="padding:4px 8px;color:#8A8578">Adjuntos</td><td style="padding:4px 8px">${esc(listaAdjuntos)}</td></tr>
       </table>
       <p style="white-space:pre-wrap;color:#2A2825;background:#F5F0E8;padding:16px;border-radius:8px">${esc(datos.mensaje)}</p>
-      <pre style="font-size:11px;color:#8A8578;border-top:1px solid #E0DCD4;padding-top:12px;margin-top:24px;white-space:pre-wrap">${esc(forense)}</pre>
+      <p style="font-size:11px;color:#8A8578;border-top:1px solid #E0DCD4;padding-top:12px;margin-top:24px">
+        Consentimiento aceptado (versión ${esc(consentimiento.version)}): “${esc(consentimiento.texto)}”</p>
+      <pre style="font-size:11px;color:#8A8578;white-space:pre-wrap">${esc(forense)}</pre>
     </div>`;
 
   await transport.sendMail({
@@ -293,6 +303,7 @@ export async function notificarContacto(
       "X-GC-Categoria": datos.categoria,
       "X-GC-Sede": datos.sede,
       "X-GC-Origen": "formulario-web",
+      "X-GC-Consentimiento": consentimiento.version,
     },
     text: texto,
     html,

@@ -72,6 +72,9 @@ const contactoSchema = z.object({
   mensaje: textoLargo(10, 2000),
   // Lista blanca: este valor va a parar a una cabecera del correo.
   sede: z.string().refine(esSedeValida, "Sede inválida").optional(),
+  // Casilla de consentimiento. Obligatoria: sin ella no se envía nada. El
+  // `required` del navegador no cuenta, se exige acá.
+  consentimiento: z.literal("si"),
   // Antispam — no se muestran al usuario
   companyWebsite: z.string().max(TOPE_ABSURDO).optional(), // honeypot
   // ms desde que se abrió el form. Llega como texto: el body es multipart.
@@ -204,11 +207,9 @@ function getMeta(req: NextRequest): MetaSolicitud {
     userAgent: h.get("user-agent") || "—",
     idioma: h.get("accept-language") || "—",
     referer: h.get("referer") || "—",
-    // Geolocalización que Vercel inyecta gratis (vacío fuera de Vercel).
-    pais: h.get("x-vercel-ip-country") || "",
-    ciudad: h.get("x-vercel-ip-city")
-      ? decodeURIComponent(h.get("x-vercel-ip-city")!)
-      : "",
+    // Sin país ni ciudad: Vercel los inyecta (x-vercel-ip-*), pero el asesor
+    // legal no ve necesidad de geolocalizar cada mensaje (informe 2026-10-21).
+    // No volver a agregarlos sin una justificación documentada.
     fecha: new Date().toISOString(),
   };
 }

@@ -37,22 +37,34 @@ export const contenido = {
   // `adjuntos: true` habilita "Adjuntar archivo" para esa categoría.
   // `aviso_adjuntos` es el texto que se muestra sobre el campo.
   //
-  // "documentos" recibe licencias médicas y certificados de alumnos: datos
-  // sensibles de menores. Está habilitado por decisión expresa del responsable
-  // del sitio (2026-10-17), como excepción a la regla #1 de CLAUDE.md, con la
-  // revisión legal (Ley 21.719) PENDIENTE. Ver docs/CONTENIDO.md.
+  // "documentos" NO acepta adjuntos. Entre el 2026-10-17 y el 2026-10-21 recibió
+  // licencias médicas de alumnos; se cerró por el informe del asesor legal: el
+  // DPA de Vercel prohíbe datos sensibles y desde el 1-dic-2026 el art. 16 bis
+  // de la Ley 19.628 restringe los datos de salud en el ámbito escolar. No
+  // reabrir sin una nueva revisión legal. Ver docs/CONTENIDO.md.
   "contacto.categorias": [
     { "id": "admision", "label": "Admisión y matrícula" },
-    {
-      "id": "documentos",
-      "label": "Certificados y documentos",
-      "adjuntos": true,
-      "aviso_adjuntos": "Puedes adjuntar licencias médicas, certificados u otros documentos. Llegan sólo al correo del colegio y se usan únicamente para tramitar tu solicitud; el sitio web no los guarda."
-    },
+    { "id": "documentos", "label": "Certificados y documentos" },
     { "id": "proveedores", "label": "Proveedores" },
-    { "id": "trabajo", "label": "Trabaja con nosotros", "adjuntos": true },
+    {
+      "id": "trabajo",
+      "label": "Trabaja con nosotros",
+      "adjuntos": true,
+      "aviso_adjuntos": "Adjunta sólo tus antecedentes profesionales. No incluyas datos de salud, certificados médicos ni otros datos sensibles."
+    },
     { "id": "otro", "label": "Otro" }
   ],
+  // Aviso y casilla del formulario: texto del asesor legal de la corporación
+  // (informe recibido el 2026-10-21, punto 7). No reescribir sin su revisión.
+  // Mientras no exista la Política de Privacidad publicada se omiten las frases
+  // que la enlazan; la línea de IP y navegador es un agregado de desarrollo
+  // pendiente de validar con él.
+  //
+  // `consentimiento_version` viaja en cada correo junto con el texto aceptado:
+  // si se cambia el texto de la casilla, se cambia también la versión.
+  "contacto.aviso_privacidad": "Este formulario es administrado por la Corporación Educacional Filadelfia Garden para recibir y responder consultas y gestionar las solicitudes que usted seleccione. No incluya diagnósticos, certificados médicos, exámenes ni otros datos sensibles en el mensaje o los archivos. Para presentar antecedentes de salud de estudiantes, solicite a Secretaría información sobre el procedimiento habilitado, sin adjuntarlos por esta vía. Los mensajes se conservan en el correo institucional. Utilizamos servicios tecnológicos de Vercel y Google Workspace que pueden implicar tratamiento de datos fuera de Chile. Para prevenir abusos registramos la dirección IP y el navegador desde el que se envía. El teléfono es opcional.",
+  "contacto.consentimiento": "Autorizo expresamente a la Corporación Educacional Filadelfia Garden a tratar los datos personales que proporciono para gestionar y responder esta solicitud.",
+  "contacto.consentimiento_version": "2026-10-21",
   "eventos.titulo": "Historias Garden",
   "eventos.subtitulo": "Lo que somos, contado desde adentro",
   "eventos.badge": "Lo que vivimos",

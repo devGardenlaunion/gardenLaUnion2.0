@@ -67,17 +67,33 @@ Iconos disponibles para `sellos.cards`: `book-open`, `heart-pulse`, `globe`,
   interno, nunca al acuse. Reglas en `src/lib/adjuntos.ts`; el server revisa el
   tipo real por los bytes del archivo, no por la extensión.
 - **`"aviso_adjuntos"`** es el texto que aparece sobre el campo de archivos.
-- **Activo en `trabajo` y en `documentos`.** `documentos` recibe licencias
-  médicas y certificados de alumnos: datos sensibles de menores (Ley 21.719,
-  vigente desde dic-2026). Se habilitó el 2026-10-17 por decisión expresa del
-  responsable, como excepción a la regla #1 de `CLAUDE.md`. Lo que el código
-  garantiza: los archivos sólo transitan por la función de Vercel hacia el
-  correo, no se escriben en disco ni en los logs (`paraLog()` en `mail.ts`), y
-  no vuelven en el acuse.
-- **Pendiente legal** (no es de código, lo define el colegio con un abogado):
-  base de licitud para datos de salud de menores, plazo de retención en el
-  buzón, quién del colegio accede a ese buzón, y que el aviso de privacidad del
-  formulario mencione el paso por Vercel (EE.UU.) y Google.
+- **Activo sólo en `trabajo`**, con un aviso que pide no incluir datos de salud.
+- **`documentos` NO acepta adjuntos, y no se reabre sin revisión legal.** Entre
+  el 2026-10-17 y el 2026-10-21 recibió licencias médicas de alumnos como
+  excepción a la regla #1 de `CLAUDE.md`. Se cerró por el informe del asesor
+  legal de la corporación (2026-10-21), por dos motivos:
+  - El acuerdo de tratamiento de datos de Vercel prohíbe datos sensibles, y el
+    archivo cuenta como tratado aunque sólo transite por la función.
+  - Desde el 1-dic-2026, el art. 16 bis de la Ley 19.628 (incorporado por la
+    21.719) restringe los datos de salud en el ámbito escolar, salvo
+    habilitación legal expresa. Una casilla de consentimiento no basta.
+  El buzón no recibió ninguna licencia en ese período (revisado por el dev el
+  2026-10-21). Antecedentes de salud: canal presencial vía Secretaría.
+
+### Aviso de privacidad y casilla de consentimiento
+
+- Textos en `contacto.aviso_privacidad` y `contacto.consentimiento`
+  (`src/content/config.ts`). Son del asesor legal: no reescribirlos sin él.
+- La casilla parte desmarcada y es obligatoria. El server rechaza el envío sin
+  ella (`consentimiento` en el schema de `/api/contacto`).
+- Cada correo deja constancia del texto aceptado y de
+  `contacto.consentimiento_version` (en el cuerpo, en el bloque JSON y en la
+  cabecera `X-GC-Consentimiento`). **Si cambia el texto, cambia la versión.**
+- El correo registra IP y navegador para reportar abusos. País y ciudad ya no se
+  registran: el asesor no ve necesidad de geolocalizar cada mensaje.
+- **Pendiente:** publicar la Política de Privacidad (el asesor dejó el borrador;
+  faltan RUT, domicilio y plazos aprobados por el colegio) y, al hacerlo,
+  reponer en el aviso y en la casilla las frases que la enlazan.
 
 ---
 
