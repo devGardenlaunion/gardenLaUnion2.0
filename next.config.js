@@ -54,6 +54,11 @@ const REDIRECTS_WORDPRESS = {
   '/tag/:resto*': '/#eventos',
   '/author/:resto*': '/#eventos',
 
+  // PDFs subidos al WP: Google indexó el PEI directo. Lo específico va antes
+  // que el comodín (gana el primer redirect que calza).
+  '/wp-content/uploads/2025/04/PEICOLEGIOGARDENCOLLEGE.pdf': '/documentos?doc=pei',
+  '/wp-content/uploads/:resto*': '/documentos',
+
   // Páginas de adjunto de fotos del WP
   '/fachada': '/#galeria',
   '/fotogc:n': '/#galeria',
