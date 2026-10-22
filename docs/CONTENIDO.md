@@ -68,10 +68,11 @@ Iconos disponibles para `sellos.cards`: `book-open`, `heart-pulse`, `globe`,
   tipo real por los bytes del archivo, no por la extensión.
 - **`"aviso_adjuntos"`** es el texto que aparece sobre el campo de archivos.
 - **Activo sólo en `trabajo`**, con un aviso que pide no incluir datos de salud.
-- **`documentos` NO acepta adjuntos, y no se reabre sin revisión legal.** Entre
-  el 2026-10-17 y el 2026-10-21 recibió licencias médicas de alumnos como
-  excepción a la regla #1 de `CLAUDE.md`. Se cerró por el informe del asesor
-  legal de la corporación (2026-10-21), por dos motivos:
+- **La categoría `documentos` ("Certificados y documentos") se retiró y no se
+  repone sin revisión legal.** Entre el 2026-10-17 y el 2026-10-21 recibió
+  licencias médicas de alumnos como excepción a la regla #1 de `CLAUDE.md`. Se
+  cerró por el informe del asesor legal de la corporación (2026-10-21), por dos
+  motivos:
   - El acuerdo de tratamiento de datos de Vercel prohíbe datos sensibles, y el
     archivo cuenta como tratado aunque sólo transite por la función.
   - Desde el 1-dic-2026, el art. 16 bis de la Ley 19.628 (incorporado por la

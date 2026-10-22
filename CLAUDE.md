@@ -18,8 +18,8 @@ Deploy: Vercel, con `git push` a `main`. Dominio: https://gardenlaunion.cl
 - **NUNCA** hardcodear credenciales, tokens, o secrets en código. Todo va en `.env`.
 - **NUNCA** exponer datos de estudiantes, apoderados o menores de edad. Este proyecto maneja SOLO datos públicos del colegio (noticias, galería, info institucional).
 - Si algún requerimiento implica procesar datos personales de menores, **RECHAZAR** y señalarlo.
-  - **No hay excepciones vigentes.** Los adjuntos de licencias médicas en
-    "Certificados y documentos" (habilitados el 2026-10-17) se cerraron el
+  - **No hay excepciones vigentes.** La categoría "Certificados y documentos",
+    que recibía licencias médicas desde el 2026-10-17, se retiró el
     2026-10-21 por informe del asesor legal: el DPA de Vercel prohíbe datos
     sensibles y desde dic-2026 la ley restringe los datos de salud escolares.
     **No reabrir ni crear otra vía para datos de salud sin una nueva revisión

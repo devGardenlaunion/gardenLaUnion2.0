@@ -37,14 +37,14 @@ export const contenido = {
   // `adjuntos: true` habilita "Adjuntar archivo" para esa categoría.
   // `aviso_adjuntos` es el texto que se muestra sobre el campo.
   //
-  // "documentos" NO acepta adjuntos. Entre el 2026-10-17 y el 2026-10-21 recibió
-  // licencias médicas de alumnos; se cerró por el informe del asesor legal: el
-  // DPA de Vercel prohíbe datos sensibles y desde el 1-dic-2026 el art. 16 bis
-  // de la Ley 19.628 restringe los datos de salud en el ámbito escolar. No
-  // reabrir sin una nueva revisión legal. Ver docs/CONTENIDO.md.
+  // Hubo una categoría "documentos" (Certificados y documentos) que entre el
+  // 2026-10-17 y el 2026-10-21 recibió licencias médicas de alumnos. Se retiró
+  // por el informe del asesor legal: el DPA de Vercel prohíbe datos sensibles y
+  // desde el 1-dic-2026 el art. 16 bis de la Ley 19.628 restringe los datos de
+  // salud en el ámbito escolar. No reponerla sin una nueva revisión legal. Ver
+  // docs/CONTENIDO.md.
   "contacto.categorias": [
     { "id": "admision", "label": "Admisión y matrícula" },
-    { "id": "documentos", "label": "Certificados y documentos" },
     { "id": "proveedores", "label": "Proveedores" },
     {
       "id": "trabajo",
