@@ -28,6 +28,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.5,
     },
+    {
+      url: absUrl("/enlaces"),
+      lastModified: hoy,
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
     ...getEventosPublicados().map((evento) => ({
       url: absUrl(`/eventos/${evento.slug}`),
       lastModified: new Date(evento.fecha),
