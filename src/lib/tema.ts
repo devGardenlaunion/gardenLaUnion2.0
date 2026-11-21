@@ -5,7 +5,9 @@
  * default. Poniendo el atributo `data-theme="clasico"` en <html> deja de
  * aplicar el bloque del uniforme en src/app/globals.css y el sitio entero
  * vuelve al verde jade, sin recompilar ni pedir nada al servidor. Es una vista
- * interna: se enciende con el botón del footer para comparar con "lo de antes".
+ * interna para comparar con "lo de antes". El botón del footer que la encendía
+ * se quitó (dev, 2026-11-21); queda el aviso flotante (ModoRevision) para que
+ * quien tenga la cookie pueda salir.
  *
  * Persistencia por COOKIE (no localStorage: lo prohíbe CLAUDE.md, y además la
  * cookie la lee un script inline en el <head> del layout para aplicar el tema
