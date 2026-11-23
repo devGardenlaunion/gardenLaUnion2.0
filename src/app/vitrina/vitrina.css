@@ -136,7 +136,7 @@
 }
 .vitrina-titulo-medio {
   font-size: 6vmin;
-  max-width: 24ch;
+  max-width: 30ch;
 }
 .vitrina-slogan {
   /* Interlineado propio: el heredado va en px (la densidad) y con letra en vmin las líneas se montaban (dev,
@@ -258,13 +258,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.4vmin;
-  width: 18vmin;
-  font-size: 2.8vmin;
+  gap: 1.8vmin;
+  width: 24vmin;
+  font-size: 3.6vmin;
+  line-height: 1.25;
 }
+/* La corta muestra los sellos juntos en una lámina: a 3–4 m tienen que leerse (dev, 2026-11-23). */
 .vitrina-sellos svg {
-  width: 9vmin;
-  height: 9vmin;
+  width: 12vmin;
+  height: 12vmin;
   color: var(--acento);
   stroke-width: 1.5;
 }
@@ -382,7 +384,7 @@
   gap: 1.4vmin;
 }
 .vitrina-extras li {
-  font-size: 2.2vmin;
+  font-size: 2.8vmin;
   padding: 0.8vmin 2vmin;
   border-radius: 99px;
   border: 1px solid var(--acento);
@@ -550,6 +552,33 @@
   padding: 0 0.5rem;
   font-variant-numeric: tabular-nums;
   opacity: 0.8;
+}
+
+/* Las redes al pie del cierre: logo y usuario, en una fila. */
+.vitrina-redes-cierre {
+  list-style: none;
+  margin: 3vmin 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2vmin 4vmin;
+}
+.vitrina-redes-cierre li {
+  display: flex;
+  align-items: center;
+  gap: 1.2vmin;
+  font-size: 2.6vmin;
+}
+.vitrina-redes-cierre .vitrina-red-icono {
+  width: 4.6vmin;
+  height: 4.6vmin;
+}
+.vitrina.vertical .vitrina-redes-cierre li {
+  font-size: 3.4vmin;
+}
+.vitrina.vertical .vitrina-redes-cierre .vitrina-red-icono {
+  width: 6vmin;
+  height: 6vmin;
 }
 
 /* ——— Detrás del video en el tótem ——— */

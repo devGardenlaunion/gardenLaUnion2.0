@@ -503,6 +503,16 @@ function PasoDeLaVitrina({
                 </li>
               ))}
             </ul>
+            {p.redes?.length > 0 && (
+              <ul className="vitrina-redes-cierre" aria-label="Nuestras redes">
+                {p.redes.map((r: { red: Red; nombre: string; usuario?: string }) => (
+                  <li key={r.red}>
+                    <IconoRed red={r.red} className="vitrina-red-icono" />
+                    <span>{r.usuario ?? r.nombre}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       );

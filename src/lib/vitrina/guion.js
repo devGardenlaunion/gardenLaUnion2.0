@@ -105,6 +105,7 @@ function conRedes(pasos, c, cada) {
   return r
 }
 
+/** El cierre: QR, admisión, sedes y **los logos de las redes** (dev, 2026-11-23: en la corta no se veían al final). */
 function cierre(c, segundos) {
   return {
     tipo: 'cierre',
@@ -112,6 +113,7 @@ function cierre(c, segundos) {
     sitio: destinoDelQr(c),
     admision: c.admision.info,
     sedes: c.sedes,
+    redes: c.redes ?? [],
     segundos,
   }
 }
@@ -201,7 +203,8 @@ function corta(c) {
       {
         tipo: 'cifra',
         cifra: c.sellos.cifra,
-        texto: 'Años formando comunidad en La Unión.',
+        // El mismo texto que la larga (la de la lámina corregida), no uno escrito aparte.
+        texto: c.sellos.cifraTexto,
         segundos: 7,
       },
       cierre(c, 14),
@@ -319,8 +322,9 @@ export function guionDe(version, pantalla = 'horizontal', c = contenido) {
   const pasos = (version === 'larga' ? larga : corta)(c).filter((p) =>
     p.tipo === 'foto' || p.tipo === 'video' ? p.src : true,
   )
-  // En la corta (2 min) una vez a la mitad; en la larga, cada unos 4 minutos.
-  return conRedes(pasos, c, version === 'larga' ? 240 : 45)
+  // En la corta (2 min) una vez a la mitad, y el cierre también las lleva. En la larga, cada unos 3 minutos (dev,
+  // 2026-11-23: «que aparezcan las redes nuestras por lo menos 2 o 3 veces»; con 4 minutos no salían en los 10 últimos).
+  return conRedes(pasos, c, version === 'larga' ? 170 : 45)
 }
 
 /** Lo que hay en la web: el script (`scripts/vitrina-contenido.mjs`) solo anota lo que existe y es grande. */
