@@ -119,7 +119,12 @@
         "src": "/media/Hero/hero.webm",
         "segundos": 64
       },
-      "poster": "/media/Hero/posterDesktop.webp"
+      "poster": "/media/Hero/posterDesktop.webp",
+      "videoVertical": {
+        "src": "/media/vitrina/hero.mp4",
+        "segundos": 60
+      },
+      "posterVertical": "/media/Hero/posterMobile.webp"
     },
     "quienesSomos": [
       "/media/QuienesSomos/polaroid/02.webp",
@@ -175,6 +180,10 @@
       ],
       "video": {
         "src": "/media/eventos/fomento-lector/hero/SFLHero.mp4",
+        "segundos": 7
+      },
+      "videoVertical": {
+        "src": "/media/eventos/fomento-lector/hero/SFLHeroMobile.mp4",
         "segundos": 7
       },
       "portada": null,
@@ -273,6 +282,10 @@
       "video": {
         "src": "/media/eventos/gala-folclorica/hero/FPHero.mp4",
         "segundos": 52
+      },
+      "videoVertical": {
+        "src": "/media/vitrina/gala-folclorica.mp4",
+        "segundos": 46
       },
       "portada": "/media/eventos/gala-folclorica/hero/FPHero.webp",
       "polaroid": [

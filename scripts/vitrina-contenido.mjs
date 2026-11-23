@@ -88,6 +88,53 @@ const videos = (carpeta) => {
 };
 const unVideo = (carpeta) => videos(carpeta)[0] ?? null;
 
+/**
+ * **La versión vertical del video de una carpeta** (dev, 2026-11-23: «tengo clips especiales para pantallas verticales;
+ * si están mejor, ponemos esos»): la web los tiene para el teléfono (`heroVert`, `FPHeroMobile`, `SFLHeroMobile`, de 4:5 o
+ * cuadrados). En el tótem llenan mucho más que uno de 21:9. Se elige el más alto que ancho (o cuadrado) de mayor
+ * resolución; si el mismo está en webm y mp4, el webm. Sin uno así, `null` y el tótem usa el horizontal.
+ *
+ * **Manda `public/media/vitrina/<clave>.mp4`** si existe: el mismo clip a 1080 × 1350 sacado del original (los de la web
+ * son de 720 × 900, para el teléfono, y un tótem de 43–55" mide 1080 de ancho). Van en su carpeta porque el sitio elige
+ * los videos de `Hero/` y de `hero/` por nombre: uno más ahí podía colarse en la portada. Se hacen así (sin audio: la
+ * vitrina va muda):
+ *   ffmpeg -i "<original 4_5>.mp4" -an -vf "scale=1080:1350:flags=lanczos,format=yuv420p" -c:v libx264 -preset slow \
+ *     -crf 25 -profile:v high -movflags +faststart public/media/vitrina/<clave>.mp4
+ */
+const unVideoVertical = (carpeta, clave) => {
+  try {
+    statSync(path.join(media, 'vitrina', `${clave}.mp4`));
+    return conDuracion(`/media/vitrina/${clave}.mp4`);
+  } catch {
+    // Sin versión propia para el tótem: la vertical de la web, si hay.
+  }
+  const dir = path.join(media, carpeta);
+  let nombres = [];
+  try {
+    nombres = readdirSync(dir).filter((n) => VIDEO.test(n));
+  } catch {
+    return null;
+  }
+  const altos = nombres
+    .map((n) => ({ n, ...medida(path.join(dir, n)) }))
+    .filter((v) => v.alto >= v.ancho)
+    .sort((a, b) => b.alto * b.ancho - a.alto * a.ancho || (b.n.endsWith('.webm') ? 1 : 0) - (a.n.endsWith('.webm') ? 1 : 0));
+  return altos.length ? conDuracion(`/media/${carpeta}/${altos[0].n}`) : null;
+};
+/** Un póster vertical (el de teléfono): la primera imagen más alta que ancha, sin pedirle tamaño (va desenfocado). */
+const unPosterVertical = (carpeta) => {
+  try {
+    const n = readdirSync(path.join(media, carpeta)).find((x) => {
+      if (!IMAGEN.test(x)) return false;
+      const { ancho, alto } = medida(path.join(media, carpeta, x));
+      return alto > ancho;
+    });
+    return n ? `/media/${carpeta}/${n}` : null;
+  } catch {
+    return null;
+  }
+};
+
 /** «@garden.launion» desde la URL de la red (como en `/enlaces`); Facebook no trae usuario en su URL. */
 function usuarioDe(url) {
   const segmentos = new URL(url).pathname.split('/').filter(Boolean);
@@ -148,7 +195,12 @@ const datos = {
     escudo: '/media/Logo/leon-circulo.webp',
     // El mismo escudo en 512 px, para la portada en pantalla grande (el de 220 px se ve borroso a ese tamaño).
     escudoGrande: '/media/Logo/cropped-cropped-logo.png',
-    hero: { video: unVideo('Hero'), poster: '/media/Hero/posterDesktop.webp' },
+    hero: {
+      video: unVideo('Hero'),
+      poster: '/media/Hero/posterDesktop.webp',
+      videoVertical: unVideoVertical('Hero', 'hero'),
+      posterVertical: unPosterVertical('Hero'),
+    },
     quienesSomos: archivos('QuienesSomos/polaroid', IMAGEN),
     convivencia: archivos('carousel-cards/convivencia', IMAGEN),
     galeria: archivos('Galeria', IMAGEN),
@@ -170,6 +222,7 @@ const datos = {
         fecha: e.fecha,
         parrafos: parrafos(e.texto),
         video: unVideo(`${base}/hero`),
+        videoVertical: unVideoVertical(`${base}/hero`, e.slug),
         portada: archivos(`${base}/hero`, IMAGEN)[0] ?? null,
         polaroid: archivos(`${base}/polaroid`, IMAGEN),
         galerias: anios.map((anio) => ({

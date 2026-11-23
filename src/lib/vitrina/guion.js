@@ -151,15 +151,21 @@ const niveles = (c) =>
     sedeNombre: c.sedes.find((s) => s.direccion.startsWith(n.sede))?.nombre ?? null,
   }))
 
-/** Un video: entero si `tope` no se da (la versión larga), o solo sus primeros `tope` segundos. */
-const video = (v, extra, tope) =>
-  v && {
+/**
+ * Un video: entero si `tope` no se da (la versión larga), o solo sus primeros `tope` segundos. `vertical` es su versión
+ * para el teléfono (4:5 o cuadrada), que en el tótem reemplaza a la horizontal; su póster, `posterVertical` en `extra`.
+ */
+const video = (horizontal, extra, tope, vertical) => {
+  const v = (enVertical && vertical) || horizontal
+  const { posterVertical, ...resto } = extra
+  if (enVertical && vertical) resto.poster = posterVertical ?? resto.poster
+  return v && {
     tipo: 'video',
     src: v.src,
-    ...extra,
+    ...resto,
     segundos: tope ? Math.min(tope, v.segundos) : v.segundos,
   }
-
+}
 /** Marca a qué parte pertenece cada paso: el módulo muestra el índice de cada versión con esto. */
 const parte = (nombre, ...pasos) =>
   pasos
@@ -170,7 +176,7 @@ const parte = (nombre, ...pasos) =>
 function corta(c) {
   return [
     parte('Portada', portada(c, 7)),
-    parte('Video del colegio', video(c.medios.hero.video, { poster: c.medios.hero.poster }, 18)),
+    parte('Video del colegio', video(c.medios.hero.video, { poster: c.medios.hero.poster, posterVertical: c.medios.hero.posterVertical }, 18, c.medios.hero.videoVertical)),
     parte('Sellos', {
       tipo: 'sellos',
       titulo: c.sellos.titulo,
@@ -185,6 +191,7 @@ function corta(c) {
           e.video,
           { poster: e.portada, rotulo: 'Lo que vivimos', titulo: e.nombre, texto: e.extracto },
           10,
+          e.videoVertical,
         ),
         fotos(muestra(e.polaroid, 3), 'Lo que vivimos', e.nombre, 5),
       ),
@@ -207,7 +214,7 @@ function larga(c) {
   return [
     parte('Portada', portada(c, 10)),
     // Entero (dev, 2026-11-21: «la versión larga debería tener el video completo»).
-    parte('Video del colegio', video(c.medios.hero.video, { poster: c.medios.hero.poster })),
+    parte('Video del colegio', video(c.medios.hero.video, { poster: c.medios.hero.poster, posterVertical: c.medios.hero.posterVertical }, undefined, c.medios.hero.videoVertical)),
     parte(
       'Quiénes somos',
       {
@@ -267,7 +274,12 @@ function larga(c) {
     ...c.eventos.map((e) =>
       parte(
         e.nombre,
-        video(e.video, { poster: e.portada, rotulo: 'Lo que vivimos', titulo: e.nombre }),
+        video(
+          e.video,
+          { poster: e.portada, rotulo: 'Lo que vivimos', titulo: e.nombre },
+          undefined,
+          e.videoVertical,
+        ),
         {
           tipo: 'lamina',
           rotulo: 'Lo que vivimos',
