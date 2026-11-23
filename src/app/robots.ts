@@ -22,7 +22,8 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // /api/contacto sólo acepta POST; no hay nada que rastrear ahí.
-      disallow: ["/api/"],
+      // /vitrina pide clave y es para pantallas en eventos, no para buscar.
+      disallow: ["/api/", "/vitrina"],
     },
     sitemap: absUrl("/sitemap.xml"),
     host: SITE_URL,

@@ -130,6 +130,11 @@ garden-web/
 - `/documentos` → Centro de documentación. El `?doc=` se resuelve en el cliente
   para no volver la página dinámica.
 - `/sitemap.xml`, `/robots.txt` → generados desde el contenido real.
+- `/vitrina` → El colegio en loop para pantallas en eventos (TV horizontal o tótem
+  vertical 9:16). Abierta, `noindex` y fuera del sitemap. Su contenido es
+  `src/lib/vitrina/contenido.json`, que se regenera a mano con
+  `node scripts/vitrina-contenido.mjs` (Node 22.18+ y ffprobe) cuando cambian
+  fotos o eventos. Sin API a propósito: nada que atacar.
 
 ### API routes
 - `POST /api/contacto` → Recibir mensaje del formulario. Público, con honeypot,

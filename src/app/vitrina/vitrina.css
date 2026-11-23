@@ -1,0 +1,832 @@
+/*
+ * La vitrina del colegio (`/vitrina`, traída de gcadmin el 2026-11-23). Va a 3–4 m de una pantalla grande: todo en
+ * `vmin`, así crece con la pantalla. Fondo marino, dorado para destacar, las tipografías del sitio (Lora y Source Sans 3).
+ * `.vitrina.vertical` es el tótem de pie (9:16, 1080 × 1920): al final del archivo.
+ */
+.vitrina,
+.vitrina-entrada {
+  --surface: #1b2a4a;
+  --ink: #fafaf8;
+  --acento: #d4bc5e;
+  --font-titulo: var(--font-lora), Georgia, serif;
+  --font-sans: var(--font-source-sans), system-ui, sans-serif;
+}
+.vitrina {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+.vitrina.sin-cursor {
+  cursor: none;
+}
+.vitrina h1,
+.vitrina h2 {
+  font-family: var(--font-titulo);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0;
+}
+.vitrina p {
+  margin: 0;
+}
+.vitrina-dorado {
+  color: var(--acento);
+}
+
+/* ——— Carga ——— */
+.vitrina-carga {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vmin;
+  padding: 6vmin;
+  text-align: center;
+}
+.vitrina-carga h1 {
+  font-size: 6vmin;
+}
+.vitrina-carga p {
+  font-size: 2.6vmin;
+  opacity: 0.8;
+}
+.vitrina-barra {
+  width: min(70vw, 60rem);
+  height: 1vmin;
+  border-radius: 1vmin;
+  background: rgb(255 255 255 / 0.15);
+  overflow: hidden;
+}
+.vitrina-barra span {
+  display: block;
+  height: 100%;
+  background: var(--acento);
+  transition: width 0.3s;
+}
+
+/* ——— Un paso ——— */
+.vitrina-paso {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.vitrina-paso.visible {
+  opacity: 1;
+}
+.vitrina-avance {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 0.5vmin;
+  width: 100%;
+  background: var(--acento);
+  opacity: 0.7;
+  transform-origin: left;
+  animation: vitrina-avance var(--dura) linear both;
+}
+.vitrina-paso.en-pausa .vitrina-avance,
+.vitrina-paso.en-pausa .lento .vitrina-foto-frente {
+  animation-play-state: paused;
+}
+@keyframes vitrina-avance {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.vitrina-rotulo {
+  display: block;
+  font-size: 2.2vmin;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+.vitrina-centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4vmin;
+  padding: 8vmin 10vw;
+  text-align: center;
+}
+.vitrina-logos {
+  display: flex;
+  gap: 4vmin;
+}
+.vitrina-logo {
+  width: 24vmin;
+  height: 24vmin;
+}
+.vitrina-titulo-grande {
+  font-size: 11vmin;
+}
+.vitrina-titulo-medio {
+  font-size: 6vmin;
+  max-width: 24ch;
+}
+.vitrina-slogan {
+  /* Interlineado propio: el heredado va en px (la densidad) y con letra en vmin las líneas se montaban (dev,
+     2026-11-21: la lámina «20+» de la larga). */
+  line-height: 1.35;
+  font-size: 4.4vmin;
+  font-family: var(--font-titulo);
+  font-style: italic;
+  opacity: 0.9;
+  max-width: 34ch;
+}
+.vitrina-cifra {
+  font-family: var(--font-titulo);
+  font-size: 30vmin;
+  line-height: 1;
+  color: var(--acento);
+}
+
+/* Foto: la misma, desenfocada, de fondo; encima, entera y con un acercamiento lento. */
+.vitrina-foto {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.vitrina-foto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.vitrina-foto-fondo {
+  object-fit: cover;
+  filter: blur(4vmin) brightness(0.55);
+  transform: scale(1.15);
+}
+.vitrina-foto-frente {
+  object-fit: contain;
+}
+.lento .vitrina-foto-frente {
+  animation: vitrina-acercar var(--dura) ease-out both;
+}
+@keyframes vitrina-acercar {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+/* Entero, con barras (dev, 2026-11-21: «ajústalos al ancho de la pantalla; tienen letras que quedan cortadas»). */
+.vitrina-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+/* El cartel abajo a la izquierda, sobre un degradado para que se lea en cualquier foto. */
+.vitrina-cartel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14vmin 6vmin 6vmin;
+  background: linear-gradient(to top, rgb(10 20 40 / 0.85), rgb(10 20 40 / 0));
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vmin;
+}
+.vitrina-cartel h2 {
+  font-size: 6vmin;
+}
+.vitrina-cartel p {
+  font-size: 3vmin;
+  max-width: 60ch;
+  opacity: 0.92;
+}
+
+/* Lámina: texto grande sobre una foto muy oscurecida. */
+.vitrina-velo-foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(0.6vmin) brightness(0.3);
+  transform: scale(1.05);
+}
+.vitrina-lamina h2 {
+  font-size: 6vmin;
+  max-width: 26ch;
+}
+.vitrina-lamina p {
+  font-size: 3.8vmin;
+  line-height: 1.4;
+  max-width: 44ch;
+}
+.vitrina-lamina p.largo {
+  font-size: 3.1vmin;
+  max-width: 56ch;
+}
+
+.vitrina-sellos,
+.vitrina-lista {
+  list-style: none;
+  margin: 2vmin 0 0;
+  padding: 0;
+}
+.vitrina-sellos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3vmin 5vmin;
+  max-width: 90vw;
+}
+.vitrina-sellos li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4vmin;
+  width: 18vmin;
+  font-size: 2.8vmin;
+}
+.vitrina-sellos svg {
+  width: 9vmin;
+  height: 9vmin;
+  color: var(--acento);
+  stroke-width: 1.5;
+}
+.vitrina-lista {
+  display: grid;
+  gap: 1.8vmin;
+  text-align: left;
+}
+.vitrina-lista li {
+  font-size: 3.6vmin;
+  padding-left: 4vmin;
+  position: relative;
+}
+.vitrina-lista li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 1.6vmin;
+  height: 1.6vmin;
+  border-radius: 50%;
+  background: var(--acento);
+}
+
+/* Mitades: foto a la izquierda, texto a la derecha. */
+.vitrina-mitades,
+.vitrina-cierre {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1.618fr 1fr;
+}
+.vitrina-mitades .vitrina-foto {
+  position: relative;
+}
+.vitrina-mitad-texto {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2vmin;
+  padding: 6vmin;
+}
+.vitrina-mitad-texto h2 {
+  font-size: 6vmin;
+}
+.vitrina-mitad-texto p {
+  font-size: 2.8vmin;
+  line-height: 1.45;
+}
+.vitrina-icono {
+  width: 10vmin;
+  height: 10vmin;
+  color: var(--acento);
+  stroke-width: 1.5;
+}
+.vitrina-sede {
+  display: flex;
+  align-items: center;
+  gap: 1vmin;
+  color: var(--acento);
+}
+
+.vitrina-niveles-todos {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3vmin;
+  padding: 5vmin;
+}
+.vitrina-niveles {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* Sin esto la fila toma el alto natural de las fotos (1600 px) y todo se sale de la pantalla. */
+  grid-template-rows: minmax(0, 1fr) auto;
+  column-gap: 3vmin;
+}
+/* Cada nivel ocupa las dos filas de la grilla (fotos y pie) con subgrid: los tres pies miden lo que el más alto y
+   las fotos quedan del mismo tamaño (dev, 2026-11-21: «deja los footers en un mismo tamaño»). */
+.vitrina-niveles figure {
+  margin: 0;
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  row-gap: 0;
+  min-height: 0;
+  border-radius: 1.4vmin;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.06);
+}
+.vitrina-niveles .vitrina-mosaico {
+  min-height: 0;
+}
+.vitrina-niveles figcaption {
+  padding: 2.4vmin 3vmin 3vmin;
+  display: grid;
+  align-content: start;
+  gap: 0.8vmin;
+}
+.vitrina-niveles h2 {
+  font-size: 4.4vmin;
+}
+.vitrina-niveles p {
+  font-size: 2.6vmin;
+}
+.vitrina-extras {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.4vmin;
+}
+.vitrina-extras li {
+  font-size: 2.2vmin;
+  padding: 0.8vmin 2vmin;
+  border-radius: 99px;
+  border: 1px solid var(--acento);
+}
+
+/* El mosaico: la primera foto ocupa dos filas; las otras, una celda cada una. */
+.vitrina-mosaico {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 0.6vmin;
+  overflow: hidden;
+}
+.vitrina-mosaico.grande {
+  position: relative;
+  grid-template-columns: 1.4fr 1fr;
+}
+.vitrina-mosaico img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  animation: vitrina-acercar var(--dura) ease-out both;
+}
+.vitrina-mosaico img:first-child {
+  grid-row: span 3;
+}
+.vitrina-mosaico[data-cuantas="1"] {
+  grid-template-columns: 1fr;
+}
+.vitrina-mosaico[data-cuantas="1"] img:first-child {
+  grid-row: auto;
+}
+.vitrina-paso.en-pausa .vitrina-mosaico img {
+  animation-play-state: paused;
+}
+
+.vitrina-cierre {
+  grid-template-columns: 1fr 1.2fr;
+  align-items: center;
+}
+.vitrina-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3vmin;
+}
+.vitrina-qr-caja {
+  position: relative;
+  width: 42vmin;
+  padding: 3vmin;
+  border-radius: 2vmin;
+  background: #fff;
+}
+/* El león: ~22 % del ancho del QR, con un anillo blanco para que no se pegue a los módulos. */
+.vitrina-qr-leon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1vmin #fff;
+  background: #fff;
+}
+.vitrina-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.vitrina-qr strong {
+  font-size: 4vmin;
+  font-family: var(--font-titulo);
+}
+.vitrina-redes {
+  list-style: none;
+  margin: 1vmin 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  justify-content: start;
+  gap: 2.4vmin 6vmin;
+}
+/* Cada red: su logo a la izquierda, ocupando las dos líneas (nombre y usuario). */
+.vitrina-redes li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 1.8vmin;
+  row-gap: 0.4vmin;
+}
+.vitrina-red-icono {
+  grid-row: span 2;
+  width: 6.4vmin;
+  height: 6.4vmin;
+  color: var(--ink);
+}
+.vitrina-redes li > :not(svg) {
+  grid-column: 2;
+}
+.vitrina.vertical .vitrina-red-icono {
+  width: 9vmin;
+  height: 9vmin;
+}
+.vitrina-redes strong {
+  font-size: 3.6vmin;
+  color: var(--acento);
+}
+.vitrina-redes span {
+  font-size: 2.8vmin;
+}
+.vitrina-sedes {
+  list-style: none;
+  margin: 1vmin 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1.6vmin;
+}
+.vitrina-sedes li {
+  display: grid;
+  gap: 0.4vmin;
+  font-size: 2.6vmin;
+}
+.vitrina-sedes strong {
+  color: var(--acento);
+}
+
+/* ——— Controles ——— */
+.vitrina-controles {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  background: rgb(10 20 40 / 0.75);
+  backdrop-filter: blur(6px);
+}
+.vitrina-controles button,
+.vitrina-controles a {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.5rem;
+  padding: 0 0.8rem;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.vitrina-controles button:hover,
+.vitrina-controles a:hover {
+  border-color: var(--acento);
+}
+.vitrina-cuenta {
+  padding: 0 0.5rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* ——— Detrás del video en el tótem ——— */
+.vitrina-video-fondo {
+  display: none;
+}
+
+/* ——— El tótem: pantalla de pie, 9:16 (dev, 2026-11-23). En vertical `vmin` es el ancho: las letras miden lo mismo que
+   en una TV de su tamaño, y sobra alto. Todo va en una columna; las fotos, arriba. ——— */
+.vitrina.vertical .vitrina-centro {
+  padding: 10vh 8vw;
+  gap: 3vmin;
+}
+.vitrina.vertical .vitrina-logos {
+  flex-direction: column;
+  align-items: center;
+}
+.vitrina.vertical .vitrina-logo {
+  width: 34vmin;
+  height: 34vmin;
+}
+.vitrina.vertical .vitrina-titulo-grande {
+  font-size: 14vmin;
+}
+.vitrina.vertical .vitrina-slogan {
+  font-size: 6vmin;
+}
+.vitrina.vertical .vitrina-titulo-medio,
+.vitrina.vertical .vitrina-lamina h2,
+.vitrina.vertical .vitrina-cartel h2,
+.vitrina.vertical .vitrina-mitad-texto h2 {
+  font-size: 8vmin;
+}
+.vitrina.vertical .vitrina-lamina p {
+  font-size: 5vmin;
+}
+.vitrina.vertical .vitrina-lamina p.largo {
+  font-size: 4.2vmin;
+}
+.vitrina.vertical .vitrina-rotulo {
+  font-size: 3.2vmin;
+}
+.vitrina.vertical .vitrina-cartel {
+  padding: 20vh 7vw 8vh;
+  gap: 2vmin;
+}
+.vitrina.vertical .vitrina-cartel p {
+  font-size: 4.2vmin;
+}
+.vitrina.vertical .vitrina-video-fondo {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(4vmin) brightness(0.45);
+  transform: scale(1.15);
+}
+.vitrina.vertical .vitrina-video {
+  background: transparent;
+}
+.vitrina.vertical .vitrina-sellos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6vmin 4vmin;
+}
+.vitrina.vertical .vitrina-sellos li {
+  width: auto;
+  font-size: 4.2vmin;
+}
+.vitrina.vertical .vitrina-sellos svg {
+  width: 14vmin;
+  height: 14vmin;
+}
+.vitrina.vertical .vitrina-cifra {
+  font-size: 44vmin;
+}
+.vitrina.vertical .vitrina-lista li {
+  font-size: 4.6vmin;
+}
+.vitrina.vertical .vitrina-mitades,
+.vitrina.vertical .vitrina-cierre {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1.4fr 1fr;
+}
+.vitrina.vertical .vitrina-mitad-texto {
+  justify-content: start;
+  padding: 6vmin 7vw;
+  gap: 2.4vmin;
+}
+.vitrina.vertical .vitrina-mitad-texto p {
+  font-size: 4vmin;
+}
+.vitrina.vertical .vitrina-niveles-todos {
+  padding: 5vh 5vw;
+}
+/* En el tótem cada nivel es una franja de fotos con su pie encima (sobre un degradado): así las fotos usan todo el
+   alto en vez de quedar en una tira sobre el texto. */
+.vitrina.vertical .vitrina-niveles {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  row-gap: 3vmin;
+}
+.vitrina.vertical .vitrina-niveles figure {
+  display: block;
+  position: relative;
+  grid-row: auto;
+}
+.vitrina.vertical .vitrina-niveles .vitrina-mosaico {
+  position: absolute;
+  inset: 0;
+}
+.vitrina.vertical .vitrina-niveles figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10vmin 4vmin 3vmin;
+  background: linear-gradient(to top, rgb(10 20 40 / 0.9), rgb(10 20 40 / 0));
+}
+.vitrina.vertical .vitrina-niveles h2 {
+  font-size: 5.6vmin;
+}
+.vitrina.vertical .vitrina-niveles p {
+  font-size: 3.6vmin;
+}
+.vitrina.vertical .vitrina-extras li {
+  font-size: 3.2vmin;
+}
+.vitrina.vertical .vitrina-cierre {
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  padding-top: 8vh;
+}
+.vitrina.vertical .vitrina-qr-caja {
+  width: 62vmin;
+}
+.vitrina.vertical .vitrina-qr strong {
+  font-size: 5vmin;
+}
+.vitrina.vertical .vitrina-redes strong {
+  font-size: 5vmin;
+}
+.vitrina.vertical .vitrina-redes span,
+.vitrina.vertical .vitrina-sedes li {
+  font-size: 3.8vmin;
+}
+.vitrina.vertical .vitrina-carga h1 {
+  font-size: 8vmin;
+}
+.vitrina.vertical .vitrina-carga p {
+  font-size: 3.6vmin;
+}
+
+/* ——— La entrada: clave, versión y pantalla ——— */
+.vitrina-entrada {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+.vitrina-entrada form {
+  width: min(100%, 26rem);
+  display: grid;
+  gap: 20px;
+}
+.vitrina-entrada-leon {
+  width: 88px;
+  height: 88px;
+  justify-self: center;
+}
+.vitrina-entrada h1 {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-titulo);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+.vitrina-entrada form > label > span,
+.vitrina-entrada legend {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+.vitrina-entrada input[type="password"] {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.06);
+  color: inherit;
+  font: inherit;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+}
+.vitrina-entrada input[type="password"]:focus {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+.vitrina-entrada fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.vitrina-entrada legend {
+  grid-column: 1 / -1;
+}
+.vitrina-entrada fieldset label {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.vitrina-entrada fieldset label:hover {
+  border-color: rgb(255 255 255 / 0.45);
+}
+.vitrina-entrada fieldset label.elegida {
+  border-color: var(--acento);
+  background: rgb(212 188 94 / 0.12);
+}
+.vitrina-entrada fieldset label:has(input:focus-visible) {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+.vitrina-entrada fieldset input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.vitrina-entrada fieldset span {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+.vitrina-entrada-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgb(198 40 40 / 0.2);
+  border: 1px solid rgb(229 57 53 / 0.6);
+}
+.vitrina-entrada button {
+  height: 48px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--acento);
+  color: #1b2a4a;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.vitrina-entrada button:hover {
+  filter: brightness(1.08);
+}
+.vitrina-entrada button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lento .vitrina-foto-frente {
+    animation: none;
+  }
+}

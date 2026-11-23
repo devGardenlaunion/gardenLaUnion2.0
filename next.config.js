@@ -106,7 +106,8 @@ const csp = [
   "font-src 'self'",
   isDev ? "connect-src 'self' ws: wss:" : "connect-src 'self'",
   "frame-src 'self'",
-  "media-src 'self'",
+  // blob: la vitrina (/vitrina) baja sus videos a memoria antes de correr, para seguir sin red.
+  "media-src 'self' blob:",
   "manifest-src 'self'",
   "worker-src 'self' blob:",
   // Sólo en Vercel (VERCEL=1), donde todo es HTTPS. Probando el build desde el
